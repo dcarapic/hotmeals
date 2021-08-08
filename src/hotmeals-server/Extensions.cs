@@ -21,12 +21,9 @@ namespace hotmeals_server
             return app.Use(next => context =>
                 {
                     string path = context.Request.Path.Value;
-                    if (
-                        string.Equals(path, "/", StringComparison.OrdinalIgnoreCase) ||
-                        string.Equals(path, "/index.html", StringComparison.OrdinalIgnoreCase))
+                    if(context.Request.Method == "GET")
                     {
-                        // The request token can be sent as a JavaScript-readable cookie, 
-                        // and Angular uses it by default.
+                        // Send CSRF token as cookie on every GET request
                         var tokens = antiforgery.GetAndStoreTokens(context);
                         context.Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken,
                             new CookieOptions() { HttpOnly = false });

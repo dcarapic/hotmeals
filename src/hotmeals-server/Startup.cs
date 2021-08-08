@@ -65,7 +65,8 @@ namespace hotmeals_server
             // Add CSRF antiforgery token
             services.AddAntiforgery(options =>
             {
-                options.HeaderName = "X-XSRF-TOKEN";
+                // This should match the ServerAPI header key in the hotmeals-client application
+                options.HeaderName = "RequestVerificationToken";
             });
         }
 

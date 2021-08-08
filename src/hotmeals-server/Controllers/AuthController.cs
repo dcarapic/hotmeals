@@ -37,17 +37,17 @@ namespace hotmeals_server.Controllers
         /// <param name="login">Login request data</param>
         /// <returns></returns>
         [HttpPost("login")]
-        public async Task<UserData> Login([FromBody] UserLoginDTO login)
+        public async Task<IActionResult> Login([FromBody] LoginRequestDTO login)
         {
             if (login == null || string.IsNullOrEmpty(login.Email))
             {
                 _log.LogWarning("Invalid email", login?.Email);
-                throw new InvalidOperationException("Please provide a valid email address!");
+                return BadRequest("Please provide a valid email address!");
             }
             if (string.IsNullOrEmpty(login.Password))
             {
                 _log.LogWarning("Invalid password", login?.Email);
-                throw new InvalidOperationException("Please provide password!");
+                return BadRequest("Please provide password!");
             }
             var user = new UserData(Guid.Empty, login.Email);
 
@@ -69,7 +69,7 @@ namespace hotmeals_server.Controllers
                 });
 
             _log.LogDebug("User {Email} logged in", user.Email);
-            return user;
+            return Ok();
         }
 
         /// <summary>
