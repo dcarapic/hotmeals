@@ -5,7 +5,7 @@ import srcLogo from "../assets/Logo.svg";
 import srcHotMeals from "../assets/HotMeals.svg";
 import srcAccount from "../assets/Account.svg";
 import RouterNavLink from "./RouterNavLink";
-import { useApplicationState } from "../model/ApplicationState";
+import { useCurrentUser } from "../user";
 import { observer } from "mobx-react-lite";
 
 const AccountMenu = () => {
@@ -17,7 +17,6 @@ const AccountMenu = () => {
                 src={srcAccount}
                 onClick={(e) => {
                     setShowMenu(true);
-                    //setTarget(e.target);
                 }}
             />
             <Modal show={showMenu} onHide={() => setShowMenu(false)} keyboard={false}>
@@ -46,7 +45,7 @@ const AccountMenu = () => {
 };
 
 const TopNav = observer(() => {
-    const appState = useApplicationState();
+    const currentUser = useCurrentUser();
     return (
         <Navbar bg="primary">
             <Container fluid>
@@ -56,7 +55,7 @@ const TopNav = observer(() => {
                         <Image src={srcHotMeals} />
                     </RouterNavLink>
                 </Navbar.Brand>
-                {appState.currentUser && <AccountMenu />}
+                {currentUser.user && <AccountMenu />}
             </Container>
         </Navbar>
     );
