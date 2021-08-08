@@ -5,7 +5,9 @@ import RouterNavLink from "../shared/RouterNavLink";
 const LoginPage = () => {
     return (
         <Fragment>
-            <h3 className="text-center p-2">Welcome to HotMeals, the best place to order your hot and fast food delivery!</h3>
+            <h3 className="text-center p-2">
+                Welcome to HotMeals, the best place to order your hot and fast food delivery!
+            </h3>
             <Form>
                 <Form.Group className="mb-3" controlId="formEmail">
                     <Form.Label>Email address</Form.Label>
@@ -20,8 +22,12 @@ const LoginPage = () => {
                     Login
                 </Button>
             </Form>
-            <RouterNavLink to="/register-customer" className="text-center">Register as a new customer ...</RouterNavLink>
-            <RouterNavLink to="/register-owner" className="text-center">Register as a new restaurant owner ...</RouterNavLink>
+            <RouterNavLink to="/register-customer" className="text-center">
+                Register as a new customer ...
+            </RouterNavLink>
+            <RouterNavLink to="/register-owner" className="text-center">
+                Register as a new restaurant owner ...
+            </RouterNavLink>
         </Fragment>
     );
 };

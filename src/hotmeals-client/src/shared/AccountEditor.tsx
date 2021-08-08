@@ -4,9 +4,6 @@ import { Button, Col, Form, Row } from "react-bootstrap";
 const AccountEditor = () => {
     return (
         <Fragment>
-            <h3 className="text-center p-2">
-                Welcome to HotMeals, the best place to order your hot and fast food delivery!
-            </h3>
             <Form>
                 <Form.Group className="mb-2" controlId="formEmail">
                     <Form.Label>Email address</Form.Label>

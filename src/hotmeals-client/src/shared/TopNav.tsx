@@ -1,5 +1,5 @@
 import React, { Fragment, useState } from "react";
-import { Button, Container, Image, Modal, Nav, Navbar, NavLink } from "react-bootstrap";
+import { Button, Container, Image, Modal, Navbar, NavLink } from "react-bootstrap";
 
 import srcLogo from "../assets/Logo.svg";
 import srcHotMeals from "../assets/HotMeals.svg";

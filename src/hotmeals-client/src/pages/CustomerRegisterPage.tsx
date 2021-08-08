@@ -1,11 +1,14 @@
 import React, { Fragment } from "react";
-import { Button, Form } from "react-bootstrap";
 import AccountEditor from "../shared/AccountEditor";
-import RouterNavLink from "../shared/RouterNavLink";
 
 const RegisterCustomerPage = () => {
     return (
-        <AccountEditor/>
+        <Fragment>
+            <h3 className="text-center p-2">
+               Register as a new customer
+            </h3>
+            <AccountEditor />
+        </Fragment>
     );
 };
 export default RegisterCustomerPage;

@@ -1,6 +1,6 @@
 import React from "react";
 import { Container, Col, Row } from "react-bootstrap";
-import { BrowserRouter, Switch, Route, Link } from "react-router-dom";
+import { BrowserRouter, Switch, Route } from "react-router-dom";
 import CustomerAccountPage from "./pages/CustomerAccountPage";
 import CustomerRegisterPage from "./pages/CustomerRegisterPage";
 import LoginPage from "./pages/LoginPage";
