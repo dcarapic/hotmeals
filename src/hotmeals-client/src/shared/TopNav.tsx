@@ -5,30 +5,21 @@ import srcLogo from "../assets/Logo.svg";
 import srcHotMeals from "../assets/HotMeals.svg";
 import srcAccount from "../assets/Account.svg";
 import RouterNavLink from "./RouterNavLink";
+import { useApplicationState } from "../model/ApplicationState";
+import { observer } from "mobx-react-lite";
 
-const TopNav = () => {
+const AccountMenu = () => {
     const [showMenu, setShowMenu] = useState(false);
-
     return (
         <Fragment>
-            <Navbar bg="primary">
-                <Container fluid>
-                    <Navbar.Brand>
-                        <RouterNavLink to="/" className="p-0">
-                            <Image src={srcLogo} className="me-2" />
-                            <Image src={srcHotMeals} />
-                        </RouterNavLink>
-                    </Navbar.Brand>
-                    <Image
-                        role="button"
-                        src={srcAccount}
-                        onClick={(e) => {
-                            setShowMenu(true);
-                            //setTarget(e.target);
-                        }}
-                    />
-                </Container>
-            </Navbar>
+            <Image
+                role="button"
+                src={srcAccount}
+                onClick={(e) => {
+                    setShowMenu(true);
+                    //setTarget(e.target);
+                }}
+            />
             <Modal show={showMenu} onHide={() => setShowMenu(false)} keyboard={false}>
                 <Modal.Header closeButton>
                     <Modal.Title>User name</Modal.Title>
@@ -53,4 +44,21 @@ const TopNav = () => {
         </Fragment>
     );
 };
+
+const TopNav = observer(() => {
+    const appState = useApplicationState();
+    return (
+        <Navbar bg="primary">
+            <Container fluid>
+                <Navbar.Brand>
+                    <RouterNavLink to="/" className="p-0">
+                        <Image src={srcLogo} className="me-2" />
+                        <Image src={srcHotMeals} />
+                    </RouterNavLink>
+                </Navbar.Brand>
+                {appState.currentUser && <AccountMenu />}
+            </Container>
+        </Navbar>
+    );
+});
 export default TopNav;

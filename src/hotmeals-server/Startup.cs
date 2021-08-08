@@ -42,9 +42,9 @@ namespace hotmeals_server
             {
                 options.AddPolicy("DevPolicy",
                     builder => builder.WithOrigins("http://localhost:3000")
-                    .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .AllowCredentials());
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials());
                 options.AddPolicy("ProdPolicy", builder => { });
             });
             services.AddControllers();

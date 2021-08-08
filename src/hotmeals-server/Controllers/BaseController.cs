@@ -36,8 +36,8 @@ namespace hotmeals_server.Controllers
                 // Create actual user from Claims
                 if (_currentUser == null)
                 {
-                    var id = Guid.Parse(User.Claims.First(x=>x.Type == "Id").Value);
-                    var email = User.Claims.First(x=>x.Type == ClaimTypes.Email).Value;
+                    var id = Guid.Parse(User.Claims.First(x=>x.Type == nameof(UserData.Id)).Value);
+                    var email = User.Claims.First(x=>x.Type == nameof(UserData.Email)).Value;
                     _currentUser = new UserData(id, email);
                 }
                 return _currentUser;

@@ -4,8 +4,8 @@ export class ServerAPI {
     private readonly _url: string;
 
     constructor() {
-        if (process.env.NODE_ENV === "production") this._url = "";
-        else this._url = "https://localhost:5001";
+        if (process.env.NODE_ENV === "production") this._url = "/";
+        else this._url = "https://localhost:5001/";
     }
 
     
@@ -13,13 +13,14 @@ export class ServerAPI {
         email: string,
         password: string
     ): Promise<ServerResponseWithData<Types.UserDTO>> {
-        const url = this._url + "api/login";
+        const url = this._url + "api/auth/login";
         const loginReq: Types.LoginRequestDTO = { email, password };
         let response = await this._wrapJsonFetch("Logging in", () =>
             fetch(url, {
                 method: "POST",
                 headers: this._createFetchHeader(),
                 body: JSON.stringify(loginReq),
+                credentials: 'include'
             })
         );
         if(response.ok)
@@ -27,18 +28,31 @@ export class ServerAPI {
         else
             return { ...response, result: undefined };
     }
+   
+    async logout(): Promise<ServerResponse> {
+        const url = this._url + "api/auth/logout";
+        let response = await this._wrapFetch("Logging out", () =>
+            fetch(url, {
+                method: "POST",
+                headers: this._createPostHeader(),
+                credentials: 'include'
+            })
+        );
+        return response;
+    }
 
     async fetchCurrentUser(): Promise<ServerResponseWithData<Types.UserDTO>> {
-        const url = this._url + "api/user";
+        const url = this._url + "api/user/current";
         const result = await this._wrapJsonFetch<Types.UserDTO>("Fetching user", () =>
             fetch(url, {
                 headers: this._createFetchHeader(),
+                credentials: 'include'
             })
         );
         return result;
     }
     
-    private async _wrapFetch<T>(requestDescription: string, method: () => Promise<Response>): Promise<ServerResponse> {
+    private async _wrapFetch(requestDescription: string, method: () => Promise<Response>): Promise<ServerResponse> {
         console.log(`%capi: ${requestDescription}`, "color: gray");
         let response: Response | undefined;
         try {
@@ -56,7 +70,7 @@ export class ServerAPI {
                 return {
                     ok: false,
                     statusMessage: `Failed to execute request '${requestDescription}'. Network error: ${
-                        (<Error>e).message
+                        (e as Error).message
                     }`,
                 };
         }
@@ -93,7 +107,7 @@ export class ServerAPI {
                 return {
                     ok: false,
                     statusMessage: `Failed to execute request '${requestDescription}'. Network error: ${
-                        (<Error>e).message
+                        (e as Error).message
                     }`,
                 };
         }
@@ -102,6 +116,7 @@ export class ServerAPI {
     private _createFetchHeader(): HeadersInit {
         return {
             Accept: "application/json",
+            "Content-Type": "application/json",
         };
     }
 
@@ -109,7 +124,7 @@ export class ServerAPI {
     private _createPostHeader(): HeadersInit {
         return {
             RequestVerificationToken: this._getCookie("XSRF-TOKEN"),
-            Accept: "application/json",
+            ...this._createFetchHeader()
         };
     }
 

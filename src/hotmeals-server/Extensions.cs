@@ -24,7 +24,7 @@ namespace hotmeals_server
                     if(context.Request.Method == "GET")
                     {
                         // Send CSRF token as cookie on every GET request
-                        var tokens = antiforgery.GetAndStoreTokens(context);
+                        var tokens = antiforgery.GetTokens(context);
                         context.Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken,
                             new CookieOptions() { HttpOnly = false });
                     }

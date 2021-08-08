@@ -69,7 +69,7 @@ namespace hotmeals_server.Controllers
                 });
 
             _log.LogDebug("User {Email} logged in", user.Email);
-            return Ok();
+            return Ok(new UserDTO(user.Email, "First", "Last", false));
         }
 
         /// <summary>
