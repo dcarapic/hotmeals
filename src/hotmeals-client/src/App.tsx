@@ -22,8 +22,11 @@ const App = () => {
         isLoading: false,
         setCurrentUser: setCurrentUserCore,
     });
-    // Try to immediately fetch the current user on application load
+
+    // Try to immediately fetch the current user on load
     useEffect(() => {
+        if (currentUser.user != null) return;
+
         setCurrentUser({ ...currentUser, isLoading: true });
         const fetch = async () => {
             console.log(`Fetching current user`);
@@ -33,6 +36,11 @@ const App = () => {
         };
         fetch();
     }, []);
+
+    const RequiresAuth = (component: JSX.Element) => {
+        return currentUser.user ? component : <LoginPage />;
+    };
+
     return (
         <CurrentUserContext.Provider value={currentUser}>
             <BrowserRouter>
@@ -40,11 +48,13 @@ const App = () => {
                 <Container className="mt-2">
                     <Row className="justify-content-md-center">
                         <Col lg="8">
-                            {currentUser.user ? (
+                            {currentUser.isLoading ? (
+                                <Col className="d-flex justify-content-center">
+                                    <Loading className="w-25" showLabel />
+                                </Col>
+                            ) : (
                                 <Switch>
-                                    <Route path="/account">
-                                        <CustomerAccountPage />
-                                    </Route>
+                                    <Route path="/account">{RequiresAuth(<CustomerAccountPage />)}</Route>
                                     <Route path="/register-customer">
                                         <CustomerRegisterPage />
                                     </Route>
@@ -55,11 +65,6 @@ const App = () => {
                                         <NotFoundPage />
                                     </Route>
                                 </Switch>
-                            ) : currentUser.isLoading ? (
-                                <Loading className="w-25" showLabel />
-                            ) : (
-                                // <Loading className="w-25" showLabel/>
-                                <LoginPage />
                             )}
                         </Col>
                     </Row>
