@@ -1,0 +1,50 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "start",
+			"path": "src/hotmeals-client/",
+			"problemMatcher": [],
+			"label": "npm: start - src/hotmeals-client",
+			"detail": "react-scripts start"
+        },
+        {
+            "label": ".net:build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/hotmeals-server/hotmeals-server.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": ".net:publish",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/src/hotmeals-server/hotmeals-server.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": ".net:run",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "run",
+				"--project",
+                "${workspaceFolder}/src/hotmeals-server/hotmeals-server.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        }
+	]
+}
