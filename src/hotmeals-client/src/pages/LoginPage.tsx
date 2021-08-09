@@ -1,17 +1,18 @@
 import React, { Fragment, useState } from "react";
-import { Alert, Form,  } from "react-bootstrap";
+import { Form  } from "react-bootstrap";
 import { FormEvent } from "react-dom/node_modules/@types/react";
 import { login } from "../api";
+import { useAppErrorUI, withAppErrorUI } from "../errorHandling";
 import { LoadingButton } from "../shared/LoadingButton";
 import { RouterNavLink } from "../shared/RouterNav";
 import { useCurrentUser } from "../user";
 
-const LoginPage = () => {
+const LoginPage = withAppErrorUI(() => {
     const currentUser = useCurrentUser();
+    const errUI = useAppErrorUI();
+
     const [submitting, setSubmitting] = useState(false);
     const [validated, setValidated] = useState(false);
-    const [loginFailed, setLoginFailed] = useState(false);
-    const [loginError, setLoginError] = useState(false);
 
     const handleSubmit = async (e: FormEvent) => {
         let form: any = e.currentTarget;
@@ -32,10 +33,10 @@ const LoginPage = () => {
             currentUser.setCurrentUser(response.result);
         } else if (response.isUnauthorized) {
             setSubmitting(false);
-            setLoginFailed(true);
+            errUI.setCurrentError("Invalid email or password", "Please check that you've entered a valid email and password!");
         } else {
             setSubmitting(false);
-            setLoginError(true);
+            errUI.setCurrentError("Invalid server response", "Server did not provide meaningful response. Please try again."); // generic error
         }
     };
     return (
@@ -59,12 +60,6 @@ const LoginPage = () => {
                     Login
                 </LoadingButton>
             </Form>
-            <Alert variant="warning" show={loginFailed}>
-                You have not provided valid email or password. Please try again.
-            </Alert>
-            <Alert variant="danger" show={loginError}>
-                An error occurred while attempting to login, please try again later.
-            </Alert>
             <RouterNavLink to="/register-customer" className="text-center">
                 Register as a new customer ...
             </RouterNavLink>
@@ -73,5 +68,5 @@ const LoginPage = () => {
             </RouterNavLink>
         </Fragment>
     );
-};
+});
 export default LoginPage;

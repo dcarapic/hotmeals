@@ -6,10 +6,17 @@ import srcHotMeals from "../assets/HotMeals.svg";
 import srcAccount from "../assets/Account.svg";
 import { RouterNavLink } from "./RouterNav";
 import { useCurrentUser } from "../user";
-import { observer } from "mobx-react-lite";
+import { logout } from "../api";
 
 const AccountMenu = () => {
     const [showMenu, setShowMenu] = useState(false);
+    const currentUser = useCurrentUser();
+
+    const logoutHandler = async () => {
+        await logout();
+        currentUser.setCurrentUser(null);
+    }
+
     return (
         <Fragment>
             <Image
@@ -31,7 +38,7 @@ const AccountMenu = () => {
                         <RouterNavLink to="/orders" onClick={() => setShowMenu(false)}>
                             Your orders
                         </RouterNavLink>
-                        <NavLink onClick={() => alert("Logout!")}>Logout</NavLink>
+                        <NavLink onClick={logoutHandler}>Logout</NavLink>
                     </div>
                 </Modal.Body>
                 <Modal.Footer>
@@ -44,7 +51,7 @@ const AccountMenu = () => {
     );
 };
 
-const TopNav = observer(() => {
+const TopNav = () => {
     const currentUser = useCurrentUser();
     return (
         <Navbar bg="primary">
@@ -59,5 +66,5 @@ const TopNav = observer(() => {
             </Container>
         </Navbar>
     );
-});
+};
 export default TopNav;
