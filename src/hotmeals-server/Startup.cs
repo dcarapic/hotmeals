@@ -8,11 +8,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+
 
 namespace hotmeals_server
 {
@@ -68,6 +70,9 @@ namespace hotmeals_server
                 // This should match the ServerAPI header key in the hotmeals-client application
                 options.HeaderName = "RequestVerificationToken";
             });
+
+            services.AddDbContext<Model.HMContext>(o=>o.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

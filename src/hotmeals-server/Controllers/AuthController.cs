@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using hotmeals_server.Model;
+using Microsoft.EntityFrameworkCore;
 
 namespace hotmeals_server.Controllers
 {
@@ -24,45 +25,41 @@ namespace hotmeals_server.Controllers
 
         ILogger<AuthController> _log;
         private IConfiguration _config;
+        private HMContext _db;
 
-        public AuthController(ILogger<AuthController> logger, IConfiguration config)
+        public AuthController(ILogger<AuthController> logger, IConfiguration config, HMContext db)
         {
             _log = logger;
             _config = config;
+            _db = db;
         }
 
         /// <summary>
         /// Authenticates the user and provides authentication cookie in the response.
         /// </summary>
-        /// <param name="login">Login request data</param>
+        /// <param name="req">Login request data</param>
         /// <returns></returns>
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest login)
+        public async Task<IActionResult> Login([FromBody] LoginRequest req)
         {
-            if (login == null || string.IsNullOrEmpty(login.Email))
-            {
-                _log.LogWarning("Invalid email", login?.Email);
-                return BadRequest("Please provide a valid email address!");
-            }
-            if (string.IsNullOrEmpty(login.Password))
-            {
-                _log.LogWarning("Invalid password", login?.Email);
-                return BadRequest("Please provide password!");
-            }
-            // TODO: Load from DB
-            var user = new CurrentUserData(Guid.Empty, login.Email);
+            var user = await _db.Users.FirstOrDefaultAsync(x => x.Email == req.Email);
+            if (user == null || !this.VerifyPassword(
+                enteredPassword: req.Password,
+                storedHash: user.PasswordHash,
+                storedSalt: user.PasswordSalt))
+                return this.Unauthorized($"There is no user with such email or password!");
+
+            var current = new CurrentUserData(user.Id, user.Email);
             _log.LogDebug("User {Email} logged in", user.Email);
-            
-            await AddAuthenticationCookie(user);
-            
+            await AddAuthenticationCookie(current);
             return Ok(new UserResponse(
                 Email: user.Email,
-                FirstName: "Test",
-                LastName: "Name",
-                AddressCityZip: "10000",
-                AddressCity: "City",
-                AddressStreet: "Street",
-                IsRestaurantOwner: false));
+                FirstName: user.FirstName,
+                LastName: user.LastName,
+                AddressCityZip: user.AddressCityZip,
+                AddressCity: user.AddressCity,
+                AddressStreet: user.AddressStreet,
+                IsRestaurantOwner: user.IsRestaurantOwner));
         }
 
         /// <summary>

@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Security.Cryptography;
+
 
 namespace hotmeals_server.Controllers
 {
@@ -68,8 +70,38 @@ namespace hotmeals_server.Controllers
                 });
         }
 
-        protected async Task RemoveAuthenticationCookie() {
+        protected async Task RemoveAuthenticationCookie()
+        {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        }
+
+
+        protected class HashSalt
+        {
+            public string Hash { get; set; }
+            public string Salt { get; set; }
+        }
+
+        protected HashSalt GenerateSaltedHash(string password)
+        {
+            // 128 bit salt
+            var saltBytes = new byte[128 / 8];
+            var provider = new RNGCryptoServiceProvider();
+            provider.GetNonZeroBytes(saltBytes);
+            var salt = Convert.ToBase64String(saltBytes);
+
+            var rfc2898DeriveBytes = new Rfc2898DeriveBytes(password, saltBytes, 10000);
+            var hashPassword = Convert.ToBase64String(rfc2898DeriveBytes.GetBytes(256));
+
+            HashSalt hashSalt = new HashSalt { Hash = hashPassword, Salt = salt };
+            return hashSalt;
+        }
+
+        protected bool VerifyPassword(string enteredPassword, string storedHash, string storedSalt)
+        {
+            var saltBytes = Convert.FromBase64String(storedSalt);
+            var rfc2898DeriveBytes = new Rfc2898DeriveBytes(enteredPassword, saltBytes, 10000);
+            return Convert.ToBase64String(rfc2898DeriveBytes.GetBytes(256)) == storedHash;
         }
 
     }

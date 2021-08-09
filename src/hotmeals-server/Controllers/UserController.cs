@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using hotmeals_server.Model;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace hotmeals_server.Controllers
 {
@@ -25,11 +27,13 @@ namespace hotmeals_server.Controllers
 
         ILogger<AuthController> _log;
         private IConfiguration _config;
+        private HMContext _db;
 
-        public UserController(ILogger<AuthController> logger, IConfiguration config)
+        public UserController(ILogger<AuthController> logger, IConfiguration config, HMContext db)
         {
             _log = logger;
             _config = config;
+            _db = db;
         }
 
         /// <summary>
@@ -38,80 +42,87 @@ namespace hotmeals_server.Controllers
         /// <param name="login">Login request data</param>
         /// <returns></returns>
         [HttpGet("current")]
-        public UserResponse GetCurrentUser()
+        public async Task<IActionResult> GetCurrentUser()
         {
-            return new UserResponse(
-                Email: this.CurrentUser.Email,
-                FirstName: "Test",
-                LastName: "Name",
-                AddressCityZip: "10000",
-                AddressCity: "City",
-                AddressStreet: "Street",
-                IsRestaurantOwner: false);
+            var user = await _db.Users.FindAsync(new object[] { CurrentUser.Id });
+            if (user == null)
+                return BadRequest("User is no longer available!");
+
+            return Ok(new UserResponse(
+                Email: user.Email,
+                FirstName: user.FirstName,
+                LastName: user.LastName,
+                AddressCityZip: user.AddressCityZip,
+                AddressCity: user.AddressCity,
+                AddressStreet: user.AddressStreet,
+                IsRestaurantOwner: user.IsRestaurantOwner));
         }
 
         [HttpPost("register")]
         [AllowAnonymous]
         public async Task<IActionResult> RegisterUser([FromBody] RegisterUserRequest req)
         {
+            var user = await _db.Users.FirstOrDefaultAsync(x => x.Email == req.Email);
+            if (user != null)
+                return this.BadRequest($"User with email address {req.Email} is already registered!");
+
+            user = new User();
+            user.Email = req.Email;
+            user.FirstName = req.FirstName;
+            user.LastName = req.LastName;
+            user.AddressCity = req.AddressCity;
+            user.AddressCityZip = req.AddressCityZip;
+            user.AddressStreet = req.AddressStreet;
+            user.IsRestaurantOwner = req.IsRestaurantOwner;
+
             var hs = GenerateSaltedHash(req.Password);
-            var user = new CurrentUserData(Guid.Empty, req.Email);
-            await this.AddAuthenticationCookie(user);
+            user.PasswordHash = hs.Hash;
+            user.PasswordSalt = hs.Salt;
+
+            _db.Users.Add(user);
+            await _db.SaveChangesAsync();
+            var current = new CurrentUserData(user.Id, user.Email);
+            await this.AddAuthenticationCookie(current);
             return Ok(new UserResponse(
-                Email: req.Email,
-                FirstName: req.FirstName,
-                LastName: req.LastName,
-                AddressCityZip: req.AddressCityZip,
-                AddressCity: req.AddressCity,
-                AddressStreet: req.AddressStreet,
-                IsRestaurantOwner: req.IsRestaurantOwner));
+                Email: user.Email,
+                FirstName: user.FirstName,
+                LastName: user.LastName,
+                AddressCityZip: user.AddressCityZip,
+                AddressCity: user.AddressCity,
+                AddressStreet: user.AddressStreet,
+                IsRestaurantOwner: user.IsRestaurantOwner));
         }
 
         [HttpPost("")]
         public async Task<IActionResult> UpdateUser([FromBody] UpdateUserRequest req)
         {
+
+            var user = await _db.Users.FindAsync(new object[] { CurrentUser.Id });
+            if (user == null)
+                return BadRequest("User is no longer available!");
+            user.FirstName = req.FirstName;
+            user.LastName = req.LastName;
+            user.AddressCity = req.AddressCity;
+            user.AddressCityZip = req.AddressCityZip;
+            user.AddressStreet = req.AddressStreet;
+
             if (req.NewPassword != null)
             {
                 var hs = GenerateSaltedHash(req.NewPassword);
-
+                user.PasswordHash = hs.Hash;
+                user.PasswordSalt = hs.Salt;
             }
+            await _db.SaveChangesAsync();
             return Ok(new UserResponse(
-                Email: this.CurrentUser.Email,
-                FirstName: req.FirstName,
-                LastName: req.LastName,
-                AddressCityZip: req.AddressCityZip,
-                AddressCity: req.AddressCity,
-                AddressStreet: req.AddressStreet,
-                IsRestaurantOwner: false));
+                Email: user.Email,
+                FirstName: user.FirstName,
+                LastName: user.LastName,
+                AddressCityZip: user.AddressCityZip,
+                AddressCity: user.AddressCity,
+                AddressStreet: user.AddressStreet,
+                IsRestaurantOwner: user.IsRestaurantOwner));
         }
 
-        private class HashSalt
-        {
-            public string Hash { get; set; }
-            public string Salt { get; set; }
-        }
-
-        private static HashSalt GenerateSaltedHash(string password)
-        {
-            // 128 bit salt
-            var saltBytes = new byte[128 / 8];
-            var provider = new RNGCryptoServiceProvider();
-            provider.GetNonZeroBytes(saltBytes);
-            var salt = Convert.ToBase64String(saltBytes);
-
-            var rfc2898DeriveBytes = new Rfc2898DeriveBytes(password, saltBytes, 10000);
-            var hashPassword = Convert.ToBase64String(rfc2898DeriveBytes.GetBytes(256));
-
-            HashSalt hashSalt = new HashSalt { Hash = hashPassword, Salt = salt };
-            return hashSalt;
-        }
-
-        private static bool VerifyPassword(string enteredPassword, string storedHash, string storedSalt)
-        {
-            var saltBytes = Convert.FromBase64String(storedSalt);
-            var rfc2898DeriveBytes = new Rfc2898DeriveBytes(enteredPassword, saltBytes, 10000);
-            return Convert.ToBase64String(rfc2898DeriveBytes.GetBytes(256)) == storedHash;
-        }
 
     }
 }

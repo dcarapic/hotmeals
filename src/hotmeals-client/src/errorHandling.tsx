@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, Fragment, ReactNode, useContext, useState } from "react";
+import React, { Component, DOMElement, ErrorInfo, Fragment, ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { Alert } from "react-bootstrap";
 import { FunctionComponent } from "react-dom/node_modules/@types/react";
 
@@ -120,12 +120,19 @@ const AppErrorUI: FunctionComponent = (props) => {
  * @returns
  */
 const AppErrorUIInner: FunctionComponent = (props) => {
-    let errUI = useAppErrorUI();
+    const errUI = useAppErrorUI();
+    const alertRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if(errUI.hasError)
+            alertRef.current?.scrollIntoView();
+    });
+
     return (
         <Fragment>
             {props.children}
             {errUI.hasError && (
-                <Alert variant="danger">
+                <Alert variant="danger" ref={alertRef}>
                     <Alert.Heading>{errUI.caption || "An error occurred!"}</Alert.Heading>
                     <p>{errUI.description || "An error occurred in the application"}</p>
                 </Alert>
