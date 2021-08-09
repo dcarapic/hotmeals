@@ -1,12 +1,12 @@
 import React, { Fragment, useState } from "react";
-import { Alert, Col, Form, InputGroup } from "react-bootstrap";
+import { Col, Form, InputGroup } from "react-bootstrap";
 import { FormEvent } from "react-dom/node_modules/@types/react";
+import { withAppErrorUI } from "../errorHandling";
 import { LoadingButton } from "../shared/LoadingButton";
 import { RouterNavButton } from "../shared/RouterNav";
 import { useCurrentUser } from "../user";
 
-const CustomerHomePage = () => {
-    const currentUser = useCurrentUser();
+const CustomerHomePage = withAppErrorUI(() => {
     const [searching, setSearching] = useState(false);
     const [validated, setValidated] = useState(false);
 
@@ -47,5 +47,5 @@ const CustomerHomePage = () => {
             </Col>
         </Fragment>
     );
-};
+});
 export default CustomerHomePage;

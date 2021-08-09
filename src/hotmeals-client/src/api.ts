@@ -4,19 +4,27 @@ let serverUrl: string;
 if (process.env.NODE_ENV === "production") serverUrl = "/";
 else serverUrl = "https://localhost:5001/";
 
-export async function login(email: string, password: string): Promise<ServerResponseWithData<Types.UserDTO>> {
-    let response = await requestPost<Types.UserDTO>("api/auth/login", {email, password});
-    if (response.ok) return await fetchCurrentUser();
-    else return { ...response, result: undefined };
+export async function login(req : Types.LoginRequest): Promise<ServerResponseWithData<Types.UserResponse>> {
+    return await requestPost<Types.UserResponse>("api/auth/login", req);
 }
 
 export async function logout(): Promise<ServerResponse> {
     return await requestPost<void>("api/auth/logout");
 }
 
-export async function fetchCurrentUser(): Promise<ServerResponseWithData<Types.UserDTO>> {
-    return await requestGet<Types.UserDTO>("api/user/current");
+export async function fetchCurrentUser(): Promise<ServerResponseWithData<Types.UserResponse>> {
+    return await requestGet<Types.UserResponse>("api/user/current");
 }
+
+export async function register(req : Types.RegisterUserRequest): Promise<ServerResponseWithData<Types.UserResponse>> {
+    return await requestPost<Types.UserResponse>("api/user/register", req);
+}
+
+export async function updateUser(req : Types.UpdateUserRequest): Promise<ServerResponseWithData<Types.UserResponse>> {
+    return await requestPost<Types.UserResponse>("api/user", req);
+}
+
+
 
 
 async function request(route: string, req: RequestInit): Promise<ServerResponse> {

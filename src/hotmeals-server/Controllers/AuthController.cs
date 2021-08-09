@@ -37,7 +37,7 @@ namespace hotmeals_server.Controllers
         /// <param name="login">Login request data</param>
         /// <returns></returns>
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequestDTO login)
+        public async Task<IActionResult> Login([FromBody] LoginRequest login)
         {
             if (login == null || string.IsNullOrEmpty(login.Email))
             {
@@ -49,27 +49,20 @@ namespace hotmeals_server.Controllers
                 _log.LogWarning("Invalid password", login?.Email);
                 return BadRequest("Please provide password!");
             }
-            var user = new UserData(Guid.Empty, login.Email);
-
-            // Claims are stored in the authentication cookie so that we do not have to load
-            // them from DB again. Cookie is encrypted so its safe that they are there.
-            var claims = new Claim[] {
-                new Claim(nameof(UserData.Id), user.Id.ToString()),
-                new Claim(nameof(UserData.Email), user.Email),
-            };
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-            // Write cookie to the response
-            await HttpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(identity),
-                new AuthenticationProperties
-                {
-                    IsPersistent = false
-                });
-
+            // TODO: Load from DB
+            var user = new CurrentUserData(Guid.Empty, login.Email);
             _log.LogDebug("User {Email} logged in", user.Email);
-            return Ok(new UserDTO(user.Email, "First", "Last", false));
+            
+            await AddAuthenticationCookie(user);
+            
+            return Ok(new UserResponse(
+                Email: user.Email,
+                FirstName: "Test",
+                LastName: "Name",
+                AddressCityZip: "10000",
+                AddressCity: "City",
+                AddressStreet: "Street",
+                IsRestaurantOwner: false));
         }
 
         /// <summary>
@@ -82,7 +75,7 @@ namespace hotmeals_server.Controllers
             var user = this.CurrentUser;
             if (user != null)
             {
-                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                await RemoveAuthenticationCookie();
                 _log.LogDebug("User {Email} logged out", user.Email);
             }
             return Ok();

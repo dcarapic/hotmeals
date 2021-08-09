@@ -34,7 +34,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     /**
      * Required by react error boundary (https://reactjs.org/docs/error-boundaries.html)
      */
-     public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         console.error("Uncaught error:", error, errorInfo);
     }
 
@@ -77,8 +77,8 @@ const AppErrorUIContext = React.createContext<ApplicationError>({
  * Wrapper component which provides application error context.
  * Whenever a child component wants to indicate that an error occurred this component will display it at the bottom of the page as a Bootstrap alert card.
  * Should mostly be used with withAppErrorUI hoc.
- * @param props 
- * @returns 
+ * @param props
+ * @returns
  */
 const AppErrorUI: FunctionComponent = (props) => {
     const setCurrentErrorCore = (caption?: string, description?: string) => {
@@ -116,8 +116,8 @@ const AppErrorUI: FunctionComponent = (props) => {
 
 /**
  * Internal component of AppErrorUI
- * @param props 
- * @returns 
+ * @param props
+ * @returns
  */
 const AppErrorUIInner: FunctionComponent = (props) => {
     let errUI = useAppErrorUI();
@@ -137,8 +137,8 @@ const AppErrorUIInner: FunctionComponent = (props) => {
 /**
  * Higher order component which wraps the given component with AppErrorUI.
  * Makes it easy to provide error display UI per component.
- * @param WrappedComponent 
- * @returns 
+ * @param WrappedComponent
+ * @returns
  */
 const withAppErrorUI = (WrappedComponent: React.ComponentType) => {
     let wrapped: FunctionComponent = (props) => (

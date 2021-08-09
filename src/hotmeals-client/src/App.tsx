@@ -21,7 +21,7 @@ import { CurrentUserContext, CurrentUser } from "./user";
 const App = () => {
     
     // Holds current user state. As this is the main component it will not get removed unless the browser is refreshed.
-    const setCurrentUserCore = (user: Types.UserDTO | null) => {
+    const setCurrentUserCore = (user: Types.UserResponse | null) => {
         setCurrentUser({ user: user, isLoading: false, setCurrentUser: setCurrentUserCore });
     };
     let [currentUser, setCurrentUser] = useState<CurrentUser>({

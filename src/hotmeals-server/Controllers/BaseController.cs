@@ -19,13 +19,13 @@ namespace hotmeals_server.Controllers
     /// </summary>
     public abstract class BaseController : ControllerBase
     {
-        // Cached current user (if authenticated)
-        private UserData _currentUser;
+        // Cached current user base data (if authenticated)
+        private CurrentUserData _currentUser;
 
         /// <summary>
-        /// Current user. Can be null if user is not authenticated.
+        /// Current user base data. Can be null if user is not authenticated.
         /// </summary>
-        protected UserData CurrentUser
+        protected CurrentUserData CurrentUser
         {
             get
             {
@@ -36,13 +36,43 @@ namespace hotmeals_server.Controllers
                 // Create actual user from Claims
                 if (_currentUser == null)
                 {
-                    var id = Guid.Parse(User.Claims.First(x=>x.Type == nameof(UserData.Id)).Value);
-                    var email = User.Claims.First(x=>x.Type == nameof(UserData.Email)).Value;
-                    _currentUser = new UserData(id, email);
+                    var id = Guid.Parse(User.Claims.First(x => x.Type == nameof(CurrentUserData.Id)).Value);
+                    var email = User.Claims.First(x => x.Type == nameof(CurrentUserData.Email)).Value;
+                    _currentUser = new CurrentUserData(id, email);
                 }
                 return _currentUser;
             }
         }
 
+        /// <summary>
+        /// Adds authentication cookie for the given user.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        protected async Task AddAuthenticationCookie(CurrentUserData user)
+        {
+            var claims = new Claim[] {
+                new Claim(nameof(CurrentUserData.Id), user.Id.ToString()),
+                new Claim(nameof(CurrentUserData.Email), user.Email),
+            };
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            // Write cookie to the response
+            // Note: Cookie is encrypted so it is safe to store user id and email.
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(identity),
+                new AuthenticationProperties
+                {
+                    IsPersistent = false
+                });
+        }
+
+        protected async Task RemoveAuthenticationCookie() {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        }
+
     }
+
+    public record CurrentUserData(Guid Id, string Email);
 }
