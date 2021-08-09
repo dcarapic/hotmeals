@@ -12,4 +12,16 @@ const RouterNavLink = (props: LinkProps) => {
     );
 };
 
-export default RouterNavLink;
+
+const RouterNavButton = (props: LinkProps) => {
+    // Merge 'className' into className and remove it from other props so that we do not override the default class name.
+    var cn = `btn btn-primary ${props.className}`
+    let {className, ...cleanProps} = props;
+    return (
+        <Link className={cn} {...cleanProps}>
+            {props.children}
+        </Link>
+    );
+};
+
+export { RouterNavLink, RouterNavButton};

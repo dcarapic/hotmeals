@@ -3,6 +3,7 @@ import { Container, Col, Row } from "react-bootstrap";
 import { BrowserRouter, Switch, Route } from "react-router-dom";
 import { fetchCurrentUser } from "./api";
 import CustomerAccountPage from "./pages/CustomerAccountPage";
+import CustomerHomePage from "./pages/CustomerHomePage";
 import CustomerRegisterPage from "./pages/CustomerRegisterPage";
 import LoginPage from "./pages/LoginPage";
 import NotFoundPage from "./pages/NotFoundPage";
@@ -59,7 +60,15 @@ const App = () => {
                                         <CustomerRegisterPage />
                                     </Route>
                                     <Route exact path="/">
-                                        <LoginPage />
+                                        {currentUser.user ? (
+                                            currentUser.user.isRestaurantOwner ? (
+                                                <CustomerHomePage />
+                                            ) : (
+                                                <CustomerHomePage />
+                                            )
+                                        ) : (
+                                            <LoginPage />
+                                        )}
                                     </Route>
                                     <Route path="*">
                                         <NotFoundPage />

@@ -1,5 +1,4 @@
 import React from "react";
-import { Fade } from "react-bootstrap";
 import { Color } from "react-bootstrap/esm/types";
 import styles from "./Loading.module.css";
 

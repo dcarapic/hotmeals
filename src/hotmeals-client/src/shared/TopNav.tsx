@@ -4,7 +4,7 @@ import { Button, Container, Image, Modal, Navbar, NavLink } from "react-bootstra
 import srcLogo from "../assets/Logo.svg";
 import srcHotMeals from "../assets/HotMeals.svg";
 import srcAccount from "../assets/Account.svg";
-import RouterNavLink from "./RouterNavLink";
+import { RouterNavLink } from "./RouterNav";
 import { useCurrentUser } from "../user";
 import { observer } from "mobx-react-lite";
 
