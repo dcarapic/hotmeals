@@ -5,7 +5,7 @@ import Loading from "./Loading";
 
 const LoadingButton = (props: ButtonProps & { loading: boolean }) => {
     // Replace button children with custom loading
-    let { children, ...otherProps } = props;
+    let { children, loading, ...otherProps } = props;
     let loadingVariant : Color = "light";
     switch(props.variant) {
         case 'primary':
@@ -15,7 +15,7 @@ const LoadingButton = (props: ButtonProps & { loading: boolean }) => {
             loadingVariant = "primary";
     }
 
-    const c = props.loading ? (
+    const c = loading ? (
                 <Fragment>
                     <Loading variant={loadingVariant} style={{ width: "1.2rem" }} />
                     Please wait
@@ -23,7 +23,7 @@ const LoadingButton = (props: ButtonProps & { loading: boolean }) => {
             ) : props.children
 
     return (
-        <Button {...otherProps} disabled={props.loading}>
+        <Button {...otherProps} disabled={loading}>
             {c}
         </Button>
     );

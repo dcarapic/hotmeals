@@ -5,7 +5,7 @@ import styles from "./Loading.module.css";
 const Loading = (props: React.HTMLAttributes<HTMLDivElement> & { showLabel?: boolean; variant?: Color; }) => {
     // Merge 'className' into className and remove it from other props so that we do not override the default class name.
     var cn = `${styles.container} ${props.className}`;
-    let { className, ...cleanProps } = props;
+    let { className, showLabel, ...cleanProps } = props;
     let color = props.variant || "primary";
     let colorClass = `bg-${color}`;
 
@@ -22,7 +22,7 @@ const Loading = (props: React.HTMLAttributes<HTMLDivElement> & { showLabel?: boo
                     <div className={`${styles.skcube} ${styles.skcube8} ${colorClass}`}></div>
                     <div className={`${styles.skcube} ${styles.skcube9} ${colorClass}`}></div>
                 </div>
-                {props.showLabel && <div>Please wait, loading ....</div>}
+                {showLabel && <div>Please wait, loading ....</div>}
             </div>
     );
 };

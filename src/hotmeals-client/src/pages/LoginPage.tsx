@@ -33,13 +33,13 @@ const LoginPage = withAppErrorUI(() => {
             // Setting the current user will change the current page so there is no need to navigate anywhere
             currentUser.setCurrentUser(response.result);
 
-        } else if (response.isUnauthorized) {
+        } else if (response.isUnauthorized || response.isBadRequest) {
             setSubmitting(false);
-            errUI.setCurrentError("Invalid email or password", "Please check that you've entered a valid email and password!");
+            errUI.setCurrentError({caption: "Login failed", description: response.errorDetails, variant: 'warning', useToast: true});
 
         } else {
             setSubmitting(false);
-            errUI.setCurrentError("Invalid server response", "Server did not provide meaningful response. Please try again."); // generic error
+            errUI.setCurrentError({caption: "Invalid server response", description: "Server did not provide meaningful response. Please try again."}); // generic error
         }
     };
     return (

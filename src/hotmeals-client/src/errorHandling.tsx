@@ -1,5 +1,6 @@
-import React, { Component, DOMElement, ErrorInfo, Fragment, ReactNode, useContext, useEffect, useRef, useState } from "react";
-import { Alert } from "react-bootstrap";
+import React, { Component, ErrorInfo, Fragment, ReactNode, useContext, useEffect, useRef, useState } from "react";
+import { Alert, Toast, ToastContainer } from "react-bootstrap";
+import { Variant } from "react-bootstrap/esm/types";
 import { FunctionComponent } from "react-dom/node_modules/@types/react";
 
 /**
@@ -51,14 +52,20 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     }
 }
 
+export type ErrorDescription = {
+    caption: string;
+    description?: string;
+    variant?: Variant;
+    useToast?: boolean;
+};
+
 /**
  * Object used with React context to hold information about a non-fatal error.
  */
 export type ApplicationError = {
     hasError: boolean;
-    caption: string | null;
-    description: string | null;
-    setCurrentError: (caption?: string, description?: string) => void;
+    error: ErrorDescription | null;
+    setCurrentError: (errDesc: ErrorDescription) => void;
     clearCurrentError: () => void;
 };
 
@@ -67,8 +74,7 @@ export type ApplicationError = {
  */
 const AppErrorUIContext = React.createContext<ApplicationError>({
     hasError: false,
-    caption: null,
-    description: null,
+    error: null,
     setCurrentError: () => {},
     clearCurrentError: () => {},
 });
@@ -81,10 +87,9 @@ const AppErrorUIContext = React.createContext<ApplicationError>({
  * @returns
  */
 const AppErrorUI: FunctionComponent = (props) => {
-    const setCurrentErrorCore = (caption?: string, description?: string) => {
+    const setCurrentErrorCore = (errDesc: ErrorDescription) => {
         setAppError({
-            caption: caption || "An error occurred!",
-            description: description || "An error occurred during processing.",
+            error: errDesc,
             hasError: true,
             setCurrentError: setCurrentErrorCore,
             clearCurrentError: clearCurrentErrorCore,
@@ -92,8 +97,7 @@ const AppErrorUI: FunctionComponent = (props) => {
     };
     const clearCurrentErrorCore = () => {
         setAppError({
-            caption: null,
-            description: null,
+            error: null,
             hasError: false,
             setCurrentError: setCurrentErrorCore,
             clearCurrentError: clearCurrentErrorCore,
@@ -101,8 +105,7 @@ const AppErrorUI: FunctionComponent = (props) => {
     };
     let [appError, setAppError] = useState<ApplicationError>({
         hasError: false,
-        caption: null,
-        description: null,
+        error: null,
         setCurrentError: setCurrentErrorCore,
         clearCurrentError: clearCurrentErrorCore,
     });
@@ -122,20 +125,31 @@ const AppErrorUI: FunctionComponent = (props) => {
 const AppErrorUIInner: FunctionComponent = (props) => {
     const errUI = useAppErrorUI();
     const alertRef = useRef<HTMLDivElement>(null);
+    const toastRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if(errUI.hasError)
-            alertRef.current?.scrollIntoView();
+        if (errUI.hasError && errUI.error && !errUI.error.useToast) alertRef.current?.scrollIntoView();
+        if (errUI.hasError && errUI.error && errUI.error.useToast) toastRef.current?.scrollIntoView();
     });
 
     return (
         <Fragment>
             {props.children}
-            {errUI.hasError && (
-                <Alert variant="danger" ref={alertRef}>
-                    <Alert.Heading>{errUI.caption || "An error occurred!"}</Alert.Heading>
-                    <p>{errUI.description || "An error occurred in the application"}</p>
+            {errUI.hasError && errUI.error && !errUI.error.useToast && (
+                <Alert variant={errUI.error.variant || 'danger'} ref={alertRef}>
+                    <Alert.Heading>{errUI.error.caption}</Alert.Heading>
+                    <p>{errUI.error.description}</p>
                 </Alert>
+            )}
+            {errUI.hasError && errUI.error && errUI.error.useToast && (
+                <ToastContainer ref={toastRef} position='bottom-center'>
+                    <Toast bg={errUI.error.variant || 'danger'} onClose={()=>errUI.clearCurrentError()}>
+                        <Toast.Header>
+                            <strong className="me-auto">{errUI.error.caption}</strong>
+                        </Toast.Header>
+                        <Toast.Body>{errUI.error.description}</Toast.Body>
+                    </Toast>
+                </ToastContainer>
             )}
         </Fragment>
     );

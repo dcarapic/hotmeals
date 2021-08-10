@@ -42,13 +42,17 @@ namespace hotmeals_server
             // Prevent access to the web server from anywhere else except our SPA application.
             services.AddCors(options =>
             {
+                // Dev policy for development
                 options.AddPolicy("DevPolicy",
                     builder => builder.WithOrigins("http://localhost:3000")
                         .AllowAnyMethod()
                         .AllowAnyHeader()
                         .AllowCredentials());
+
+                // Production prohibits everything except the source                        
                 options.AddPolicy("ProdPolicy", builder => { });
             });
+
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -67,11 +71,13 @@ namespace hotmeals_server
             // Add CSRF antiforgery token
             services.AddAntiforgery(options =>
             {
-                // This should match the ServerAPI header key in the hotmeals-client application
-                options.HeaderName = "RequestVerificationToken";
+                // The client should provide the second cookie value via the header field 'X-XSRF-TOKEN'
+                options.HeaderName = "X-XSRF-TOKEN";
+                options.Cookie.Name = "XSRF-TOKEN";
+                options.Cookie.HttpOnly = false;
             });
 
-            services.AddDbContext<Model.HMContext>(o=>o.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<Model.HMContext>(o => o.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
 
         }
 

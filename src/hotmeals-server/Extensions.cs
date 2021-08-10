@@ -15,21 +15,34 @@ namespace hotmeals_server
 
     public static class Extensions
     {
+        /// <summary>
+        /// Adds an antiforgery token to every GET request. 
+        /// Validate every mutating request (POST, PUT, DELETE, PATCH) for antiforgery token.
+        /// </summary>
         public static IApplicationBuilder UseAntiforgery(this IApplicationBuilder app)
         {
             var antiforgery = (IAntiforgery)app.ApplicationServices.GetService(typeof(IAntiforgery));
-            return app.Use(next => context =>
+            return app.Use(next => async context =>
                 {
                     string path = context.Request.Path.Value;
-                    if(context.Request.Method == "GET")
+                    if (context.Request.Method == HttpMethods.Get)
                     {
-                        // Send CSRF token as cookie on every GET request
-                        var tokens = antiforgery.GetTokens(context);
-                        context.Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken,
-                            new CookieOptions() { HttpOnly = false });
+                        // Add CSRF coopkie for antiforgery
+                        var tokens = antiforgery.GetAndStoreTokens(context);
+                        // Add CSRF cookie which is to be read by API and returned via 'X-XSRF-TOKEN' header field
+                        context.Response.Cookies.Append("XSRF-Api", tokens.RequestToken, new CookieOptions() { HttpOnly = false });
                     }
+                    else if (context.Request.Method == HttpMethods.Patch || context.Request.Method == HttpMethods.Post || context.Request.Method == HttpMethods.Put || context.Request.Method == HttpMethods.Delete)
+                    {
+                        // Validate the token.
+                        if(!await antiforgery.IsRequestValidAsync(context)) {
+                            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                            await context.Response.Body.WriteAsync(System.Text.Encoding.UTF8.GetBytes("Please provide 'X-XSRF-TOKEN' header with a valid XSRF-TOKEN value!"));
+                            return;
+                        }
 
-                    return next(context);
+                    }
+                    await next(context);
                 });
         }
     }

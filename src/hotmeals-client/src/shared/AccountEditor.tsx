@@ -60,15 +60,13 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
                 password,
                 isRestaurantOwner: props.isRestaurantOwner,
             });
+            setSubmitting(false);
             if (response.ok && response.result) {
-                setSubmitting(false);
                 currentUser.setCurrentUser(response.result);
                 // Go to home page
                 history.push("/");
-    
             } else {
-                setSubmitting(false);
-                errUI.setCurrentError("Saving changes failed!", response.statusMessage); // generic error
+                errUI.setCurrentError({caption: "Registration failed!", description: response.errorDetails, variant: 'warning', useToast: true}); // generic error
             }
         } else {
             response = await updateUser({
@@ -79,14 +77,12 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
                 addressStreet,
                 newPassword : password
             });
+            setSubmitting(false);
             if (response.ok && response.result) {
-                setSubmitting(false);
                 currentUser.setCurrentUser(response.result);
                 setSaved(true);
-    
             } else {
-                setSubmitting(false);
-                errUI.setCurrentError("Registration failed", response.statusMessage); // generic error
+                errUI.setCurrentError({caption: "Saving changes failed!", description: response.errorDetails}); // generic error
             }
         }
 
