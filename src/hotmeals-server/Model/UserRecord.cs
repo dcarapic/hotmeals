@@ -5,13 +5,13 @@ using System.Collections.Generic;
 
 namespace hotmeals_server.Model
 {
-    public partial class User
+    public partial class UserRecord
     {
-        public User()
+        public UserRecord()
         {
-            BlockedUsers = new HashSet<BlockedUser>();
-            Orders = new HashSet<Order>();
-            Restaurants = new HashSet<Restaurant>();
+            BlockedUsers = new HashSet<BlockedUserRecord>();
+            Orders = new HashSet<OrderRecord>();
+            Restaurants = new HashSet<RestaurantRecord>();
         }
 
         public Guid Id { get; set; }
@@ -25,8 +25,8 @@ namespace hotmeals_server.Model
         public string PasswordSalt { get; set; }
         public bool IsRestaurantOwner { get; set; }
 
-        public virtual ICollection<BlockedUser> BlockedUsers { get; set; }
-        public virtual ICollection<Order> Orders { get; set; }
-        public virtual ICollection<Restaurant> Restaurants { get; set; }
+        public virtual ICollection<BlockedUserRecord> BlockedUsers { get; set; }
+        public virtual ICollection<OrderRecord> Orders { get; set; }
+        public virtual ICollection<RestaurantRecord> Restaurants { get; set; }
     }
 }

@@ -2,6 +2,7 @@ import React, { Component, ErrorInfo, Fragment, ReactNode, useContext, useEffect
 import { Alert, Toast, ToastContainer } from "react-bootstrap";
 import { Variant } from "react-bootstrap/esm/types";
 import { FunctionComponent } from "react-dom/node_modules/@types/react";
+import { ServerResponse } from "./api";
 
 /**
  * Properties for the ErrorBoundary object.
@@ -66,6 +67,7 @@ export type ApplicationError = {
     hasError: boolean;
     error: ErrorDescription | null;
     setCurrentError: (errDesc: ErrorDescription) => void;
+    setCurrentErrorFromResponse: (response: ServerResponse, caption?: string) => void;
     clearCurrentError: () => void;
 };
 
@@ -76,8 +78,30 @@ const AppErrorUIContext = React.createContext<ApplicationError>({
     hasError: false,
     error: null,
     setCurrentError: () => {},
+    setCurrentErrorFromResponse: () => {},
     clearCurrentError: () => {},
 });
+
+const generateErrorDescriptionFromResponse = (response: ServerResponse, caption?: string): ErrorDescription | null => {
+    if (response.ok) return null;
+    let errDesc: ErrorDescription;
+    if (response.isBadRequest)
+        errDesc = {
+            caption: caption || "Operation failed",
+            description: response.errorDetails || "An error occurred while processing your request",
+            useToast: false,
+            variant: "warning",
+        };
+    else if (response.isAborted) return null;
+    else
+        errDesc = {
+            caption: caption || "Operation failed",
+            description: "An error occurred while processing your request",
+            useToast: false,
+            variant: "danger",
+        };
+    return errDesc;
+};
 
 /**
  * Wrapper component which provides application error context.
@@ -92,6 +116,18 @@ const AppErrorUI: FunctionComponent = (props) => {
             error: errDesc,
             hasError: true,
             setCurrentError: setCurrentErrorCore,
+            setCurrentErrorFromResponse: setCurrentErrorFromResponseCore,
+            clearCurrentError: clearCurrentErrorCore,
+        });
+    };
+    const setCurrentErrorFromResponseCore = (response: ServerResponse, caption?: string) => {
+        let errDesc: ErrorDescription | null = generateErrorDescriptionFromResponse(response, caption);
+        if (!errDesc) return;
+        setAppError({
+            error: errDesc,
+            hasError: true,
+            setCurrentError: setCurrentErrorCore,
+            setCurrentErrorFromResponse: setCurrentErrorFromResponseCore,
             clearCurrentError: clearCurrentErrorCore,
         });
     };
@@ -100,6 +136,7 @@ const AppErrorUI: FunctionComponent = (props) => {
             error: null,
             hasError: false,
             setCurrentError: setCurrentErrorCore,
+            setCurrentErrorFromResponse: setCurrentErrorFromResponseCore,
             clearCurrentError: clearCurrentErrorCore,
         });
     };
@@ -107,6 +144,7 @@ const AppErrorUI: FunctionComponent = (props) => {
         hasError: false,
         error: null,
         setCurrentError: setCurrentErrorCore,
+        setCurrentErrorFromResponse: setCurrentErrorFromResponseCore,
         clearCurrentError: clearCurrentErrorCore,
     });
 
@@ -125,25 +163,23 @@ const AppErrorUI: FunctionComponent = (props) => {
 const AppErrorUIInner: FunctionComponent = (props) => {
     const errUI = useAppErrorUI();
     const alertRef = useRef<HTMLDivElement>(null);
-    const toastRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (errUI.hasError && errUI.error && !errUI.error.useToast) alertRef.current?.scrollIntoView();
-        if (errUI.hasError && errUI.error && errUI.error.useToast) toastRef.current?.scrollIntoView();
     });
 
     return (
         <Fragment>
             {props.children}
             {errUI.hasError && errUI.error && !errUI.error.useToast && (
-                <Alert variant={errUI.error.variant || 'danger'} ref={alertRef}>
+                <Alert variant={errUI.error.variant || "danger"} ref={alertRef}>
                     <Alert.Heading>{errUI.error.caption}</Alert.Heading>
                     <p>{errUI.error.description}</p>
                 </Alert>
             )}
             {errUI.hasError && errUI.error && errUI.error.useToast && (
-                <ToastContainer ref={toastRef} position='bottom-center'>
-                    <Toast bg={errUI.error.variant || 'danger'} onClose={()=>errUI.clearCurrentError()}>
+                <ToastContainer position="bottom-center">
+                    <Toast bg={errUI.error.variant || "danger"} onClose={() => errUI.clearCurrentError()}>
                         <Toast.Header>
                             <strong className="me-auto">{errUI.error.caption}</strong>
                         </Toast.Header>
@@ -152,6 +188,20 @@ const AppErrorUIInner: FunctionComponent = (props) => {
                 </ToastContainer>
             )}
         </Fragment>
+    );
+};
+
+const APIError = (props: { response?: ServerResponse | null; caption?: string }) => {
+    if (!props.response) {
+        return null;
+    }
+    let errDesc: ErrorDescription | null = generateErrorDescriptionFromResponse(props.response, props.caption);
+    if (!errDesc) return null;
+    return (
+        <Alert variant={errDesc.variant || "danger"}>
+            <Alert.Heading>{errDesc.caption}</Alert.Heading>
+            <p>{errDesc.description}</p>
+        </Alert>
     );
 };
 
@@ -175,4 +225,4 @@ const withAppErrorUI = (WrappedComponent: React.ComponentType) => {
  */
 const useAppErrorUI = () => useContext(AppErrorUIContext);
 
-export { AppErrorUIContext, AppErrorUI, useAppErrorUI, withAppErrorUI, ErrorBoundary };
+export { AppErrorUIContext, AppErrorUI, useAppErrorUI, withAppErrorUI, ErrorBoundary, APIError };

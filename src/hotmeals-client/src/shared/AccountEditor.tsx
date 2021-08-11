@@ -1,9 +1,8 @@
 import React, { FormEvent, Fragment, useState } from "react";
 import { Alert, Col, Form, Row } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
-import { register, ServerResponseWithData, updateUser } from "../api";
+import { useAbortable, userRegister, userUpdate } from "../api";
 import { useAppErrorUI } from "../errorHandling";
-import { UserResponse } from "../types";
 import { useCurrentUser } from "../user";
 import { LoadingButton } from "./LoadingButton";
 
@@ -11,6 +10,7 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
     const currentUser = useCurrentUser();
     const errUI = useAppErrorUI();
     const history = useHistory();
+    const abort = useAbortable();
 
     const [submitting, setSubmitting] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -35,6 +35,7 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
         let addressStreet : string = form.formAddressStreet.value;
         let password : string = form.formPassword.value;
         let passwordConfirm : string = form.formPasswordConfirm.value;
+        
         if (form.checkValidity() === false) {
             setValidated(true);
             return;
@@ -48,9 +49,8 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
 
         setValidated(false);
         setSubmitting(true);
-        let response : ServerResponseWithData<UserResponse>;
         if(props.isRegistration) {
-            response = await register({
+            let response = await userRegister({
                 email,
                 firstName,
                 lastName,
@@ -59,27 +59,29 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
                 addressStreet,
                 password,
                 isRestaurantOwner: props.isRestaurantOwner,
-            });
+            }, abort);
+            if(response.isAborted) return;
             setSubmitting(false);
             if (response.ok && response.result) {
-                currentUser.setCurrentUser(response.result);
+                currentUser.setCurrentUser(response.result.user);
                 // Go to home page
                 history.push("/");
             } else {
                 errUI.setCurrentError({caption: "Registration failed!", description: response.errorDetails, variant: 'warning', useToast: true}); // generic error
             }
         } else {
-            response = await updateUser({
+            let response = await userUpdate({
                 firstName,
                 lastName,
                 addressCityZip,
                 addressCity,
                 addressStreet,
                 newPassword : password
-            });
+            }, abort);
+            if(response.isAborted) return;
             setSubmitting(false);
             if (response.ok && response.result) {
-                currentUser.setCurrentUser(response.result);
+                currentUser.setCurrentUser(response.result.user);
                 setSaved(true);
             } else {
                 errUI.setCurrentError({caption: "Saving changes failed!", description: response.errorDetails}); // generic error
@@ -97,7 +99,7 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
                         placeholder="Enter your email"
                         maxLength={100}
                         readOnly={submitting || !props.isRegistration}
-                        defaultValue={currentUser.user?.email}
+                        defaultValue={currentUser.userData?.email}
                         required
                     />
                 </Form.Group>
@@ -107,7 +109,7 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
                             <Form.Label>First name</Form.Label>
                             <Form.Control
                                 type="text"
-                                defaultValue={currentUser.user?.firstName}
+                                defaultValue={currentUser.userData?.firstName}
                                 maxLength={100}
                                 readOnly={submitting}
                                 required
@@ -119,7 +121,7 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
                             <Form.Label>Last name</Form.Label>
                             <Form.Control
                                 type="text"
-                                defaultValue={currentUser.user?.lastName}
+                                defaultValue={currentUser.userData?.lastName}
                                 maxLength={100}
                                 readOnly={submitting}
                                 required
@@ -133,7 +135,7 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
                             <Form.Label>City</Form.Label>
                             <Form.Control
                                 type="text"
-                                defaultValue={currentUser.user?.addressCity}
+                                defaultValue={currentUser.userData?.addressCity}
                                 maxLength={100}
                                 readOnly={submitting}
                                 required
@@ -145,7 +147,7 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
                             <Form.Label>Zip code</Form.Label>
                             <Form.Control
                                 type="text"
-                                defaultValue={currentUser.user?.addressCityZip}
+                                defaultValue={currentUser.userData?.addressCityZip}
                                 maxLength={20}
                                 readOnly={submitting}
                                 required
@@ -157,7 +159,7 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
                     <Form.Label>Street and number</Form.Label>
                     <Form.Control
                         type="text"
-                        defaultValue={currentUser.user?.addressStreet}
+                        defaultValue={currentUser.userData?.addressStreet}
                         maxLength={200}
                         readOnly={submitting}
                         required
@@ -193,7 +195,7 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
                     {props.isRegistration ? "Register" : "Save changes"}
                 </LoadingButton>
             </Form>
-            <Alert show={saved}>
+            <Alert show={saved} variant="success">
                 Your changes have been saved.
             </Alert>
         </Fragment>

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace hotmeals_server.Model
 {
-    public partial class OrderItem
+    public partial class OrderItemRecord
     {
         public Guid Id { get; set; }
         public Guid OrderId { get; set; }
@@ -14,6 +14,6 @@ namespace hotmeals_server.Model
         public long Quantity { get; set; }
         public decimal PricePerItem { get; set; }
 
-        public virtual Order Order { get; set; }
+        public virtual OrderRecord Order { get; set; }
     }
 }

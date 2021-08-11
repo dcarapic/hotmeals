@@ -30,7 +30,7 @@ namespace hotmeals_server
                         // Add CSRF coopkie for antiforgery
                         var tokens = antiforgery.GetAndStoreTokens(context);
                         // Add CSRF cookie which is to be read by API and returned via 'X-XSRF-TOKEN' header field
-                        context.Response.Cookies.Append("XSRF-Api", tokens.RequestToken, new CookieOptions() { HttpOnly = false });
+                        context.Response.Cookies.Append("X-XSRF-TOKEN", tokens.RequestToken, new CookieOptions() { HttpOnly = false });
                     }
                     else if (context.Request.Method == HttpMethods.Patch || context.Request.Method == HttpMethods.Post || context.Request.Method == HttpMethods.Put || context.Request.Method == HttpMethods.Delete)
                     {
@@ -45,5 +45,21 @@ namespace hotmeals_server
                     await next(context);
                 });
         }
+
+        /// <summary>
+        /// Adds a delay when executing a request
+        /// </summary>
+        /// <param name="app"></param>
+        /// <param name="seconds"></param>
+        /// <returns></returns>
+        public static IApplicationBuilder UseDelay(this IApplicationBuilder app, int seconds)
+        {
+            return app.Use(next => async context =>
+                {
+                    await Task.Delay(seconds * 1000, context.RequestAborted);
+                    await next(context);
+                });
+        }
+
     }
 }

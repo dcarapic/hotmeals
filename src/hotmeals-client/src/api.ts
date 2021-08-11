@@ -1,35 +1,198 @@
-import * as Types from "./types";
+import { DependencyList, useEffect, useState } from "react";
 
 let serverUrl: string;
 if (process.env.NODE_ENV === "production") serverUrl = "/";
 else serverUrl = "https://localhost:5001/";
 
-export async function login(req: Types.LoginRequest): Promise<ServerResponseWithData<Types.UserResponse>> {
-    return await requestPost<Types.UserResponse>("api/auth/login", req);
+// API methods
+
+export async function userAuthenticate(abort?: AbortSignal): Promise<ServerResponse<AuthenticateResponse>> {
+    return await request<void, AuthenticateResponse>("api/user/authenticate", "GET", undefined, abort);
+}
+export async function userLogin(req: LoginRequest, abort?: AbortSignal): Promise<ServerResponse<LoginResponse>> {
+    return await request<LoginRequest, LoginResponse>("api/user/login", "POST", req, abort);
 }
 
-export async function logout(): Promise<ServerResponse> {
-    return await requestPost<void>("api/auth/logout");
+export async function userLogout(abort?: AbortSignal): Promise<ServerResponse> {
+    return await request("api/user/logout", "POST", undefined, abort);
 }
 
-export async function fetchCurrentUser(): Promise<ServerResponseWithData<Types.UserResponse>> {
-    return await requestGet<Types.UserResponse>("api/user/current");
+export async function userRegister(
+    req: RegisterUserRequest,
+    abort?: AbortSignal
+): Promise<ServerResponse<RegisterUserResponse>> {
+    return await request<RegisterUserRequest, RegisterUserResponse>("api/user", "POST", req, abort);
 }
 
-export async function register(req: Types.RegisterUserRequest): Promise<ServerResponseWithData<Types.UserResponse>> {
-    return await requestPost<Types.UserResponse>("api/user/register", req);
+export async function userUpdate(
+    req: UpdateUserRequest,
+    abort?: AbortSignal
+): Promise<ServerResponse<UpdateUserResponse>> {
+    return await request<UpdateUserRequest, UpdateUserResponse>("api/user", "PUT", req, abort);
 }
 
-export async function updateUser(req: Types.UpdateUserRequest): Promise<ServerResponseWithData<Types.UserResponse>> {
-    return await requestPost<Types.UserResponse>("api/user", req);
+export async function restaurantFetchAll(abort?: AbortSignal): Promise<ServerResponse<GetRestaurantsResponse>> {
+    return await request<void, GetRestaurantsResponse>("api/restaurants", "GET", undefined, abort);
+}
+export async function restaurantAdd(
+    req: NewRestaurantRequest,
+    abort?: AbortSignal
+): Promise<ServerResponse<NewRestaurantResponse>> {
+    return await request<NewRestaurantRequest, NewRestaurantResponse>("api/restaurants", "POST", req, abort);
 }
 
-async function request(route: string, req: RequestInit): Promise<ServerResponse> {
+export async function restaurantUpdate(
+    req: UpdateRestaurantRequest,
+    abort?: AbortSignal
+): Promise<ServerResponse<UpdateRestaurantResponse>> {
+    return await request<UpdateRestaurantRequest, UpdateRestaurantResponse>("api/restaurants", "PUT", req, abort);
+}
+
+export async function restaurantDelete(
+    req: DeleteRestaurantRequest,
+    abort?: AbortSignal
+): Promise<ServerResponse<DeleteRestaurantResponse>> {
+    return await request<DeleteRestaurantRequest, DeleteRestaurantResponse>("api/restaurants", "DELETE", req, abort);
+}
+
+// objects
+
+export type ServerResponse<T = any> = {
+    ok: boolean;
+    statusCode?: number;
+    statusMessage?: string;
+    errorDetails?: string;
+    isAborted?: boolean;
+    isUnauthorized?: boolean;
+    isForbidden?: boolean;
+    isBadRequest?: boolean;
+    isNetworkError?: boolean;
+    rawResponse?: Response;
+    result?: T;
+};
+
+export type UserDTO = {
+    email: string;
+    firstName: string;
+    lastName: string;
+    addressCityZip: string;
+    addressCity: string;
+    addressStreet: string;
+    password: string;
+    isRestaurantOwner: boolean;
+};
+
+export type RestaurantDTO = {
+    id: string;
+    name: string;
+    description: string;
+    phoneNumber: string;
+};
+
+export type APIResponse = {
+    isSuccess: boolean;
+    errorMessage: string;
+};
+
+export type LoginRequest = {
+    email: string;
+    password: string;
+};
+
+export type LoginResponse = APIResponse & {
+    user: UserDTO;
+};
+
+export type AuthenticateResponse = APIResponse & {
+    user: UserDTO;
+};
+
+export type RegisterUserRequest = {
+    email: string;
+    firstName: string;
+    lastName: string;
+    addressCityZip: string;
+    addressCity: string;
+    addressStreet: string;
+    password: string;
+    isRestaurantOwner: boolean;
+};
+
+export type RegisterUserResponse = APIResponse & {
+    user: UserDTO;
+};
+
+export type UpdateUserRequest = {
+    firstName: string;
+    lastName: string;
+    addressCityZip: string;
+    addressCity: string;
+    addressStreet: string;
+    newPassword?: string;
+};
+
+export type UpdateUserResponse = APIResponse & {
+    user: UserDTO;
+};
+
+export type GetRestaurantsResponse = APIResponse & {
+    restaurants: RestaurantDTO[];
+};
+
+export type NewRestaurantRequest = {
+    name: string;
+    description: string;
+    phoneNumber: string;
+};
+
+export type NewRestaurantResponse = APIResponse & {
+    restaurant: RestaurantDTO;
+};
+
+export type UpdateRestaurantRequest = {
+    id: string;
+    name: string;
+    description: string;
+    phoneNumber: string;
+};
+
+export type UpdateRestaurantResponse = APIResponse & {
+    restaurant: RestaurantDTO;
+};
+
+export type DeleteRestaurantRequest = {
+    id: string;
+};
+
+export type DeleteRestaurantResponse = APIResponse;
+
+// Helper functions
+
+async function request<TReq = void, TResp = void>(
+    route: string,
+    method: "GET" | "POST" | "DELETE" | "PUT",
+    request?: TReq,
+    abort?: AbortSignal
+): Promise<ServerResponse<TResp>> {
     console.log(`%capi: ${route}`, "color: darkblue");
-    let result: ServerResponse | null = null;
+    let result: ServerResponse<TResp> | null = null;
+
+    const headers: any = {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+    };
+    const init: RequestInit = {
+        headers: headers,
+        method: method,
+        credentials: "include",
+    };
+    if (abort) init.signal = abort;
+    if (request) init.body = JSON.stringify(request);
+    if (method !== "GET") headers["X-XSRF-TOKEN"] = getCookie("X-XSRF-TOKEN");
+
     try {
         const url = serverUrl + route;
-        let response = await fetch(url, req);
+        let response = await fetch(url, init);
         result = {
             ok: response.ok,
             statusCode: response.status,
@@ -41,6 +204,8 @@ async function request(route: string, req: RequestInit): Promise<ServerResponse>
         };
         if (!response.ok) {
             result.errorDetails = await extractErrorDetails(response);
+        } else {
+            await updateResultFromBody<TResp>(result);
         }
     } catch (e) {
         if (e.name === "AbortError") {
@@ -48,7 +213,7 @@ async function request(route: string, req: RequestInit): Promise<ServerResponse>
         } else
             result = {
                 ok: false,
-                errorDetails: `Network fetch failed '${route}'. Network error: ${(e as Error).message}`,
+                errorDetails: `Failed to connect to server. The server might not be available or you are not connected to internet.`,
                 isNetworkError: true,
             };
     }
@@ -56,69 +221,32 @@ async function request(route: string, req: RequestInit): Promise<ServerResponse>
     return result;
 }
 
-async function requestGet<T>(route: string, req?: RequestInit): Promise<ServerResponseWithData<T>> {
-    let response = await request(route, {
-        headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-        },
-        ...req,
-        method: "GET",
-        credentials: "include",
-    });
-    if (!response.ok) return response;
-    return await parseResponseBody<T>(response);
-}
-
-async function requestPost<T>(route: string, payload?: object, req?: RequestInit): Promise<ServerResponseWithData<T>> {
-    let response = await request(route, {
-        body: JSON.stringify(payload),
-        headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            "X-XSRF-TOKEN": getCookie("XSRF-Api"),
-        },
-        ...req,
-        method: "POST",
-        credentials: "include",
-    });
-    if (!response.ok) return response;
-    return await parseResponseBody<T>(response);
-}
-
-async function parseResponseBody<T>(response: ServerResponseWithData<T>): Promise<ServerResponseWithData<T>> {
+async function updateResultFromBody<T>(response: ServerResponse<T>): Promise<void> {
     try {
         let json: T = await response.rawResponse?.json();
-        return {
-            ...response,
-            result: json,
-        };
+        response.result = json;
     } catch (e) {
-        return {
-            ok: false,
-            errorDetails: `Failed to parse content as JSON: ${(e as Error).message}`,
-        };
+        response.ok = false;
+        response.errorDetails = `Failed to process server response: ${e.toString()}`;
     }
 }
 
 async function extractErrorDetails(response: Response): Promise<string> {
     try {
         let json: any = await response.json();
-        if (json.message) return json.message;
+        if (json.errorMessage) return json.errorMessage;
         // Parse .NET model validation error
         if (json.errors) {
-            for(let err in json.errors) {
+            for (let err in json.errors) {
                 let errValue = json.errors[err];
-                if(Array.isArray(errValue)) {
-                    for(let errText of errValue) {
+                if (Array.isArray(errValue)) {
+                    for (let errText of errValue) {
                         return errText;
                     }
                 }
-                
             }
         }
         return json.toString();
-        
     } catch (e) {
         return await response.text();
     }
@@ -140,19 +268,26 @@ function getCookie(cname: string): string {
     return "";
 }
 
-export type ServerResponse = {
-    ok: boolean;
-    statusCode?: number;
-    statusMessage?: string;
-    errorDetails?: string;
-    isAborted?: boolean;
-    isUnauthorized?: boolean;
-    isForbidden?: boolean;
-    isBadRequest?: boolean;
-    isNetworkError?: boolean;
-    rawResponse?: Response;
+/**
+ * React hook which returns an abort signal which is automatically raised if a component has been dismounted.
+ */
+const useAbortable = (): AbortSignal => {
+    let [controller, _ ] = useState(new AbortController());
+    useEffect(() => {
+        return () => controller.abort();
+    }, []);
+    return controller.signal;
 };
 
-export type ServerResponseWithData<T> = ServerResponse & {
-    result?: T;
+/**
+ * React effect hook which provides abort signal which is automatically raised if a component has been dismounted.
+ */
+const useAbortableEffect = (effect: (signal: AbortSignal) => void, deps?: DependencyList) => {
+    useEffect(() => {
+        let controller = new AbortController();
+        effect(controller.signal);
+        return () => controller.abort();
+    }, deps);
 };
+
+export { useAbortableEffect, useAbortable };

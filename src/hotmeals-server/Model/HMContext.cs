@@ -17,12 +17,12 @@ namespace hotmeals_server.Model
         {
         }
 
-        public virtual DbSet<BlockedUser> BlockedUsers { get; set; }
-        public virtual DbSet<MenuItem> MenuItems { get; set; }
-        public virtual DbSet<Order> Orders { get; set; }
-        public virtual DbSet<OrderItem> OrderItems { get; set; }
-        public virtual DbSet<Restaurant> Restaurants { get; set; }
-        public virtual DbSet<User> Users { get; set; }
+        public virtual DbSet<BlockedUserRecord> BlockedUsers { get; set; }
+        public virtual DbSet<MenuItemRecord> MenuItems { get; set; }
+        public virtual DbSet<OrderRecord> Orders { get; set; }
+        public virtual DbSet<OrderItemRecord> OrderItems { get; set; }
+        public virtual DbSet<RestaurantRecord> Restaurants { get; set; }
+        public virtual DbSet<UserRecord> Users { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -30,7 +30,7 @@ namespace hotmeals_server.Model
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<BlockedUser>(entity =>
+            modelBuilder.Entity<BlockedUserRecord>(entity =>
             {
                 entity.HasKey(e => new { e.UserId, e.RestaurantId });
 
@@ -49,7 +49,7 @@ namespace hotmeals_server.Model
                     .HasForeignKey(d => d.UserId);
             });
 
-            modelBuilder.Entity<MenuItem>(entity =>
+            modelBuilder.Entity<MenuItemRecord>(entity =>
             {
                 entity.ToTable("MenuItem");
 
@@ -76,7 +76,7 @@ namespace hotmeals_server.Model
                     .HasForeignKey(d => d.RestaurantId);
             });
 
-            modelBuilder.Entity<Order>(entity =>
+            modelBuilder.Entity<OrderRecord>(entity =>
             {
                 entity.ToTable("Order");
 
@@ -101,7 +101,7 @@ namespace hotmeals_server.Model
                     .HasForeignKey(d => d.RestaurantId);
             });
 
-            modelBuilder.Entity<OrderItem>(entity =>
+            modelBuilder.Entity<OrderItemRecord>(entity =>
             {
                 entity.ToTable("OrderItem");
 
@@ -130,23 +130,11 @@ namespace hotmeals_server.Model
                     .HasForeignKey(d => d.OrderId);
             });
 
-            modelBuilder.Entity<Restaurant>(entity =>
+            modelBuilder.Entity<RestaurantRecord>(entity =>
             {
                 entity.ToTable("Restaurant");
 
                 entity.Property(e => e.Id).HasColumnType("guid");
-
-                entity.Property(e => e.AddressCity)
-                    .IsRequired()
-                    .HasColumnType("nvarchar(100)");
-
-                entity.Property(e => e.AddressCityZip)
-                    .IsRequired()
-                    .HasColumnType("nvarchar(20)");
-
-                entity.Property(e => e.AddressStreet)
-                    .IsRequired()
-                    .HasColumnType("nvarchar(200)");
 
                 entity.Property(e => e.Description)
                     .IsRequired()
@@ -169,7 +157,7 @@ namespace hotmeals_server.Model
                     .HasForeignKey(d => d.OwnerId);
             });
 
-            modelBuilder.Entity<User>(entity =>
+            modelBuilder.Entity<UserRecord>(entity =>
             {
                 entity.ToTable("User");
 

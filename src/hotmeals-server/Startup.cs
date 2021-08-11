@@ -73,7 +73,7 @@ namespace hotmeals_server
             {
                 // The client should provide the second cookie value via the header field 'X-XSRF-TOKEN'
                 options.HeaderName = "X-XSRF-TOKEN";
-                options.Cookie.Name = "XSRF-TOKEN";
+                //options.Cookie.Name = "XSRF-TOKEN";
                 options.Cookie.HttpOnly = false;
             });
 
@@ -105,6 +105,7 @@ namespace hotmeals_server
 
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseDelay(1); // TODO: Remove later
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

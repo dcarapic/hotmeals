@@ -6,14 +6,14 @@ import srcHotMeals from "../assets/HotMeals.svg";
 import srcAccount from "../assets/Account.svg";
 import { RouterNavLink } from "./RouterNav";
 import { useCurrentUser } from "../user";
-import { logout } from "../api";
+import { userLogout } from "../api";
 
 const AccountMenu = () => {
     const [showMenu, setShowMenu] = useState(false);
     const currentUser = useCurrentUser();
 
     const logoutHandler = async () => {
-        await logout();
+        await userLogout();
         currentUser.setCurrentUser(null);
     }
 
@@ -62,7 +62,7 @@ const TopNav = () => {
                         <Image src={srcHotMeals} />
                     </RouterNavLink>
                 </Navbar.Brand>
-                {currentUser.user && <AccountMenu />}
+                {currentUser.userData && <AccountMenu />}
             </Container>
         </Navbar>
     );

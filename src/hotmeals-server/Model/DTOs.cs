@@ -3,9 +3,43 @@ using System.ComponentModel.DataAnnotations;
 
 namespace hotmeals_server.Model
 {
+
+    /// <summary>
+    /// User information returned by server.
+    /// </summary>
+    public record UserDTO(string Email, string FirstName, string LastName, string AddressCityZip, string AddressCity, string AddressStreet, bool IsRestaurantOwner);
+    /// <summary>
+    /// Restaurant information returned by server.
+    /// </summary>
+    public record RestaurantDTO(Guid Id, string Name, string Description, string PhoneNumber);
+
+    /// <summary>
+    /// Base API response containing success code and an error message in case of failing to perform the operation.
+    /// </summary>
+    public record APIResponse(bool IsSuccess, string ErrorMessage = null);
+
+
     public record LoginRequest([Required][MaxLength(100)] string Email, [Required][MaxLength(500)] string Password);
-    public record UserResponse([Required][MaxLength(100)] string Email, [Required][MaxLength(100)] string FirstName, [Required][MaxLength(100)] string LastName, [Required][MaxLength(20)] string AddressCityZip, [Required][MaxLength(100)] string AddressCity, [Required][MaxLength(200)] string AddressStreet, bool IsRestaurantOwner);
+    public record LoginResponse(UserDTO User) : APIResponse(true, null);
+
+
+
     public record RegisterUserRequest([Required][MaxLength(100)] string Email, [Required][MaxLength(100)] string FirstName, [Required][MaxLength(100)] string LastName, [Required][MaxLength(20)] string AddressCityZip, [Required][MaxLength(100)] string AddressCity, [Required][MaxLength(200)] string AddressStreet, [Required][MaxLength(500)] string Password, bool IsRestaurantOwner);
-    public record UpdateUserRequest([Required][MaxLength(100)] string FirstName, [Required][MaxLength(100)] string LastName, [Required][MaxLength(20)] string AddressCityZip, [Required][MaxLength(100)] string AddressCity, [Required][MaxLength(200)] string AddressStreet, [MaxLength(500)] string NewPassword);
+    public record RegisterUserResponse(UserDTO User) : APIResponse(true, null);
+
+    public record UpdateUserRequest([Required][MaxLength(100)] string FirstName, [Required][MaxLength(100)] string LastName, [Required][MaxLength(20)] string AddressCityZip, [Required][MaxLength(100)] string AddressCity, [Required][MaxLength(200)] string AddressStreet, [MaxLength(500)] string NewPassword) : APIResponse(true, null);
+    public record UpdateUserResponse(UserDTO User) : APIResponse(true, null);
+
+    public record GetRestaurantsResponse(RestaurantDTO[] Restaurants) : APIResponse(true, null);
+
+    public record NewRestaurantRequest([Required][MaxLength(100)] string Name, [Required][MaxLength(2000)] string Description, [Required][MaxLength(20)] string PhoneNumber);
+    public record NewRestaurantResponse(RestaurantDTO Restaurant) : APIResponse(true, null);
+
+    public record UpdateRestaurantRequest([Required] Guid Id, [Required][MaxLength(100)] string Name, [Required][MaxLength(2000)] string Description, [Required][MaxLength(20)] string PhoneNumber);
+    public record UpdateRestaurantResponse(RestaurantDTO Restaurant) : APIResponse(true, null);
+
+    public record DeleteRestaurantRequest([Required] Guid Id);
+    public record DeleteRestaurantResponse() : APIResponse(true, null);
+
 
 }

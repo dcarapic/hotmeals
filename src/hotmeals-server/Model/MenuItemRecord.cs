@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace hotmeals_server.Model
 {
-    public partial class MenuItem
+    public partial class MenuItemRecord
     {
         public Guid Id { get; set; }
         public Guid RestaurantId { get; set; }
@@ -13,6 +13,6 @@ namespace hotmeals_server.Model
         public string Description { get; set; }
         public decimal Price { get; set; }
 
-        public virtual Restaurant Restaurant { get; set; }
+        public virtual RestaurantRecord Restaurant { get; set; }
     }
 }

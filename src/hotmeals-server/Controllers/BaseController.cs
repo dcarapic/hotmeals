@@ -40,7 +40,8 @@ namespace hotmeals_server.Controllers
                 {
                     var id = Guid.Parse(User.Claims.First(x => x.Type == nameof(CurrentUserData.Id)).Value);
                     var email = User.Claims.First(x => x.Type == nameof(CurrentUserData.Email)).Value;
-                    _currentUser = new CurrentUserData(id, email);
+                    var isOwner = int.Parse(User.Claims.First(x => x.Type == nameof(CurrentUserData.IsRestaurantOwner)).Value) == 1;
+                    _currentUser = new CurrentUserData(id, email, isOwner);
                 }
                 return _currentUser;
             }
@@ -56,6 +57,7 @@ namespace hotmeals_server.Controllers
             var claims = new Claim[] {
                 new Claim(nameof(CurrentUserData.Id), user.Id.ToString()),
                 new Claim(nameof(CurrentUserData.Email), user.Email),
+                new Claim(nameof(CurrentUserData.IsRestaurantOwner), user.IsRestaurantOwner ? "1" : "0"),
             };
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
@@ -106,5 +108,5 @@ namespace hotmeals_server.Controllers
 
     }
 
-    public record CurrentUserData(Guid Id, string Email);
+    public record CurrentUserData(Guid Id, string Email, bool IsRestaurantOwner);
 }
