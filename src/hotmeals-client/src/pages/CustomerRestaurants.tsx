@@ -1,8 +1,8 @@
 import React, { Fragment } from "react";
 import { Col } from "react-bootstrap";
-import { useAppErrorUI, withAppErrorUI } from "../util/errorHandling";
+import { useMessageService, withMessageContainer } from "../util/ui";
 
-const CustomerRestaurants = withAppErrorUI(() => {
+const CustomerRestaurants = withMessageContainer(() => {
     return (
         <Fragment>
             <h3 className="text-center p-2">Restaurants</h3>

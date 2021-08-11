@@ -1,8 +1,8 @@
 import React, { Fragment } from "react";
-import { withAppErrorUI } from "../util/errorHandling";
+import { withMessageContainer } from "../util/ui";
 import AccountEditor from "../shared/AccountEditor";
 
-const CustomerAccountPage = withAppErrorUI(() => {
+const CustomerAccountPage = withMessageContainer(() => {
     return (
         <Fragment>
             <h3 className="text-center p-2">

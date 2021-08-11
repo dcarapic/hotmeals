@@ -6,14 +6,15 @@ import srcHotMeals from "../assets/HotMeals.svg";
 import srcAccount from "../assets/Account.svg";
 import { RouterNavLink } from "./RouterNav";
 import { useCurrentUser } from "../user";
-import { userLogout } from "../api";
+import { userLogout } from "../util/api";
 
-const AccountMenu = () => {
+const AccountImage = () => {
     const [showMenu, setShowMenu] = useState(false);
     const currentUser = useCurrentUser();
 
     const logoutHandler = async () => {
         await userLogout();
+        // we do not care if we fail the logout because the server is not available, just continue
         currentUser.setCurrentUser(null);
     }
 
@@ -62,7 +63,7 @@ const TopNav = () => {
                         <Image src={srcHotMeals} />
                     </RouterNavLink>
                 </Navbar.Brand>
-                {currentUser.userData && <AccountMenu />}
+                {currentUser.userData && <AccountImage />}
             </Container>
         </Navbar>
     );

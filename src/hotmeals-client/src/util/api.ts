@@ -7,58 +7,59 @@ else serverUrl = "https://localhost:5001/";
 // API methods
 
 export async function userAuthenticate(abort?: AbortSignal): Promise<ServerResponse<AuthenticateResponse>> {
-    return await request<void, AuthenticateResponse>("api/user/authenticate", "GET", undefined, abort);
+    return await request<void, AuthenticateResponse>("Authenticate user", "api/user/authenticate", "GET", undefined, abort);
 }
 export async function userLogin(req: LoginRequest, abort?: AbortSignal): Promise<ServerResponse<LoginResponse>> {
-    return await request<LoginRequest, LoginResponse>("api/user/login", "POST", req, abort);
+    return await request<LoginRequest, LoginResponse>("Login", "api/user/login", "POST", req, abort);
 }
 
 export async function userLogout(abort?: AbortSignal): Promise<ServerResponse> {
-    return await request("api/user/logout", "POST", undefined, abort);
+    return await request("Logout", "api/user/logout", "POST", undefined, abort);
 }
 
 export async function userRegister(
     req: RegisterUserRequest,
     abort?: AbortSignal
 ): Promise<ServerResponse<RegisterUserResponse>> {
-    return await request<RegisterUserRequest, RegisterUserResponse>("api/user", "POST", req, abort);
+    return await request<RegisterUserRequest, RegisterUserResponse>(`Register new ${req.isRestaurantOwner ? "restaurant owner" : "customer"}`, "api/user", "POST", req, abort);
 }
 
 export async function userUpdate(
     req: UpdateUserRequest,
     abort?: AbortSignal
 ): Promise<ServerResponse<UpdateUserResponse>> {
-    return await request<UpdateUserRequest, UpdateUserResponse>("api/user", "PUT", req, abort);
+    return await request<UpdateUserRequest, UpdateUserResponse>("Update user information", "api/user", "PUT", req, abort);
 }
 
 export async function restaurantFetchAll(abort?: AbortSignal): Promise<ServerResponse<GetRestaurantsResponse>> {
-    return await request<void, GetRestaurantsResponse>("api/restaurants", "GET", undefined, abort);
+    return await request<void, GetRestaurantsResponse>("Fetch all restaurants", "api/restaurants", "GET", undefined, abort);
 }
 export async function restaurantAdd(
     req: NewRestaurantRequest,
     abort?: AbortSignal
 ): Promise<ServerResponse<NewRestaurantResponse>> {
-    return await request<NewRestaurantRequest, NewRestaurantResponse>("api/restaurants", "POST", req, abort);
+    return await request<NewRestaurantRequest, NewRestaurantResponse>("Add new restaurant", "api/restaurants", "POST", req, abort);
 }
 
 export async function restaurantUpdate(
     req: UpdateRestaurantRequest,
     abort?: AbortSignal
 ): Promise<ServerResponse<UpdateRestaurantResponse>> {
-    return await request<UpdateRestaurantRequest, UpdateRestaurantResponse>("api/restaurants", "PUT", req, abort);
+    return await request<UpdateRestaurantRequest, UpdateRestaurantResponse>("Update restaurant", "api/restaurants", "PUT", req, abort);
 }
 
 export async function restaurantDelete(
     req: DeleteRestaurantRequest,
     abort?: AbortSignal
 ): Promise<ServerResponse<DeleteRestaurantResponse>> {
-    return await request<DeleteRestaurantRequest, DeleteRestaurantResponse>("api/restaurants", "DELETE", req, abort);
+    return await request<DeleteRestaurantRequest, DeleteRestaurantResponse>("Delete restaurant","api/restaurants", "DELETE", req, abort);
 }
 
 // objects
 
 export type ServerResponse<T = any> = {
     ok: boolean;
+    requestDescription: string;
     statusCode?: number;
     statusMessage?: string;
     errorDetails?: string;
@@ -169,12 +170,13 @@ export type DeleteRestaurantResponse = APIResponse;
 // Helper functions
 
 async function request<TReq = void, TResp = void>(
+    requestDescription: string,
     route: string,
     method: "GET" | "POST" | "DELETE" | "PUT",
     request?: TReq,
     abort?: AbortSignal
 ): Promise<ServerResponse<TResp>> {
-    console.log(`%capi: ${route}`, "color: darkblue");
+    console.log(`%capi:API: ${requestDescription}`, "color: darkblue");
     let result: ServerResponse<TResp> | null = null;
 
     const headers: any = {
@@ -195,6 +197,7 @@ async function request<TReq = void, TResp = void>(
         let response = await fetch(url, init);
         result = {
             ok: response.ok,
+            requestDescription: requestDescription,
             statusCode: response.status,
             statusMessage: response.statusText,
             isBadRequest: !response.ok && response.status === 400,
@@ -209,15 +212,20 @@ async function request<TReq = void, TResp = void>(
         }
     } catch (e) {
         if (e.name === "AbortError") {
-            result = { ok: false, errorDetails: "Request aborted", isAborted: true };
+            result = { requestDescription, ok: false, errorDetails: "Request aborted", isAborted: true };
         } else
             result = {
                 ok: false,
+                requestDescription,
                 errorDetails: `Failed to connect to server. The server might not be available or you are not connected to internet.`,
                 isNetworkError: true,
             };
     }
-    console.log(`%c ... ${result.statusCode} / ${result.errorDetails} `, "color: darkblue");
+    if(result.ok)
+        console.log(`%c ... ${result.statusCode}`, "color: darkblue");
+    else
+        console.log(`%c ... ${result.statusCode} / ${result.errorDetails}`, "color: darkblue");
+
     return result;
 }
 
@@ -272,10 +280,10 @@ function getCookie(cname: string): string {
  * React hook which returns an abort signal which is automatically raised if a component has been dismounted.
  */
 const useAbortable = (): AbortSignal => {
-    let [controller, _ ] = useState(new AbortController());
+    let [controller] = useState(new AbortController());
     useEffect(() => {
         return () => controller.abort();
-    }, []);
+    }, [controller]);
     return controller.signal;
 };
 

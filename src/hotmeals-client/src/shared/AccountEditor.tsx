@@ -1,14 +1,14 @@
 import React, { FormEvent, Fragment, useState } from "react";
 import { Alert, Col, Form, Row } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
-import { useAbortable, userRegister, userUpdate } from "../api";
-import { useAppErrorUI } from "../util/errorHandling";
+import { useAbortable, userRegister, userUpdate } from "../util/api";
+import { useMessageService } from "../util/ui";
 import { useCurrentUser } from "../user";
 import { LoadingButton } from "./LoadingButton";
 
 const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: boolean }) => {
     const currentUser = useCurrentUser();
-    const errUI = useAppErrorUI();
+    const msgs = useMessageService();
     const history = useHistory();
     const abort = useAbortable();
 
@@ -20,7 +20,7 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
         let form: any = e.currentTarget;
         e.preventDefault();
         e.stopPropagation();
-        errUI.clearCurrentError();
+        msgs.clearMessage();
 
         setSaved(false);
         
@@ -62,12 +62,11 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
             }, abort);
             if(response.isAborted) return;
             setSubmitting(false);
+            msgs.setMessageFromResponse(response);
             if (response.ok && response.result) {
                 currentUser.setCurrentUser(response.result.user);
                 // Go to home page
                 history.push("/");
-            } else {
-                errUI.setCurrentError({caption: "Registration failed!", description: response.errorDetails, variant: 'warning', useToast: true}); // generic error
             }
         } else {
             let response = await userUpdate({
@@ -80,11 +79,10 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
             }, abort);
             if(response.isAborted) return;
             setSubmitting(false);
+            msgs.setMessageFromResponse(response);
             if (response.ok && response.result) {
                 currentUser.setCurrentUser(response.result.user);
                 setSaved(true);
-            } else {
-                errUI.setCurrentError({caption: "Saving changes failed!", description: response.errorDetails}); // generic error
             }
         }
 

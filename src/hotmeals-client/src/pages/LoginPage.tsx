@@ -2,16 +2,16 @@ import React, { Fragment, useState } from "react";
 import { Form } from "react-bootstrap";
 import { FormEvent } from "react-dom/node_modules/@types/react";
 import { useHistory } from "react-router-dom";
-import { useAbortable, userLogin } from "../api";
-import { useAppErrorUI, withAppErrorUI } from "../util/errorHandling";
+import { useAbortable, userLogin } from "../util/api";
+import { useMessageService, withMessageContainer } from "../util/ui";
 import routes from "../routeConfig";
 import { LoadingButton } from "../shared/LoadingButton";
 import { RouterNavLink } from "../shared/RouterNav";
 import { useCurrentUser } from "../user";
 
-const LoginPage = withAppErrorUI(() => {
+const LoginPage = withMessageContainer(() => {
     const currentUser = useCurrentUser();
-    const errUI = useAppErrorUI();
+    const msgs = useMessageService();
     const history = useHistory();
     const abort = useAbortable();
 
@@ -31,27 +31,16 @@ const LoginPage = withAppErrorUI(() => {
         }
         setValidated(false);
         setSubmitting(true);
-        errUI.clearCurrentError();
+        msgs.clearMessage();
         let response = await userLogin({ email, password }, abort);
         if (response.isAborted) return;
+        setSubmitting(false);
+        msgs.setMessageFromResponse(response);
+
         if (response.ok && response.result) {
             currentUser.setCurrentUser(response.result.user);
             // Go to home page
             history.push("/");
-
-        } else if (response.isUnauthorized || response.isBadRequest) {
-            setSubmitting(false);
-            errUI.setCurrentError({
-                caption: "Login failed",
-                description: response.errorDetails,
-                variant: "warning"
-            });
-        } else {
-            setSubmitting(false);
-            errUI.setCurrentError({
-                caption: "Invalid server response",
-                description: "Server did not provide meaningful response. Please try again.",
-            }); // generic error
         }
     };
     return (

@@ -1,8 +1,5 @@
-import React, { Component, ErrorInfo, Fragment, ReactNode, useContext, useEffect, useRef, useState } from "react";
-import { Alert, Toast, ToastContainer } from "react-bootstrap";
-import { Variant } from "react-bootstrap/esm/types";
-import { FunctionComponent } from "react-dom/node_modules/@types/react";
-import { ServerResponse } from "../api";
+import React, { Component, ErrorInfo,  ReactNode} from "react";
+import { Alert} from "react-bootstrap";
 
 /**
  * Properties for the ErrorBoundary object.

@@ -1,10 +1,10 @@
 import React, { Fragment } from "react";
 import { Col } from "react-bootstrap";
-import { withAppErrorUI } from "../util/errorHandling";
+import { withMessageContainer } from "../util/ui";
 import routes from "../routeConfig";
 import { RouterNavButton } from "../shared/RouterNav";
 
-const OwnerHomePage = withAppErrorUI(() => {
+const OwnerHomePage = withMessageContainer(() => {
 
     return (
         <Fragment>

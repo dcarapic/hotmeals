@@ -1,11 +1,11 @@
 import React, { Fragment, useState } from "react";
 import { Col, Form, InputGroup } from "react-bootstrap";
 import { FormEvent } from "react-dom/node_modules/@types/react";
-import { withAppErrorUI } from "../util/errorHandling";
+import { withMessageContainer } from "../util/ui";
 import { LoadingButton } from "../shared/LoadingButton";
 import { RouterNavButton } from "../shared/RouterNav";
 
-const CustomerHomePage = withAppErrorUI(() => {
+const CustomerHomePage = withMessageContainer(() => {
     const [searching, setSearching] = useState(false);
     const [validated, setValidated] = useState(false);
 

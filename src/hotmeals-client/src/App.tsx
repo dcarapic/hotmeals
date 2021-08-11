@@ -1,7 +1,7 @@
 import React, {  useState } from "react";
 import { Container, Col, Row } from "react-bootstrap";
 import { BrowserRouter, Switch, Route, Redirect } from "react-router-dom";
-import { useAbortableEffect, userAuthenticate, UserDTO } from "./api";
+import { useAbortableEffect, userAuthenticate, UserDTO } from "./util/api";
 import CustomerAccountPage from "./pages/CustomerAccountPage";
 import CustomerHomePage from "./pages/CustomerHomePage";
 import CustomerOrdering from "./pages/CustomerOrdering";
@@ -22,7 +22,7 @@ import routes from "./routeConfig";
 import Loading from "./shared/Loading";
 
 import TopNav from "./shared/TopNav";
-import { CurrentUserContext, CurrentUser, useCurrentUser } from "./user";
+import { CurrentUserContext, ApplicationUser, useCurrentUser } from "./user";
 import GlobalErrorBoundary from "./util/globalErrorHandling";
 
 /**
@@ -34,7 +34,7 @@ const App = () => {
     const setCurrentUserCore = (userData: UserDTO | null) => {
         setCurrentUser({ userData: userData, isLoading: false, setCurrentUser: setCurrentUserCore });
     };
-    let [currentUser, setCurrentUser] = useState<CurrentUser>({
+    let [currentUser, setCurrentUser] = useState<ApplicationUser>({
         userData: null,
         isLoading: true,
         setCurrentUser: setCurrentUserCore,
