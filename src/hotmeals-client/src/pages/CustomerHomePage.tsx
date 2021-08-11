@@ -1,7 +1,7 @@
 import React, { Fragment, useState } from "react";
 import { Col, Form, InputGroup } from "react-bootstrap";
 import { FormEvent } from "react-dom/node_modules/@types/react";
-import { withAppErrorUI } from "../errorHandling";
+import { withAppErrorUI } from "../util/errorHandling";
 import { LoadingButton } from "../shared/LoadingButton";
 import { RouterNavButton } from "../shared/RouterNav";
 

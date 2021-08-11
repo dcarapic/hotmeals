@@ -2,7 +2,6 @@ import React, {  useState } from "react";
 import { Container, Col, Row } from "react-bootstrap";
 import { BrowserRouter, Switch, Route, Redirect } from "react-router-dom";
 import { useAbortableEffect, userAuthenticate, UserDTO } from "./api";
-import { ErrorBoundary } from "./errorHandling";
 import CustomerAccountPage from "./pages/CustomerAccountPage";
 import CustomerHomePage from "./pages/CustomerHomePage";
 import CustomerOrdering from "./pages/CustomerOrdering";
@@ -24,6 +23,7 @@ import Loading from "./shared/Loading";
 
 import TopNav from "./shared/TopNav";
 import { CurrentUserContext, CurrentUser, useCurrentUser } from "./user";
+import GlobalErrorBoundary from "./util/globalErrorHandling";
 
 /**
  * Main application component.
@@ -60,7 +60,7 @@ const App = () => {
         fetch();
     }, []);
     return (
-        <ErrorBoundary>
+        <GlobalErrorBoundary>
             <CurrentUserContext.Provider value={currentUser}>
                 <BrowserRouter>
                     <TopNav />
@@ -73,7 +73,7 @@ const App = () => {
                     </Container>
                 </BrowserRouter>
             </CurrentUserContext.Provider>
-        </ErrorBoundary>
+        </GlobalErrorBoundary>
     );
 };
 

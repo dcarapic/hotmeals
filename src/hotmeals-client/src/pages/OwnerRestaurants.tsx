@@ -11,7 +11,7 @@ import {
     restaurantAdd,
     ServerResponse,
 } from "../api";
-import { APIError, useAppErrorUI, withAppErrorUI } from "../errorHandling";
+import { APIError, useAppErrorUI, withAppErrorUI } from "../util/errorHandling";
 import routes from "../routeConfig";
 import Loading from "../shared/Loading";
 import { LoadingButton } from "../shared/LoadingButton";
@@ -199,6 +199,7 @@ const OwnerRestaurants = withAppErrorUI(() => {
     const [loading, setLoading] = useState(true);
     const [restaurants, setRestaurants] = useState<RestaurantDTO[]>([]);
     const [editedRestaurant, setEditedRestaurant] = useState<RestaurantDTO | null>(null);
+    const [restaurantToDelete, setRestaurantToDelete] = useState<RestaurantDTO | null>(null);
 
     const loadRestaurants = async () => {
         errUI.clearCurrentError();
@@ -223,15 +224,15 @@ const OwnerRestaurants = withAppErrorUI(() => {
     const createNewRestaurant = () => {
         setEditedRestaurant({ id: "", name: "New restaurant", description: "", phoneNumber: "" });
     };
-    const editRestaurant = (id : string) => {
-        let r = restaurants.find(x=>x.id === id);
+    const editRestaurant = (id: string) => {
+        let r = restaurants.find((x) => x.id === id);
         setEditedRestaurant(r!);
     };
 
-    const editMenu = (id : string) => {
+    const editMenu = (id: string) => {
         history.push(routes.getOwnerRestaurantMenu(id));
     };
-    const viewOrders = (id : string) => {
+    const viewOrders = (id: string) => {
         history.push(routes.getOwnerOrdersForRestaurant(id));
     };
 
@@ -255,15 +256,20 @@ const OwnerRestaurants = withAppErrorUI(() => {
             )}
             {!loading && (
                 <Fragment>
-                    <RestaurantList restaurants={restaurants} onEdit={editRestaurant} onViewOrders={viewOrders} onEditMenu={editMenu} />
+                    <RestaurantList
+                        restaurants={restaurants}
+                        onEdit={editRestaurant}
+                        onViewOrders={viewOrders}
+                        onEditMenu={editMenu}
+                    />
                     <Alert show={restaurants.length == 0} variant="primary">
                         You do not have any restaurants at the moment.
                     </Alert>
-                    <Button onClick={createNewRestaurant} className="mt-3" disabled={loading}>
-                        Create new restaurant
-                    </Button>
                 </Fragment>
             )}
+            <Button onClick={createNewRestaurant} className="mt-3" disabled={loading}>
+                Create new restaurant
+            </Button>
             <RestaurantEditor restaurant={editedRestaurant} onCancel={onEditCancel} onSaved={onEditSaved} />
         </Fragment>
     );

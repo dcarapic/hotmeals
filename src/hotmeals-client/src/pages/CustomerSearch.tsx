@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 import { Col } from "react-bootstrap";
-import { useAppErrorUI, withAppErrorUI } from "../errorHandling";
+import { useAppErrorUI, withAppErrorUI } from "../util/errorHandling";
 
 const CustomerSearch = withAppErrorUI(() => {
     return (

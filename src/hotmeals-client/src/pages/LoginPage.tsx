@@ -3,7 +3,7 @@ import { Form } from "react-bootstrap";
 import { FormEvent } from "react-dom/node_modules/@types/react";
 import { useHistory } from "react-router-dom";
 import { useAbortable, userLogin } from "../api";
-import { useAppErrorUI, withAppErrorUI } from "../errorHandling";
+import { useAppErrorUI, withAppErrorUI } from "../util/errorHandling";
 import routes from "../routeConfig";
 import { LoadingButton } from "../shared/LoadingButton";
 import { RouterNavLink } from "../shared/RouterNav";

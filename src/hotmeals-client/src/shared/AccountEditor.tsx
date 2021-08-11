@@ -2,7 +2,7 @@ import React, { FormEvent, Fragment, useState } from "react";
 import { Alert, Col, Form, Row } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
 import { useAbortable, userRegister, userUpdate } from "../api";
-import { useAppErrorUI } from "../errorHandling";
+import { useAppErrorUI } from "../util/errorHandling";
 import { useCurrentUser } from "../user";
 import { LoadingButton } from "./LoadingButton";
 

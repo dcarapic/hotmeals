@@ -1,5 +1,5 @@
 import React, { Fragment } from "react";
-import { withAppErrorUI } from "../errorHandling";
+import { withAppErrorUI } from "../util/errorHandling";
 import AccountEditor from "../shared/AccountEditor";
 
 const CustomerRegisterPage = withAppErrorUI(() => {

@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 import { Col } from "react-bootstrap";
-import { withAppErrorUI } from "../errorHandling";
+import { withAppErrorUI } from "../util/errorHandling";
 import routes from "../routeConfig";
 import { RouterNavButton } from "../shared/RouterNav";
 
