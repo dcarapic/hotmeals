@@ -20,9 +20,16 @@ namespace hotmeals_server.Model
     public record MenuItemDTO(Guid Id, Guid RestaurantId, string Name, string Description, decimal Price);    
   
     /// <summary>
-    /// Restaurant menu iteminformation returned by server.
+    /// Restaurant menu item information returned by server.
     /// </summary>
     public record BlockedUserDTO(string Email, string FirstName, string LastName, string AddressCityZip, string AddressCity, string AddressStreet);    
+
+
+  
+    /// <summary>
+    /// Search menu item returned by server.
+    /// </summary>
+    public record OrderSelectionMenuItemDTO(Guid Id, Guid RestaurantId, string RestaurantName, string Name, string Description, decimal Price);    
 
     /// <summary>
     /// Base API response containing success code and an error message in case of failing to perform the operation.
@@ -63,5 +70,6 @@ namespace hotmeals_server.Model
     public record BlockUserRequest([Required][MaxLength(100)] string Email);
     public record UnBlockUserRequest([Required][MaxLength(100)] string Email);
 
+    public record SearchFoodResponse(OrderSelectionMenuItemDTO[] Items, int TotalPages, int Page);
 
 }

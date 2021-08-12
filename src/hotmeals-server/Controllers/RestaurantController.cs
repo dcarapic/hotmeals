@@ -54,7 +54,8 @@ namespace hotmeals_server.Controllers
             else
             {
                 var result = from r in _db.Restaurants
-                             where !r.BlockedUsers.Any(x => x.UserId == CurrentUser.Id) && r.MenuItems.Any()
+                             join o in _db.Users on r.OwnerId equals o.Id
+                             where !o.BlockedUsers.Any(x => x.UserId == CurrentUser.Id) && r.MenuItems.Any()
                              orderby r.Name
                              select new RestaurantDTO(r.Id, r.Name, r.Description, r.PhoneNumber);
                 return Ok(new GetRestaurantsResponse(await result.ToArrayAsync()));

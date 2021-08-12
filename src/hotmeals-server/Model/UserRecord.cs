@@ -9,6 +9,7 @@ namespace hotmeals_server.Model
     {
         public UserRecord()
         {
+            BlockingUsers = new HashSet<BlockedUserRecord>();
             BlockedUsers = new HashSet<BlockedUserRecord>();
             Orders = new HashSet<OrderRecord>();
             Restaurants = new HashSet<RestaurantRecord>();
@@ -25,6 +26,7 @@ namespace hotmeals_server.Model
         public string PasswordSalt { get; set; }
         public bool IsRestaurantOwner { get; set; }
 
+        public virtual ICollection<BlockedUserRecord> BlockingUsers { get; set; }
         public virtual ICollection<BlockedUserRecord> BlockedUsers { get; set; }
         public virtual ICollection<OrderRecord> Orders { get; set; }
         public virtual ICollection<RestaurantRecord> Restaurants { get; set; }

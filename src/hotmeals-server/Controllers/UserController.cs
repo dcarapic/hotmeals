@@ -77,6 +77,11 @@ namespace hotmeals_server.Controllers
                 return this.Unauthorized(new APIResponse(false, $"You are not logged in. Please login via /api/users/login and using your email and password!"));
 
             var user = await _db.Users.FindAsync(CurrentUser.Id);
+            if(user == null) {
+                await this.RemoveAuthenticationCookie();
+                return this.Unauthorized(new APIResponse(false, $"You are not logged in. Please login via /api/users/login and using your email and password!"));
+            }
+
             return Ok(new LoginResponse(new UserDTO(
                          Email: user.Email,
                          FirstName: user.FirstName,

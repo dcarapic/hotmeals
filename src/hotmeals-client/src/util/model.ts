@@ -34,3 +34,13 @@ export type BlockedUserDTO = {
     addressStreet: string;
     blockedDate: Date;
 };
+
+
+export type OrderSelectionMenuItemDTO = {
+    id: string;
+    restaurantId: string
+    restaurantName: string;
+    name: string;
+    description: string;
+    price: number;
+};

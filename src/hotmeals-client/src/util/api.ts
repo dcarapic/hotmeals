@@ -188,11 +188,25 @@ export async function blockedUsersRemove(
         "Delete menu item",
         `api/blocked-users`,
         "DELETE",
-        undefined,
+        req,
         abort
     );
 }
 
+export async function searchFood(
+    searchExpression: string,
+    page: number,
+    abort?: AbortSignal
+): Promise<ServerResponse<SearchFoodResponse>> {
+    searchExpression = encodeURI(searchExpression);
+    return await request<void, SearchFoodResponse>(
+        "Search for food",
+        `api/search/${searchExpression}?page=${page}`,
+        "GET",
+        undefined,
+        abort
+    );
+}
 
 // objects
 
@@ -323,6 +337,17 @@ export type BlockUserRequest = {
 export type UnblockUserRequest = {
     email: string;
 };
+
+
+
+export type SearchFoodResponse = APIResponse & {
+    totalPages: number;
+    page: number;
+    items: model.OrderSelectionMenuItemDTO[];
+};
+
+
+
 
 // Helper functions
 

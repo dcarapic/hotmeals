@@ -42,8 +42,8 @@ namespace hotmeals_server.Model
 
                 entity.Property(e => e.DateCreated).IsRequired().HasColumnType("datetime");
 
-                entity.HasOne(d => d.User)
-                    .WithMany(p => p.BlockedUsers)
+                entity.HasOne(d => d.RestaurantOwner)
+                    .WithMany(p => p.BlockingUsers)
                     .HasForeignKey(d => d.RestaurantOwnerId);
 
                 entity.HasOne(d => d.User)

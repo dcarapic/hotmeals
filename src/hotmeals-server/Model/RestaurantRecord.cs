@@ -9,7 +9,6 @@ namespace hotmeals_server.Model
     {
         public RestaurantRecord()
         {
-            BlockedUsers = new HashSet<BlockedUserRecord>();
             MenuItems = new HashSet<MenuItemRecord>();
             Orders = new HashSet<OrderRecord>();
         }
@@ -22,7 +21,6 @@ namespace hotmeals_server.Model
         public DateTime DateCreated {get; set;}
 
         public virtual UserRecord Owner { get; set; }
-        public virtual ICollection<BlockedUserRecord> BlockedUsers { get; set; }
         public virtual ICollection<MenuItemRecord> MenuItems { get; set; }
         public virtual ICollection<OrderRecord> Orders { get; set; }
     }

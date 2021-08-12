@@ -3,7 +3,6 @@ const routes = {
     login :  "/login",
     userAccount :  "/account",
     customerRegister :  "/customer-register",
-    customerSearch:  "/customer-search",
     customerOrder:  "/customer-order",
     customerRestaurants:  "/customer-restaurants",
     customerOrders:  "/customer-orders",

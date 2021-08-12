@@ -10,7 +10,6 @@ import CustomerOrdering from "./pages/CustomerOrdering";
 import CustomerOrders from "./pages/CustomerOrders";
 import CustomerRegisterPage from "./pages/CustomerRegisterPage";
 import CustomerRestaurants from "./pages/CustomerRestaurants";
-import CustomerSearch from "./pages/CustomerSearch";
 import LoginPage from "./pages/LoginPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import OwnerAccountPage from "./pages/OwnerAccountPage";
@@ -111,9 +110,6 @@ const AppRoutes = () => {
             </Route>
             <Route exact path={routes.customerRegister}>
                 <CustomerRegisterPage />
-            </Route>
-            <Route exact path={routes.customerSearch}>
-                {RequiresAuth(currentUser.userData, <CustomerSearch />)}
             </Route>
             <Route exact path={routes.customerOrder}>
                 {RequiresAuth(currentUser.userData, <CustomerOrdering />)}
