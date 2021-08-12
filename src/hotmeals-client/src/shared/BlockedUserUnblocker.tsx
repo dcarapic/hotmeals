@@ -1,15 +1,14 @@
-import React, {  useState } from "react";
+import React, { useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../util/model";
 import { Button, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
 
-
-const RestaurantDeleter = (props: {
-    restaurant: model.RestaurantDTO;
+const BlockedUserUnblocker = (props: {
+    blockedUser: model.BlockedUserDTO;
     onCancel: () => void;
-    onDeleted: () => void;
+    onUnblocked: () => void;
 }) => {
     const [submitting, setSubmitting] = useState(false);
     const [serverResponse, setServerResponse] = useState<api.ServerResponse<any> | null>(null);
@@ -19,33 +18,33 @@ const RestaurantDeleter = (props: {
         setSubmitting(true);
         setServerResponse(null);
 
-        let response = await api.restaurantDelete(props.restaurant!.id, abort);
+        let response = await api.blockedUsersRemove({ email: props.blockedUser.email }, abort);
         if (response.isAborted) return;
         setSubmitting(false);
         setServerResponse(response);
         if (response.ok && response.result) {
-            props.onDeleted();
+            props.onUnblocked();
         }
     };
 
     return (
         <Modal onHide={props.onCancel} show={true}>
             <Modal.Header closeButton>
-                <Modal.Title>Delete restaurant </Modal.Title>
+                <Modal.Title>Unblock customer</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                Are you sure you wish to delete your restaurant "{props.restaurant?.name}"?
+                Are you sure you wish to unblock customer {props.blockedUser.firstName} {props.blockedUser.lastName}?
                 <ui.MessageServiceContainer serverResponse={serverResponse} />
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="secondary" onClick={props.onCancel}>
                     Cancel
                 </Button>
-                <LoadingButton variant="danger" type="submit" loading={submitting} onClick={onDelete}>
-                    Delete
+                <LoadingButton variant="warning" type="submit" loading={submitting} onClick={onDelete}>
+                    Unblock
                 </LoadingButton>
             </Modal.Footer>
         </Modal>
     );
 };
-export default RestaurantDeleter;
+export default BlockedUserUnblocker;

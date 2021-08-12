@@ -8,9 +8,9 @@ namespace hotmeals_server.Model
     public partial class BlockedUserRecord
     {
         public Guid UserId { get; set; }
-        public Guid RestaurantId { get; set; }
+        public Guid RestaurantOwnerId { get; set; }
         public DateTime DateCreated {get; set;}
-        public virtual RestaurantRecord Restaurant { get; set; }
+        public virtual UserRecord RestaurantOwner { get; set; }
         public virtual UserRecord User { get; set; }
     }
 }

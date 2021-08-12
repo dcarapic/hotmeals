@@ -24,3 +24,13 @@ export type MenuItemDTO = {
     description: string;
     price: number;
 };
+
+export type BlockedUserDTO = {
+    email: string;
+    firstName: string;
+    lastName: string;
+    addressCityZip: string;
+    addressCity: string;
+    addressStreet: string;
+    blockedDate: Date;
+};

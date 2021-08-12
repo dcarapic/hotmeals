@@ -165,7 +165,7 @@ namespace hotmeals_server.Controllers
             var result = from mi in restaurant.MenuItems
                          orderby mi.DateCreated
                          select new MenuItemDTO(mi.Id, mi.RestaurantId, mi.Name, mi.Description, mi.Price);
-            return Ok(new GetMenuItemsResponse(result.ToArray()));
+            return Ok(new GetMenuItemsResponse(restaurant.Id, restaurant.Name, restaurant.Description, restaurant.PhoneNumber, result.ToArray()));
         }
 
         /// <summary>

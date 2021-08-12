@@ -1,6 +1,6 @@
 import React, { Fragment, useEffect, useState } from "react";
 import { Row, Col, Alert, Button } from "react-bootstrap";
-import { useHistory, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../util/model";
@@ -34,10 +34,7 @@ const MenuItemListItem = (props: {
 }) => {
     return (
         <Row className="d-grid">
-            <Col>
-                <Col>{props.menuItem.name}</Col>
-                <Col>{props.menuItem.price} €</Col>
-            </Col>
+                <Col>{props.menuItem.name} <strong className='text-success'>{props.menuItem.price} €</strong></Col>
             <Col>
                 <i>{props.menuItem.description}</i>
             </Col>
@@ -63,12 +60,12 @@ const MenuItemListItem = (props: {
 
 const OwnerRestaurantMenu = ui.withMessageContainer(() => {
     const msgs = ui.useMessageService();
-    const history = useHistory();
     const abort = ui.useAbortable();
     const { restaurantId } = useParams<any>();
     if (!restaurantId) return <NotFoundPage />;
 
     const [loading, setLoading] = useState(true);
+    const [title, setTitle] = useState("");
     const [menuItems, setMenuItems] = useState<model.MenuItemDTO[]>([]);
     const [editedMenuItem, setEditedMenuItem] = useState<model.MenuItemDTO | null>(null);
     const [menuItemToDelete, setMenuItemToDelete] = useState<model.MenuItemDTO | null>(null);
@@ -83,9 +80,11 @@ const OwnerRestaurantMenu = ui.withMessageContainer(() => {
         if (response.ok && response.result) {
             console.log(JSON.stringify(response.result.menuItems));
             setMenuItems(response.result.menuItems);
+            setTitle(`Menu for '${response.result.restaurantName}'`)
         } else {
             setLoading(false);
             setMenuItems([]);
+            setTitle("")
         }
     };
 
@@ -130,7 +129,7 @@ const OwnerRestaurantMenu = ui.withMessageContainer(() => {
 
     return (
         <Fragment>
-            <h3 className="text-center p-2">MenuItem XY menu</h3>
+            <h3 className="text-center p-2">{title}</h3>
             {loading && (
                 <Row className="justify-content-center">
                     <Col xs="3">
@@ -141,7 +140,7 @@ const OwnerRestaurantMenu = ui.withMessageContainer(() => {
             {!loading && (
                 <Fragment>
                     <MenuItemList menuItems={menuItems} onEdit={editMenuItem} onDelete={deleteMenuItem} />
-                    <Alert show={menuItems.length == 0} variant="primary">
+                    <Alert show={menuItems.length === 0} variant="primary">
                         You do not have any menu items at the moment.
                     </Alert>
                 </Fragment>

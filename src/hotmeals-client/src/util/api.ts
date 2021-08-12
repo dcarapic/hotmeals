@@ -110,6 +110,7 @@ export async function menuItemFetchAll(
         abort
     );
 }
+
 export async function menuItemAdd(
     restaurantId: string,
     req: NewMenuItemRequest,
@@ -152,6 +153,46 @@ export async function menuItemDelete(
         abort
     );
 }
+
+
+export async function blockedUsersFetchAll(
+    abort?: AbortSignal
+): Promise<ServerResponse<GetBlockedUsersResponse>> {
+    return await request<void, GetBlockedUsersResponse>(
+        "Fetch blocked users",
+        `api/blocked-users`,
+        "GET",
+        undefined,
+        abort
+    );
+}
+
+export async function blockedUsersAdd(
+    req: BlockUserRequest,
+    abort?: AbortSignal
+): Promise<ServerResponse<APIResponse>> {
+    return await request<BlockUserRequest, APIResponse>(
+        "Block user",
+        `api/blocked-users`,
+        "POST",
+        req,
+        abort
+    );
+}
+
+export async function blockedUsersRemove(
+    req: UnblockUserRequest,
+    abort?: AbortSignal
+): Promise<ServerResponse<APIResponse>> {
+    return await request<UnblockUserRequest, APIResponse>(
+        "Delete menu item",
+        `api/blocked-users`,
+        "DELETE",
+        undefined,
+        abort
+    );
+}
+
 
 // objects
 
@@ -241,6 +282,10 @@ export type UpdateRestaurantResponse = APIResponse & {
 };
 
 export type GetMenuItemsResponse = APIResponse & {
+    restaurantId: string
+    restaurantName: string;
+    restaurantDescription: string;
+    restaurantPhoneNumber: string;
     menuItems: model.MenuItemDTO[];
 };
 
@@ -262,6 +307,21 @@ export type UpdateMenuItemRequest = {
 
 export type UpdateMenuItemResponse = APIResponse & {
     menuItem: model.MenuItemDTO;
+};
+
+
+
+
+export type GetBlockedUsersResponse = APIResponse & {
+    blockedUsers: model.BlockedUserDTO[];
+};
+
+export type BlockUserRequest = {
+    email: string;
+};
+
+export type UnblockUserRequest = {
+    email: string;
 };
 
 // Helper functions

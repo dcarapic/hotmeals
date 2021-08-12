@@ -175,7 +175,7 @@ const OwnerRestaurants = ui.withMessageContainer(() => {
                         onEditMenu={editMenu}
                         onDelete={deleteRestaurant}
                     />
-                    <Alert show={restaurants.length == 0} variant="primary">
+                    <Alert show={restaurants.length === 0} variant="primary">
                         You do not have any restaurants at the moment.
                     </Alert>
                 </Fragment>

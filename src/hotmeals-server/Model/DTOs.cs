@@ -18,6 +18,11 @@ namespace hotmeals_server.Model
     /// Restaurant menu iteminformation returned by server.
     /// </summary>
     public record MenuItemDTO(Guid Id, Guid RestaurantId, string Name, string Description, decimal Price);    
+  
+    /// <summary>
+    /// Restaurant menu iteminformation returned by server.
+    /// </summary>
+    public record BlockedUserDTO(string Email, string FirstName, string LastName, string AddressCityZip, string AddressCity, string AddressStreet);    
 
     /// <summary>
     /// Base API response containing success code and an error message in case of failing to perform the operation.
@@ -45,13 +50,18 @@ namespace hotmeals_server.Model
     public record UpdateRestaurantResponse(RestaurantDTO Restaurant) : APIResponse(true, null);
 
 
-    public record GetMenuItemsResponse(MenuItemDTO[] MenuItems) : APIResponse(true, null);
+    public record GetMenuItemsResponse(Guid RestaurantId, string RestaurantName, string RestaurantDescription, string RestaurantPhoneNumber, MenuItemDTO[] MenuItems) : APIResponse(true, null);
 
     public record NewMenuItemRequest([Required][MaxLength(100)] string Name, [Required][MaxLength(2000)] string Description, [Required][Range(0, 999999)]decimal Price);
     public record NewMenuItemResponse(MenuItemDTO MenuItem) : APIResponse(true, null);
 
     public record UpdateMenuItemRequest([Required][MaxLength(100)] string Name, [Required][MaxLength(2000)] string Description, [Required][Range(0, 999999)]decimal Price);
     public record UpdateMenuItemResponse(MenuItemDTO MenuItem) : APIResponse(true, null);
+
+
+    public record GetBlockedUsersResponse(BlockedUserDTO[] BlockedUsers) : APIResponse(true, null);
+    public record BlockUserRequest([Required][MaxLength(100)] string Email);
+    public record UnBlockUserRequest([Required][MaxLength(100)] string Email);
 
 
 }

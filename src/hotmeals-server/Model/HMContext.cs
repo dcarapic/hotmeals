@@ -32,19 +32,19 @@ namespace hotmeals_server.Model
         {
             modelBuilder.Entity<BlockedUserRecord>(entity =>
             {
-                entity.HasKey(e => new { e.UserId, e.RestaurantId });
+                entity.HasKey(e => new { e.UserId, e.RestaurantOwnerId });
 
                 entity.ToTable("BlockedUser");
 
                 entity.Property(e => e.UserId).HasColumnType("guid");
 
-                entity.Property(e => e.RestaurantId).HasColumnType("guid");
+                entity.Property(e => e.RestaurantOwnerId).HasColumnType("guid");
 
                 entity.Property(e => e.DateCreated).IsRequired().HasColumnType("datetime");
 
-                entity.HasOne(d => d.Restaurant)
+                entity.HasOne(d => d.User)
                     .WithMany(p => p.BlockedUsers)
-                    .HasForeignKey(d => d.RestaurantId);
+                    .HasForeignKey(d => d.RestaurantOwnerId);
 
                 entity.HasOne(d => d.User)
                     .WithMany(p => p.BlockedUsers)

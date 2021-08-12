@@ -1,6 +1,5 @@
 import React, { Fragment } from "react";
 import AccountEditor from "../shared/AccountEditor";
-import * as api from "../util/api";
 import * as ui from "../util/ui";
 
 const OwnerRegisterPage = ui.withMessageContainer(() => {
