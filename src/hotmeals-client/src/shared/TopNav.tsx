@@ -1,19 +1,18 @@
 import React, { Fragment, useState } from "react";
+import * as api from "../util/api";
 import { Button, Container, Image, Modal, Navbar, NavLink } from "react-bootstrap";
-
 import srcLogo from "../assets/Logo.svg";
 import srcHotMeals from "../assets/HotMeals.svg";
 import srcAccount from "../assets/Account.svg";
 import { RouterNavLink } from "./RouterNav";
 import { useCurrentUser } from "../user";
-import { userLogout } from "../util/api";
 
 const AccountImage = () => {
     const [showMenu, setShowMenu] = useState(false);
     const currentUser = useCurrentUser();
 
     const logoutHandler = async () => {
-        await userLogout();
+        await api.userLogout();
         // we do not care if we fail the logout because the server is not available, just continue
         currentUser.setCurrentUser(null);
     }

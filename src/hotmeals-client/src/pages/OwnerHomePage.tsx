@@ -1,10 +1,11 @@
 import React, { Fragment } from "react";
+import * as api from "../util/api";
+import * as ui from "../util/ui";
 import { Col } from "react-bootstrap";
-import { withMessageContainer } from "../util/ui";
-import routes from "../routeConfig";
+import routes from "../routes";
 import { RouterNavButton } from "../shared/RouterNav";
 
-const OwnerHomePage = withMessageContainer(() => {
+const OwnerHomePage = ui.withMessageContainer(() => {
 
     return (
         <Fragment>

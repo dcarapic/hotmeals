@@ -1,7 +1,9 @@
 import React, {  useState } from "react";
+import * as api from "./util/api";
+import * as ui from "./util/ui";
+import * as model from "./util/model";
 import { Container, Col, Row } from "react-bootstrap";
 import { BrowserRouter, Switch, Route, Redirect } from "react-router-dom";
-import { useAbortableEffect, userAuthenticate, UserDTO } from "./util/api";
 import CustomerAccountPage from "./pages/CustomerAccountPage";
 import CustomerHomePage from "./pages/CustomerHomePage";
 import CustomerOrdering from "./pages/CustomerOrdering";
@@ -18,7 +20,7 @@ import OwnerOrders from "./pages/OwnerOrders";
 import OwnerRegisterPage from "./pages/OwnerRegisterPage";
 import OwnerRestaurantMenu from "./pages/OwnerRestaurantMenu";
 import OwnerRestaurants from "./pages/OwnerRestaurants";
-import routes from "./routeConfig";
+import routes from "./routes";
 import Loading from "./shared/Loading";
 
 import TopNav from "./shared/TopNav";
@@ -31,7 +33,7 @@ import GlobalErrorBoundary from "./util/globalErrorHandling";
  */
 const App = () => {
     // Holds current user state. As this is the main component it will not get removed unless the browser is refreshed.
-    const setCurrentUserCore = (userData: UserDTO | null) => {
+    const setCurrentUserCore = (userData: model.UserDTO | null) => {
         setCurrentUser({ userData: userData, isLoading: false, setCurrentUser: setCurrentUserCore });
     };
     let [currentUser, setCurrentUser] = useState<ApplicationUser>({
@@ -42,11 +44,11 @@ const App = () => {
 
     // On the first load immediately try to authenticate the user.
     // This will only succeed if we have a valid cookie. If not we will not be able to set the current user and the login dialog will be displayed.
-    useAbortableEffect((signal) => {
+    ui.useAbortableEffect((signal) => {
         setCurrentUser({ userData: currentUser.userData, isLoading: true, setCurrentUser: setCurrentUserCore });
         const fetch = async () => {
             console.log(`Fetching current user`);
-            const response = await userAuthenticate(signal);
+            const response = await api.userAuthenticate(signal);
             console.log(`Result: ${JSON.stringify(response)}`);
             if (response.isAborted) return;
             if (response.ok && response.result)
@@ -83,7 +85,7 @@ const AppRoutes = () => {
     // Wraps component to:
     // - Redirects to login page in case the user is not authenticated
     // - Displays main component or an alternate component if the user is a restaurant owner
-    const RequiresAuth = (user: UserDTO | null, component: JSX.Element, alternateOwnerComponent?: JSX.Element) => {
+    const RequiresAuth = (user: model.UserDTO | null, component: JSX.Element, alternateOwnerComponent?: JSX.Element) => {
         if (!user)  {
             console.log(`Redirecting to login`);
             return <Redirect to="/login" />;

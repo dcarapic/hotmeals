@@ -9,6 +9,7 @@ namespace hotmeals_server.Model
     {
         public Guid Id { get; set; }
         public Guid OrderId { get; set; }
+        public int Position { get; set; }
         public string MenuItemName { get; set; }
         public string MenuItemDescription { get; set; }
         public long Quantity { get; set; }

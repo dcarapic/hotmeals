@@ -8,10 +8,16 @@ namespace hotmeals_server.Model
     /// User information returned by server.
     /// </summary>
     public record UserDTO(string Email, string FirstName, string LastName, string AddressCityZip, string AddressCity, string AddressStreet, bool IsRestaurantOwner);
+
     /// <summary>
     /// Restaurant information returned by server.
     /// </summary>
     public record RestaurantDTO(Guid Id, string Name, string Description, string PhoneNumber);
+    
+    /// <summary>
+    /// Restaurant menu iteminformation returned by server.
+    /// </summary>
+    public record MenuItemDTO(Guid Id, Guid RestaurantId, string Name, string Description, decimal Price);    
 
     /// <summary>
     /// Base API response containing success code and an error message in case of failing to perform the operation.
@@ -35,11 +41,17 @@ namespace hotmeals_server.Model
     public record NewRestaurantRequest([Required][MaxLength(100)] string Name, [Required][MaxLength(2000)] string Description, [Required][MaxLength(20)] string PhoneNumber);
     public record NewRestaurantResponse(RestaurantDTO Restaurant) : APIResponse(true, null);
 
-    public record UpdateRestaurantRequest([Required] Guid Id, [Required][MaxLength(100)] string Name, [Required][MaxLength(2000)] string Description, [Required][MaxLength(20)] string PhoneNumber);
+    public record UpdateRestaurantRequest([Required][MaxLength(100)] string Name, [Required][MaxLength(2000)] string Description, [Required][MaxLength(20)] string PhoneNumber);
     public record UpdateRestaurantResponse(RestaurantDTO Restaurant) : APIResponse(true, null);
 
-    public record DeleteRestaurantRequest([Required] Guid Id);
-    public record DeleteRestaurantResponse() : APIResponse(true, null);
+
+    public record GetMenuItemsResponse(MenuItemDTO[] MenuItems) : APIResponse(true, null);
+
+    public record NewMenuItemRequest([Required][MaxLength(100)] string Name, [Required][MaxLength(2000)] string Description, [Required][Range(0, 999999)]decimal Price);
+    public record NewMenuItemResponse(MenuItemDTO MenuItem) : APIResponse(true, null);
+
+    public record UpdateMenuItemRequest([Required][MaxLength(100)] string Name, [Required][MaxLength(2000)] string Description, [Required][Range(0, 999999)]decimal Price);
+    public record UpdateMenuItemResponse(MenuItemDTO MenuItem) : APIResponse(true, null);
 
 
 }

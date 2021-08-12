@@ -1,16 +1,16 @@
 import React, { FormEvent, Fragment, useState } from "react";
+import * as api from "../util/api";
+import * as ui from "../util/ui";
 import { Alert, Col, Form, Row } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
-import { useAbortable, userRegister, userUpdate } from "../util/api";
-import { useMessageService } from "../util/ui";
 import { useCurrentUser } from "../user";
 import { LoadingButton } from "./LoadingButton";
 
 const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: boolean }) => {
     const currentUser = useCurrentUser();
-    const msgs = useMessageService();
+    const msgs = ui.useMessageService();
     const history = useHistory();
-    const abort = useAbortable();
+    const abort = ui.useAbortable();
 
     const [submitting, setSubmitting] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -50,7 +50,7 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
         setValidated(false);
         setSubmitting(true);
         if(props.isRegistration) {
-            let response = await userRegister({
+            let response = await api.userRegister({
                 email,
                 firstName,
                 lastName,
@@ -69,7 +69,7 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
                 history.push("/");
             }
         } else {
-            let response = await userUpdate({
+            let response = await api.userUpdate({
                 firstName,
                 lastName,
                 addressCityZip,

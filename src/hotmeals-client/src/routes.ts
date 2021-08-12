@@ -12,7 +12,7 @@ const routes = {
     ownerRestaurantOrders:  "/owner-orders/:id",
     ownerBlockedUsers:  "/owner-blocked-users",
     ownerRestaurants:  "/owner-restaurants",
-    ownerRestaurantMenu:  "/owner-restaurants/:id/menu",
+    ownerRestaurantMenu:  "/owner-restaurants/:restaurantId/menu",
     
     getOwnerOrdersForRestaurant: (restaurantId: string) =>  `/owner-orders/${restaurantId}`,
     getOwnerRestaurantMenu: (restaurantId: string) =>  `/owner-restaurants/${restaurantId}/menu`,

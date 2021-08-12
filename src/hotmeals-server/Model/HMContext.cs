@@ -40,6 +40,8 @@ namespace hotmeals_server.Model
 
                 entity.Property(e => e.RestaurantId).HasColumnType("guid");
 
+                entity.Property(e => e.DateCreated).IsRequired().HasColumnType("datetime");
+
                 entity.HasOne(d => d.Restaurant)
                     .WithMany(p => p.BlockedUsers)
                     .HasForeignKey(d => d.RestaurantId);
@@ -71,6 +73,8 @@ namespace hotmeals_server.Model
                     .IsRequired()
                     .HasColumnType("guid");
 
+                entity.Property(e => e.DateCreated).IsRequired().HasColumnType("datetime");
+
                 entity.HasOne(d => d.Restaurant)
                     .WithMany(p => p.MenuItems)
                     .HasForeignKey(d => d.RestaurantId);
@@ -91,6 +95,8 @@ namespace hotmeals_server.Model
                     .HasColumnType("guid");
 
                 entity.Property(e => e.StatusId).HasColumnType("int");
+
+                entity.Property(e => e.DateCreated).IsRequired().HasColumnType("datetime");
 
                 entity.HasOne(d => d.Customer)
                     .WithMany(p => p.Orders)
@@ -123,7 +129,8 @@ namespace hotmeals_server.Model
                     .IsRequired()
                     .HasColumnType("decimal(9, 2)");
 
-                entity.Property(e => e.Quantity).HasColumnType("int");
+                entity.Property(e => e.Quantity).IsRequired().HasColumnType("int");
+                entity.Property(e => e.Position).IsRequired().HasColumnType("int");
 
                 entity.HasOne(d => d.Order)
                     .WithMany(p => p.OrderItems)
@@ -151,6 +158,8 @@ namespace hotmeals_server.Model
                 entity.Property(e => e.PhoneNumber)
                     .IsRequired()
                     .HasColumnType("nvarchar(50)");
+
+                entity.Property(e => e.DateCreated).IsRequired().HasColumnType("datetime");
 
                 entity.HasOne(d => d.Owner)
                     .WithMany(p => p.Restaurants)
@@ -185,8 +194,7 @@ namespace hotmeals_server.Model
 
                 entity.Property(e => e.IsRestaurantOwner)
                     .IsRequired()
-                    .HasColumnType("bit")
-                    .HasDefaultValueSql("0");
+                    .HasColumnType("bit");
 
                 entity.Property(e => e.LastName)
                     .IsRequired()

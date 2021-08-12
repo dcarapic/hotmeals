@@ -47,6 +47,7 @@ namespace hotmeals_server.Controllers
             {
                 var result = from r in _db.Restaurants
                              where r.OwnerId == CurrentUser.Id
+                             orderby r.DateCreated
                              select new RestaurantDTO(r.Id, r.Name, r.Description, r.PhoneNumber);
                 return Ok(new GetRestaurantsResponse(await result.ToArrayAsync()));
             }
@@ -54,17 +55,20 @@ namespace hotmeals_server.Controllers
             {
                 var result = from r in _db.Restaurants
                              where !r.BlockedUsers.Any(x => x.UserId == CurrentUser.Id) && r.MenuItems.Any()
+                             orderby r.Name
                              select new RestaurantDTO(r.Id, r.Name, r.Description, r.PhoneNumber);
                 return Ok(new GetRestaurantsResponse(await result.ToArrayAsync()));
             }
         }
 
-
-        [HttpPost("")]
+        /// <summary>
+        /// Adds a new restaurant for the currently logged on user.
+        /// </summary>
+        [HttpPost]
         public async Task<IActionResult> AddRestaurant([FromBody] NewRestaurantRequest req)
         {
-            if (!CurrentUser.IsRestaurantOwner)
-                return BadRequest(new APIResponse(false, "You may not create new restaurants!"));
+            if (!this.CurrentUser.IsRestaurantOwner)
+                return Unauthorized("You are not a restaurant owner!");
 
 
             var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Name.ToLower() == req.Name.ToLower());
@@ -76,6 +80,7 @@ namespace hotmeals_server.Controllers
             restaurant.Name = req.Name.Trim();
             restaurant.Description = req.Description.Trim();
             restaurant.PhoneNumber = req.PhoneNumber.Trim();
+            restaurant.DateCreated = DateTime.UtcNow;
             _db.Restaurants.Add(restaurant);
 
             await _db.SaveChangesAsync();
@@ -86,18 +91,21 @@ namespace hotmeals_server.Controllers
                 PhoneNumber: restaurant.PhoneNumber)));
         }
 
-
-        [HttpPut("")]
-        public async Task<IActionResult> UpdateRestaurant([FromBody] UpdateRestaurantRequest req)
+        /// <summary>
+        /// Updates the restaurant of the currently logged on user.
+        /// </summary>
+        [HttpPut("{restaurantId}")]
+        public async Task<IActionResult> UpdateRestaurant(Guid restaurantId, [FromBody] UpdateRestaurantRequest req)
         {
-            if (!CurrentUser.IsRestaurantOwner)
-                return BadRequest(new APIResponse(false, "You may not update a restaurant!"));
+            if (!this.CurrentUser.IsRestaurantOwner)
+                return Unauthorized("You are not a restaurant owner!");
 
-            var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Id == req.Id);
+            var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Id == restaurantId);
             if (restaurant == null)
                 return BadRequest(new APIResponse(false, "The restaurant does not exist. Have you perhaps deleted it?"));
 
-            if (string.Compare(restaurant.Name, req.Name.Trim(), ignoreCase: true) != 0) {
+            if (string.Compare(restaurant.Name, req.Name.Trim(), ignoreCase: true) != 0)
+            {
                 // Name changed
                 var sameName = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Name.ToLower() == req.Name.ToLower());
                 if (sameName != null)
@@ -115,14 +123,18 @@ namespace hotmeals_server.Controllers
                 PhoneNumber: restaurant.PhoneNumber)));
         }
 
-
-        [HttpDelete("")]
-        public async Task<IActionResult> DeleteRestaurant([FromBody] DeleteRestaurantRequest req)
+        /// <summary>
+        /// Deletes a restaurant owned by currently logged in user.
+        /// </summary>
+        /// <param name="restaurantId"></param>
+        /// <returns></returns>
+        [HttpDelete("{restaurantId}")]
+        public async Task<IActionResult> DeleteRestaurant(Guid restaurantId)
         {
-            if (!CurrentUser.IsRestaurantOwner)
-                return BadRequest(new APIResponse(false, "You may not delete a restaurant!"));
+            if (!this.CurrentUser.IsRestaurantOwner)
+                return Unauthorized("You are not a restaurant owner!");
 
-            var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Id == req.Id);
+            var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Id == restaurantId);
             if (restaurant == null)
                 return BadRequest(new APIResponse(false, "The restaurant does not exist. Have you perhaps already deleted it?"));
             if (restaurant.Orders.Any())
@@ -130,7 +142,125 @@ namespace hotmeals_server.Controllers
 
             _db.Restaurants.Remove(restaurant);
             await _db.SaveChangesAsync();
-            return Ok(new DeleteRestaurantResponse());
+            return Ok(new APIResponse(true, null));
+        }
+
+
+
+        /// <summary>
+        /// Gets the restaurant menu.
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("{restaurantId}/menu")]
+        public async Task<IActionResult> GetRestaurantMenu(Guid restaurantId)
+        {
+            if (!this.CurrentUser.IsRestaurantOwner)
+                return Unauthorized("You are not a restaurant owner!");
+
+            var restaurant = await _db.Restaurants.Include(r => r.MenuItems).FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Id == restaurantId);
+            if (restaurant == null)
+                return BadRequest(new APIResponse(false, "The restaurant does not exist. Have you perhaps deleted it?"));
+
+
+            var result = from mi in restaurant.MenuItems
+                         orderby mi.DateCreated
+                         select new MenuItemDTO(mi.Id, mi.RestaurantId, mi.Name, mi.Description, mi.Price);
+            return Ok(new GetMenuItemsResponse(result.ToArray()));
+        }
+
+        /// <summary>
+        /// Adds a new restaurant for the currently logged on user.
+        /// </summary>
+        [HttpPost("{restaurantId}/menu")]
+        public async Task<IActionResult> AddMenuItem(Guid restaurantId, [FromBody] NewMenuItemRequest req)
+        {
+            if (!this.CurrentUser.IsRestaurantOwner)
+                return Unauthorized("You are not a restaurant owner!");
+
+            var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Id == restaurantId);
+            if (restaurant == null)
+                return BadRequest(new APIResponse(false, "The restaurant does not exist. Have you perhaps already deleted it?"));
+
+            var menuItem = await _db.MenuItems.FirstOrDefaultAsync(x => x.RestaurantId == restaurantId && x.Name.ToLower() == req.Name.ToLower());
+            if (menuItem != null)
+                return BadRequest(new APIResponse(false, "You already have a menu item with the same name!"));
+
+            menuItem = new MenuItemRecord();
+            menuItem.RestaurantId = restaurantId;
+            menuItem.Name = req.Name.Trim();
+            menuItem.Description = req.Description.Trim();
+            menuItem.Price = req.Price;
+            menuItem.DateCreated = DateTime.UtcNow;
+            _db.MenuItems.Add(menuItem);
+
+            await _db.SaveChangesAsync();
+            return Ok(new NewMenuItemResponse(new MenuItemDTO(
+                Id: menuItem.Id,
+                RestaurantId: restaurantId,
+                Name: menuItem.Name,
+                Description: menuItem.Description,
+                Price: menuItem.Price)));
+        }
+
+        /// <summary>
+        /// Updates the restaurant of the currently logged on user.
+        /// </summary>
+        [HttpPut("{restaurantId}/menu/{menuItemId}")]
+        public async Task<IActionResult> UpdateMenuItem(Guid menuItemId, Guid restaurantId, [FromBody] UpdateMenuItemRequest req)
+        {
+            if (!this.CurrentUser.IsRestaurantOwner)
+                return Unauthorized("You are not a restaurant owner!");
+
+            var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Id == restaurantId);
+            if (restaurant == null)
+                return BadRequest(new APIResponse(false, "The restaurant does not exist. Have you perhaps already deleted it?"));
+
+            var menuItem = await _db.MenuItems.FindAsync(menuItemId);
+            if (menuItem == null || menuItem.RestaurantId != restaurantId)
+                return BadRequest(new APIResponse(false, "The menu item does not exist. Have you perhaps already deleted it?"));
+
+            if (string.Compare(menuItem.Name, req.Name.Trim(), ignoreCase: true) != 0)
+            {
+                // Name changed
+                var sameName = await _db.MenuItems.FirstOrDefaultAsync(x => x.RestaurantId == restaurantId && x.Name.ToLower() == req.Name.ToLower());
+                if (sameName != null)
+                    return BadRequest(new APIResponse(false, "You already have a menu item with the same name!"));
+            }
+
+            menuItem.Name = req.Name.Trim();
+            menuItem.Description = req.Description.Trim();
+            menuItem.Price = req.Price;
+            await _db.SaveChangesAsync();
+            return Ok(new UpdateMenuItemResponse(new MenuItemDTO(
+                Id: menuItem.Id,
+                RestaurantId: restaurantId,
+                Name: menuItem.Name,
+                Description: menuItem.Description,
+                Price: menuItem.Price)));
+        }
+
+        /// <summary>
+        /// Deletes a restaurant owned by currently logged in user.
+        /// </summary>
+        /// <param name="restaurantId"></param>
+        /// <returns></returns>
+        [HttpDelete("{restaurantId}/menu/{menuItemId}")]
+        public async Task<IActionResult> DeleteMenuItem(Guid menuItemId, Guid restaurantId)
+        {
+            if (!this.CurrentUser.IsRestaurantOwner)
+                return Unauthorized("You are not a restaurant owner!");
+
+            var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Id == restaurantId);
+            if (restaurant == null)
+                return BadRequest(new APIResponse(false, "The restaurant does not exist. Have you perhaps already deleted it?"));
+
+            var menuItem = await _db.MenuItems.FindAsync(menuItemId);
+            if (menuItem == null || menuItem.RestaurantId != restaurantId)
+                return BadRequest(new APIResponse(false, "The menu item does not exist. Have you perhaps already deleted it?"));
+
+            _db.MenuItems.Remove(menuItem);
+            await _db.SaveChangesAsync();
+            return Ok(new APIResponse(true, null));
         }
 
 

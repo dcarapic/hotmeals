@@ -1,25 +1,17 @@
-import React, { Fragment, useEffect, useRef, useState } from "react";
-import { Alert, Button, Col, Form, Modal, Row } from "react-bootstrap";
+import React, { Fragment, useEffect, useState } from "react";
+import { Alert, Button, Col,  Row } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
-import {
-    RestaurantDTO,
-    restaurantFetchAll,
-    useAbortable,
-    restaurantUpdate,
-    UpdateRestaurantRequest,
-    NewRestaurantRequest,
-    restaurantAdd,
-    ServerResponse,
-    DeleteRestaurantRequest,
-    restaurantDelete,
-} from "../util/api";
-import { MessageServiceContainer, useMessageService, withMessageContainer } from "../util/ui";
-import routes from "../routeConfig";
+import * as api from "../util/api";
+import * as ui from "../util/ui";
+import * as model from "../util/model";
+import routes from "../routes";
 import Loading from "../shared/Loading";
-import { LoadingButton } from "../shared/LoadingButton";
+import RestaurantEditor from "../shared/RestaurantEditor";
+import RestaurantDeleter from "../shared/RestaurantDeleter";
+
 
 const RestaurantList = (props: {
-    restaurants: RestaurantDTO[];
+    restaurants: model.RestaurantDTO[];
     onEdit?: (id: string) => void;
     onEditMenu?: (id: string) => void;
     onViewOrders?: (id: string) => void;
@@ -45,7 +37,7 @@ const RestaurantList = (props: {
     );
 };
 const RestaurantListItem = (props: {
-    restaurant: RestaurantDTO;
+    restaurant: model.RestaurantDTO;
     onEdit?: (id: string) => void;
     onEditMenu?: (id: string) => void;
     onViewOrders?: (id: string) => void;
@@ -92,173 +84,20 @@ const RestaurantListItem = (props: {
     );
 };
 
-const RestaurantEditor = (props: {
-    restaurant: RestaurantDTO | null;
-    onCancel: () => void;
-    onSaved: (savedRestaurant: RestaurantDTO) => void;
-}) => {
-    const [submitting, setSubmitting] = useState(false);
-    const [serverResponse, setServerResponse] = useState<ServerResponse<any> | null>(null);
-    const [validated, setValidated] = useState(false);
-    const abort = useAbortable();
-
-    const formRef = useRef<any>();
-
-    // Clear message in case restaurant changes
-    useEffect(() => {
-        setServerResponse(null);
-    }, [props.restaurant]);
-
-    const onSave = async () => {
-        if (formRef.current?.checkValidity() === false) {
-            setValidated(true);
-            return;
-        }
-        let name: string = formRef.current?.formName.value;
-        let description: string = formRef.current?.formDescription.value;
-        let phoneNumber: string = formRef.current?.formPhone.value;
-        setSubmitting(true);
-        setServerResponse(null);
-
-        if (props.restaurant?.id === "") {
-            let req: NewRestaurantRequest = { name, description, phoneNumber };
-            let response = await restaurantAdd(req, abort);
-            if (response.isAborted) return;
-            setSubmitting(false);
-            setServerResponse(response);
-            if (response.ok && response.result) {
-                props.onSaved(response.result.restaurant);
-            }
-        } else {
-            let req: UpdateRestaurantRequest = { id: props.restaurant!.id, name, description, phoneNumber };
-            let response = await restaurantUpdate(req, abort);
-            if (response.isAborted) return;
-            setSubmitting(false);
-            setServerResponse(response);
-            if (response.ok && response.result) {
-                props.onSaved(response.result.restaurant);
-            }
-        }
-    };
-
-    return (
-        <Modal onHide={props.onCancel} show={!!props.restaurant}>
-            <Modal.Header closeButton>
-                <Modal.Title>Edit restaurant </Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                <Col className="d-grid">
-                    <Form onSubmit={onSave} noValidate validated={validated} ref={formRef}>
-                        <Form.Group className="mb-2" controlId="formName">
-                            <Form.Label>Restaurant name</Form.Label>
-                            <Form.Control
-                                type="text"
-                                maxLength={100}
-                                readOnly={submitting}
-                                defaultValue={props.restaurant?.name}
-                                required
-                            />
-                        </Form.Group>
-                        <Form.Group className="mb-2" controlId="formDescription">
-                            <Form.Label>Description</Form.Label>
-                            <Form.Control
-                                as="textarea"
-                                maxLength={2000}
-                                readOnly={submitting}
-                                defaultValue={props.restaurant?.description}
-                                rows={3}
-                                required
-                            />
-                        </Form.Group>
-                        <Form.Group className="mb-2" controlId="formPhone">
-                            <Form.Label>Phone number</Form.Label>
-                            <Form.Control
-                                type="phone"
-                                maxLength={50}
-                                readOnly={submitting}
-                                defaultValue={props.restaurant?.phoneNumber}
-                                required
-                            />
-                        </Form.Group>
-                    </Form>
-                    <MessageServiceContainer serverResponse={serverResponse} />
-                </Col>
-            </Modal.Body>
-            <Modal.Footer>
-                <Button variant="secondary" onClick={props.onCancel}>
-                    Cancel
-                </Button>
-                <LoadingButton variant="primary" type="submit" loading={submitting} onClick={onSave}>
-                    Save
-                </LoadingButton>
-            </Modal.Footer>
-        </Modal>
-    );
-};
-
-
-const RestaurantDeleter = (props: {
-    restaurant: RestaurantDTO | null;
-    onCancel: () => void;
-    onDeleted: () => void;
-}) => {
-    const [submitting, setSubmitting] = useState(false);
-    const [serverResponse, setServerResponse] = useState<ServerResponse<any> | null>(null);
-    const abort = useAbortable();
-
-    // Clear message in case restaurant changes
-    useEffect(() => {
-        setServerResponse(null);
-    }, [props.restaurant]);
-
-    const onDelete = async () => {
-        setSubmitting(true);
-        setServerResponse(null);
-
-        let req: DeleteRestaurantRequest = { id: props.restaurant!.id };
-        let response = await restaurantDelete(req, abort);
-        if (response.isAborted) return;
-        setSubmitting(false);
-        setServerResponse(response);
-        if (response.ok && response.result) {
-            props.onDeleted();
-        }
-    };
-
-    return (
-        <Modal onHide={props.onCancel} show={!!props.restaurant}>
-            <Modal.Header closeButton>
-                <Modal.Title>Delete restaurant </Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                Are you sure you wish to delete your restaurant "{props.restaurant?.name}"?
-            </Modal.Body>
-            <Modal.Footer>
-                <Button variant="secondary" onClick={props.onCancel}>
-                    Cancel
-                </Button>
-                <LoadingButton variant="danger" type="submit" loading={submitting} onClick={onDelete}>
-                    Delete
-                </LoadingButton>
-            </Modal.Footer>
-        </Modal>
-    );
-};
-
-const OwnerRestaurants = withMessageContainer(() => {
-    const msgs = useMessageService();
+const OwnerRestaurants = ui.withMessageContainer(() => {
+    const msgs = ui.useMessageService();
     const history = useHistory();
-    const abort = useAbortable();
+    const abort = ui.useAbortable();
 
     const [loading, setLoading] = useState(true);
-    const [restaurants, setRestaurants] = useState<RestaurantDTO[]>([]);
-    const [editedRestaurant, setEditedRestaurant] = useState<RestaurantDTO | null>(null);
-    const [restaurantToDelete, setRestaurantToDelete] = useState<RestaurantDTO | null>(null);
+    const [restaurants, setRestaurants] = useState<model.RestaurantDTO[]>([]);
+    const [editedRestaurant, setEditedRestaurant] = useState<model.RestaurantDTO | null>(null);
+    const [restaurantToDelete, setRestaurantToDelete] = useState<model.RestaurantDTO | null>(null);
 
     const loadRestaurants = async () => {
         msgs.clearMessage();
         setLoading(true);
-        let response = await restaurantFetchAll(abort);
+        let response = await api.restaurantFetchAll(abort);
         if (response.isAborted) return;
         setLoading(false);
         msgs.setMessageFromResponse(response);
@@ -276,11 +115,15 @@ const OwnerRestaurants = withMessageContainer(() => {
     }, []);
 
     const createNewRestaurant = () => {
-        setEditedRestaurant({ id: "", name: "New restaurant", description: "", phoneNumber: "" });
+        setEditedRestaurant({ id: "", name: "", description: "", phoneNumber: "" });
     };
     const editRestaurant = (id: string) => {
         let r = restaurants.find((x) => x.id === id);
         setEditedRestaurant(r!);
+    };
+    const deleteRestaurant = (id: string) => {
+        let r = restaurants.find((x) => x.id === id);
+        setRestaurantToDelete(r!);
     };
 
     const editMenu = (id: string) => {
@@ -289,24 +132,28 @@ const OwnerRestaurants = withMessageContainer(() => {
     const viewOrders = (id: string) => {
         history.push(routes.getOwnerOrdersForRestaurant(id));
     };
-    const deleteRestaurant = (id: string) => {
-        let r = restaurants.find((x) => x.id === id);
-        setRestaurantToDelete(r!);
-    };
 
     const onEditCancel = () => setEditedRestaurant(null);
-    const onEditSaved = (savedRestaurant: RestaurantDTO) => {
+    const onEditSaved = (savedRestaurant: model.RestaurantDTO) => {
+        // Replace the edited restaurant with the updated copy
+        let copy = [...restaurants]
+        if(editedRestaurant!.id)
+            copy[copy.indexOf(editedRestaurant!)] = savedRestaurant
+        else
+            copy.push(savedRestaurant);
         // Clear edited restaurant, this will hide the dialog
         setEditedRestaurant(null);
-        // Reload the list
-        loadRestaurants();
+        setRestaurants(copy);
     };
 
+    const onDeleteCancel = () => setRestaurantToDelete(null);
     const onDeleted = () => {
-        // Clear edited restaurant, this will hide the dialog
+        // Remove the restaurant
+        let copy = [...restaurants]
+        copy.splice(copy.indexOf(restaurantToDelete!), 1);
+        // Clear deleted restaurant, this will hide the dialog
         setRestaurantToDelete(null);
-        // Reload the list
-        loadRestaurants();
+        setRestaurants(copy);
     };
 
     return (
@@ -336,8 +183,8 @@ const OwnerRestaurants = withMessageContainer(() => {
             <Button onClick={createNewRestaurant} className="mt-3" disabled={loading}>
                 Create new restaurant
             </Button>
-            <RestaurantEditor restaurant={editedRestaurant} onCancel={onEditCancel} onSaved={onEditSaved} />
-            <RestaurantDeleter restaurant={restaurantToDelete} onCancel={onEditCancel} onDeleted={onDeleted} />
+            {editedRestaurant && <RestaurantEditor restaurant={editedRestaurant} onCancel={onEditCancel} onSaved={onEditSaved} />}
+            {restaurantToDelete && <RestaurantDeleter restaurant={restaurantToDelete} onCancel={onDeleteCancel} onDeleted={onDeleted} />}
         </Fragment>
     );
 });

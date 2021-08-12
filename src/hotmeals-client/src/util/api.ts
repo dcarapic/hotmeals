@@ -1,4 +1,4 @@
-import { DependencyList, useEffect, useState } from "react";
+import * as model from "./model";
 
 let serverUrl: string;
 if (process.env.NODE_ENV === "production") serverUrl = "/";
@@ -7,7 +7,13 @@ else serverUrl = "https://localhost:5001/";
 // API methods
 
 export async function userAuthenticate(abort?: AbortSignal): Promise<ServerResponse<AuthenticateResponse>> {
-    return await request<void, AuthenticateResponse>("Authenticate user", "api/user/authenticate", "GET", undefined, abort);
+    return await request<void, AuthenticateResponse>(
+        "Authenticate user",
+        "api/user/authenticate",
+        "GET",
+        undefined,
+        abort
+    );
 }
 export async function userLogin(req: LoginRequest, abort?: AbortSignal): Promise<ServerResponse<LoginResponse>> {
     return await request<LoginRequest, LoginResponse>("Login", "api/user/login", "POST", req, abort);
@@ -21,38 +27,130 @@ export async function userRegister(
     req: RegisterUserRequest,
     abort?: AbortSignal
 ): Promise<ServerResponse<RegisterUserResponse>> {
-    return await request<RegisterUserRequest, RegisterUserResponse>(`Register new ${req.isRestaurantOwner ? "restaurant owner" : "customer"}`, "api/user", "POST", req, abort);
+    return await request<RegisterUserRequest, RegisterUserResponse>(
+        `Register new ${req.isRestaurantOwner ? "restaurant owner" : "customer"}`,
+        "api/user",
+        "POST",
+        req,
+        abort
+    );
 }
 
 export async function userUpdate(
     req: UpdateUserRequest,
     abort?: AbortSignal
 ): Promise<ServerResponse<UpdateUserResponse>> {
-    return await request<UpdateUserRequest, UpdateUserResponse>("Update user information", "api/user", "PUT", req, abort);
+    return await request<UpdateUserRequest, UpdateUserResponse>(
+        "Update user information",
+        "api/user",
+        "PUT",
+        req,
+        abort
+    );
 }
 
 export async function restaurantFetchAll(abort?: AbortSignal): Promise<ServerResponse<GetRestaurantsResponse>> {
-    return await request<void, GetRestaurantsResponse>("Fetch all restaurants", "api/restaurants", "GET", undefined, abort);
+    return await request<void, GetRestaurantsResponse>(
+        "Fetch all restaurants",
+        "api/restaurants",
+        "GET",
+        undefined,
+        abort
+    );
 }
 export async function restaurantAdd(
     req: NewRestaurantRequest,
     abort?: AbortSignal
 ): Promise<ServerResponse<NewRestaurantResponse>> {
-    return await request<NewRestaurantRequest, NewRestaurantResponse>("Add new restaurant", "api/restaurants", "POST", req, abort);
+    return await request<NewRestaurantRequest, NewRestaurantResponse>(
+        "Add new restaurant",
+        "api/restaurants",
+        "POST",
+        req,
+        abort
+    );
 }
 
 export async function restaurantUpdate(
+    restaurantId: string,
     req: UpdateRestaurantRequest,
     abort?: AbortSignal
 ): Promise<ServerResponse<UpdateRestaurantResponse>> {
-    return await request<UpdateRestaurantRequest, UpdateRestaurantResponse>("Update restaurant", "api/restaurants", "PUT", req, abort);
+    return await request<UpdateRestaurantRequest, UpdateRestaurantResponse>(
+        "Update restaurant",
+        `api/restaurants/${restaurantId}`,
+        "PUT",
+        req,
+        abort
+    );
 }
 
 export async function restaurantDelete(
-    req: DeleteRestaurantRequest,
+    restaurantId: string,
     abort?: AbortSignal
-): Promise<ServerResponse<DeleteRestaurantResponse>> {
-    return await request<DeleteRestaurantRequest, DeleteRestaurantResponse>("Delete restaurant","api/restaurants", "DELETE", req, abort);
+): Promise<ServerResponse<APIResponse>> {
+    return await request<void, APIResponse>(
+        "Delete restaurant",
+        `api/restaurants/${restaurantId}`,
+        "DELETE",
+        undefined,
+        abort
+    );
+}
+
+export async function menuItemFetchAll(
+    restaurantId: string,
+    abort?: AbortSignal
+): Promise<ServerResponse<GetMenuItemsResponse>> {
+    return await request<void, GetMenuItemsResponse>(
+        "Fetch menu items for the restaurant",
+        `api/restaurants/${restaurantId}/menu`,
+        "GET",
+        undefined,
+        abort
+    );
+}
+export async function menuItemAdd(
+    restaurantId: string,
+    req: NewMenuItemRequest,
+    abort?: AbortSignal
+): Promise<ServerResponse<NewMenuItemResponse>> {
+    return await request<NewMenuItemRequest, NewMenuItemResponse>(
+        "Add new menu item",
+        `api/restaurants/${restaurantId}/menu`,
+        "POST",
+        req,
+        abort
+    );
+}
+
+export async function menuItemUpdate(
+    id: string,
+    restaurantId: string,
+    req: UpdateMenuItemRequest,
+    abort?: AbortSignal
+): Promise<ServerResponse<UpdateMenuItemResponse>> {
+    return await request<UpdateMenuItemRequest, UpdateMenuItemResponse>(
+        "Update menu item",
+        `api/restaurants/${restaurantId}/menu/${id}`,
+        "PUT",
+        req,
+        abort
+    );
+}
+
+export async function menuItemDelete(
+    id: string,
+    restaurantId: string,
+    abort?: AbortSignal
+): Promise<ServerResponse<APIResponse>> {
+    return await request<void, APIResponse>(
+        "Delete menu item",
+        `api/restaurants/${restaurantId}/menu/${id}`,
+        "DELETE",
+        undefined,
+        abort
+    );
 }
 
 // objects
@@ -72,24 +170,6 @@ export type ServerResponse<T = any> = {
     result?: T;
 };
 
-export type UserDTO = {
-    email: string;
-    firstName: string;
-    lastName: string;
-    addressCityZip: string;
-    addressCity: string;
-    addressStreet: string;
-    password: string;
-    isRestaurantOwner: boolean;
-};
-
-export type RestaurantDTO = {
-    id: string;
-    name: string;
-    description: string;
-    phoneNumber: string;
-};
-
 export type APIResponse = {
     isSuccess: boolean;
     errorMessage: string;
@@ -101,11 +181,11 @@ export type LoginRequest = {
 };
 
 export type LoginResponse = APIResponse & {
-    user: UserDTO;
+    user: model.UserDTO;
 };
 
 export type AuthenticateResponse = APIResponse & {
-    user: UserDTO;
+    user: model.UserDTO;
 };
 
 export type RegisterUserRequest = {
@@ -120,7 +200,7 @@ export type RegisterUserRequest = {
 };
 
 export type RegisterUserResponse = APIResponse & {
-    user: UserDTO;
+    user: model.UserDTO;
 };
 
 export type UpdateUserRequest = {
@@ -133,11 +213,11 @@ export type UpdateUserRequest = {
 };
 
 export type UpdateUserResponse = APIResponse & {
-    user: UserDTO;
+    user: model.UserDTO;
 };
 
 export type GetRestaurantsResponse = APIResponse & {
-    restaurants: RestaurantDTO[];
+    restaurants: model.RestaurantDTO[];
 };
 
 export type NewRestaurantRequest = {
@@ -147,25 +227,42 @@ export type NewRestaurantRequest = {
 };
 
 export type NewRestaurantResponse = APIResponse & {
-    restaurant: RestaurantDTO;
+    restaurant: model.RestaurantDTO;
 };
 
 export type UpdateRestaurantRequest = {
-    id: string;
     name: string;
     description: string;
     phoneNumber: string;
 };
 
 export type UpdateRestaurantResponse = APIResponse & {
-    restaurant: RestaurantDTO;
+    restaurant: model.RestaurantDTO;
 };
 
-export type DeleteRestaurantRequest = {
-    id: string;
+export type GetMenuItemsResponse = APIResponse & {
+    menuItems: model.MenuItemDTO[];
 };
 
-export type DeleteRestaurantResponse = APIResponse;
+export type NewMenuItemRequest = {
+    name: string;
+    description: string;
+    price: number;
+};
+
+export type NewMenuItemResponse = APIResponse & {
+    menuItem: model.MenuItemDTO;
+};
+
+export type UpdateMenuItemRequest = {
+    name: string;
+    description: string;
+    price: number;
+};
+
+export type UpdateMenuItemResponse = APIResponse & {
+    menuItem: model.MenuItemDTO;
+};
 
 // Helper functions
 
@@ -221,10 +318,8 @@ async function request<TReq = void, TResp = void>(
                 isNetworkError: true,
             };
     }
-    if(result.ok)
-        console.log(`%c ... ${result.statusCode}`, "color: darkblue");
-    else
-        console.log(`%c ... ${result.statusCode} / ${result.errorDetails}`, "color: darkblue");
+    if (result.ok) console.log(`%c ... ${result.statusCode}`, "color: darkblue");
+    else console.log(`%c ... ${result.statusCode} / ${result.errorDetails}`, "color: darkblue");
 
     return result;
 }
@@ -275,27 +370,3 @@ function getCookie(cname: string): string {
     }
     return "";
 }
-
-/**
- * React hook which returns an abort signal which is automatically raised if a component has been dismounted.
- */
-const useAbortable = (): AbortSignal => {
-    let [controller] = useState(new AbortController());
-    useEffect(() => {
-        return () => controller.abort();
-    }, [controller]);
-    return controller.signal;
-};
-
-/**
- * React effect hook which provides abort signal which is automatically raised if a component has been dismounted.
- */
-const useAbortableEffect = (effect: (signal: AbortSignal) => void, deps?: DependencyList) => {
-    useEffect(() => {
-        let controller = new AbortController();
-        effect(controller.signal);
-        return () => controller.abort();
-    }, deps);
-};
-
-export { useAbortableEffect, useAbortable };

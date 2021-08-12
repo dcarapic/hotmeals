@@ -1,8 +1,8 @@
-import React, { Fragment,  useContext, useEffect, useRef, useState } from "react";
+import React, { DependencyList, Fragment,  useContext, useEffect, useRef, useState } from "react";
 import { Alert, Toast, ToastContainer } from "react-bootstrap";
 import { Variant } from "react-bootstrap/esm/types";
 import { FunctionComponent } from "react-dom/node_modules/@types/react";
-import { ServerResponse } from "./api";
+import * as api from "../util/api";
 
 /**
  * User message definition.
@@ -18,7 +18,7 @@ export type Message = {
  */
 export type MessageService = {
     setMessage: (message: Message) => void;
-    setMessageFromResponse: (response: ServerResponse, caption?: string) => void;
+    setMessageFromResponse: (response: api.ServerResponse, caption?: string) => void;
     showToast: (message: Message) => void;
     clearMessage: () => void;
 };
@@ -37,7 +37,7 @@ const MessageServiceContext = React.createContext<MessageService>({
  * Helper function which generates a message from a server response of a request which is not successful.
  * In case there is no error then null is returned.
  */
-const generateMessageFromServerResponse = (response: ServerResponse, caption?: string): Message | null => {
+const generateMessageFromServerResponse = (response: api.ServerResponse, caption?: string): Message | null => {
     if (response.ok || response.isAborted) return null;
     let msg: Message;
     if (response.isBadRequest)
@@ -69,7 +69,7 @@ const generateMessageFromServerResponse = (response: ServerResponse, caption?: s
  */
 
 const MessageServiceContainer = (
-    props: React.PropsWithChildren<{ message?: Message | null; serverResponse?: ServerResponse | null }>
+    props: React.PropsWithChildren<{ message?: Message | null; serverResponse?: api.ServerResponse | null }>
 ) => {
     const [msg, setMsg] = useState<Message | null>(null);
     const [toasts, setToasts] = useState<Message[]>([]);
@@ -78,7 +78,7 @@ const MessageServiceContainer = (
             setMsg(message);
         },
         showToast: (message: Message) => {},
-        setMessageFromResponse: (response: ServerResponse, caption?: string) =>
+        setMessageFromResponse: (response: api.ServerResponse, caption?: string) =>
             setMsg(generateMessageFromServerResponse(response, caption)),
         clearMessage: () => setMsg(null),
     });
@@ -148,3 +148,28 @@ const withMessageContainer = (WrappedComponent: React.ComponentType) => {
 const useMessageService = () => useContext(MessageServiceContext);
 
 export { MessageServiceContext, MessageServiceContainer, useMessageService, withMessageContainer };
+
+
+/**
+ * React hook which returns an abort signal which is automatically raised if a component has been dismounted.
+ */
+ const useAbortable = (): AbortSignal => {
+    let [controller] = useState(new AbortController());
+    useEffect(() => {
+        return () => controller.abort();
+    }, [controller]);
+    return controller.signal;
+};
+
+/**
+ * React effect hook which provides abort signal which is automatically raised if a component has been dismounted.
+ */
+const useAbortableEffect = (effect: (signal: AbortSignal) => void, deps?: DependencyList) => {
+    useEffect(() => {
+        let controller = new AbortController();
+        effect(controller.signal);
+        return () => controller.abort();
+    }, deps);
+};
+
+export { useAbortableEffect, useAbortable };

@@ -1,10 +1,10 @@
 import React, { useContext } from "react";
-import { UserDTO } from "./util/api";
+import * as model from "./util/model";
 
 export type ApplicationUser = {
-    userData: UserDTO | null;
+    userData: model.UserDTO | null;
     isLoading: boolean;
-    setCurrentUser: (userData: UserDTO | null) => void;
+    setCurrentUser: (userData: model.UserDTO | null) => void;
 };
 
 const ApplicationUserContext = React.createContext<ApplicationUser>({ userData: null, isLoading: false, setCurrentUser: () => {} });

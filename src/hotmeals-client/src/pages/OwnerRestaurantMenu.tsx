@@ -1,14 +1,156 @@
-import React, { Fragment } from "react";
-import { Col } from "react-bootstrap";
-import { useMessageService, withMessageContainer } from "../util/ui";
+import React, { Fragment, useEffect, useState } from "react";
+import { Row, Col, Alert, Button } from "react-bootstrap";
+import { useHistory, useParams } from "react-router-dom";
+import * as api from "../util/api";
+import * as ui from "../util/ui";
+import * as model from "../util/model";
+import MenuItemEditor from "../shared/MenuItemEditor";
+import MenuItemDeleter from "../shared/MenuItemDeleter";
+import Loading from "../shared/Loading";
+import NotFoundPage from "./NotFoundPage";
 
-const OwnerRestaurantMenu = withMessageContainer(() => {
+const MenuItemList = (props: {
+    menuItems: model.MenuItemDTO[];
+    onEdit?: (id: string) => void;
+    onDelete?: (id: string) => void;
+}) => {
     return (
         <Fragment>
-            <h3 className="text-center p-2">Restaurant menu</h3>
-            <Col className="d-grid">
-                Restaurant menu
+            {props.menuItems.map((mi, i) => {
+                return (
+                    <Fragment key={mi.id}>
+                        {i > 0 && <hr />}
+                        <MenuItemListItem menuItem={mi} onEdit={props.onEdit} onDelete={props.onDelete} />
+                    </Fragment>
+                );
+            })}
+        </Fragment>
+    );
+};
+const MenuItemListItem = (props: {
+    menuItem: model.MenuItemDTO;
+    onEdit?: (id: string) => void;
+    onDelete?: (id: string) => void;
+}) => {
+    return (
+        <Row className="d-grid">
+            <Col>
+                <Col>{props.menuItem.name}</Col>
+                <Col>{props.menuItem.price} €</Col>
             </Col>
+            <Col>
+                <i>{props.menuItem.description}</i>
+            </Col>
+            <Col>
+                <Button
+                    size="sm"
+                    className="me-1 mb-1"
+                    variant="success"
+                    onClick={() => props.onEdit && props.onEdit(props.menuItem.id)}>
+                    Edit item
+                </Button>
+                <Button
+                    size="sm"
+                    className="me-1 mb-1"
+                    variant="danger"
+                    onClick={() => props.onDelete && props.onDelete(props.menuItem.id)}>
+                    Delete
+                </Button>
+            </Col>
+        </Row>
+    );
+};
+
+const OwnerRestaurantMenu = ui.withMessageContainer(() => {
+    const msgs = ui.useMessageService();
+    const history = useHistory();
+    const abort = ui.useAbortable();
+    const { restaurantId } = useParams<any>();
+    if (!restaurantId) return <NotFoundPage />;
+
+    const [loading, setLoading] = useState(true);
+    const [menuItems, setMenuItems] = useState<model.MenuItemDTO[]>([]);
+    const [editedMenuItem, setEditedMenuItem] = useState<model.MenuItemDTO | null>(null);
+    const [menuItemToDelete, setMenuItemToDelete] = useState<model.MenuItemDTO | null>(null);
+
+    const loadMenuItems = async () => {
+        msgs.clearMessage();
+        setLoading(true);
+        let response = await api.menuItemFetchAll(restaurantId, abort);
+        if (response.isAborted) return;
+        setLoading(false);
+        msgs.setMessageFromResponse(response);
+        if (response.ok && response.result) {
+            console.log(JSON.stringify(response.result.menuItems));
+            setMenuItems(response.result.menuItems);
+        } else {
+            setLoading(false);
+            setMenuItems([]);
+        }
+    };
+
+    useEffect(() => {
+        loadMenuItems();
+    }, []);
+
+    const createNewMenuItem = () => {
+        setEditedMenuItem({ id: "", restaurantId, name: "", description: "", price: 0 });
+    };
+    const editMenuItem = (id: string) => {
+        let r = menuItems.find((x) => x.id === id);
+        setEditedMenuItem(r!);
+    };
+    const deleteMenuItem = (id: string) => {
+        let r = menuItems.find((x) => x.id === id);
+        setMenuItemToDelete(r!);
+    };
+
+    const onEditCancel = () => setEditedMenuItem(null);
+    const onEditSaved = (savedMenuItem: model.MenuItemDTO) => {
+        // Replace the edited menu item with the updated copy
+        let copy = [...menuItems];
+        if(editedMenuItem!.id)
+            copy[copy.indexOf(editedMenuItem!)] = savedMenuItem;
+        else
+            copy.push(savedMenuItem);
+        // Clear edited menu item, this will hide the dialog
+        setEditedMenuItem(null);
+        setMenuItems(copy);
+    };
+
+    const onDeleteCancel = () => setMenuItemToDelete(null);
+    const onDeleted = () => {
+        // Remove the menu item
+        let copy = [...menuItems];
+        copy.splice(copy.indexOf(menuItemToDelete!), 1);
+        // Clear deleted menu item, this will hide the dialog
+        setMenuItemToDelete(null);
+        setMenuItems(copy);
+    };
+
+    return (
+        <Fragment>
+            <h3 className="text-center p-2">MenuItem XY menu</h3>
+            {loading && (
+                <Row className="justify-content-center">
+                    <Col xs="3">
+                        <Loading showLabel />
+                    </Col>
+                </Row>
+            )}
+            {!loading && (
+                <Fragment>
+                    <MenuItemList menuItems={menuItems} onEdit={editMenuItem} onDelete={deleteMenuItem} />
+                    <Alert show={menuItems.length == 0} variant="primary">
+                        You do not have any menu items at the moment.
+                    </Alert>
+                </Fragment>
+            )}
+            <Button onClick={createNewMenuItem} className="mt-3" disabled={loading}>
+                Create new menu item
+            </Button>
+            {editedMenuItem && <MenuItemEditor menuItem={editedMenuItem} onCancel={onEditCancel} onSaved={onEditSaved} />}
+            {menuItemToDelete && <MenuItemDeleter menuItem={menuItemToDelete} onCancel={onDeleteCancel} onDeleted={onDeleted} />}
         </Fragment>
     );
 });

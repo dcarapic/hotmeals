@@ -9,7 +9,7 @@ namespace hotmeals_server.Model
     {
         public Guid UserId { get; set; }
         public Guid RestaurantId { get; set; }
-
+        public DateTime DateCreated {get; set;}
         public virtual RestaurantRecord Restaurant { get; set; }
         public virtual UserRecord User { get; set; }
     }

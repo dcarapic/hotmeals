@@ -1,19 +1,19 @@
 import React, { Fragment, useState } from "react";
+import * as api from "../util/api";
+import * as ui from "../util/ui";
 import { Form } from "react-bootstrap";
 import { FormEvent } from "react-dom/node_modules/@types/react";
 import { useHistory } from "react-router-dom";
-import { useAbortable, userLogin } from "../util/api";
-import { useMessageService, withMessageContainer } from "../util/ui";
-import routes from "../routeConfig";
+import routes from "../routes";
 import { LoadingButton } from "../shared/LoadingButton";
 import { RouterNavLink } from "../shared/RouterNav";
 import { useCurrentUser } from "../user";
 
-const LoginPage = withMessageContainer(() => {
+const LoginPage = ui.withMessageContainer(() => {
     const currentUser = useCurrentUser();
-    const msgs = useMessageService();
+    const msgs = ui.useMessageService();
     const history = useHistory();
-    const abort = useAbortable();
+    const abort = ui.useAbortable();
 
     const [submitting, setSubmitting] = useState(false);
     const [validated, setValidated] = useState(false);
@@ -32,7 +32,7 @@ const LoginPage = withMessageContainer(() => {
         setValidated(false);
         setSubmitting(true);
         msgs.clearMessage();
-        let response = await userLogin({ email, password }, abort);
+        let response = await api.userLogin({ email, password }, abort);
         if (response.isAborted) return;
         setSubmitting(false);
         msgs.setMessageFromResponse(response);

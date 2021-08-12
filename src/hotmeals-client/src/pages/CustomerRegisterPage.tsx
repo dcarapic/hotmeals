@@ -1,8 +1,9 @@
 import React, { Fragment } from "react";
-import { withMessageContainer } from "../util/ui";
+import * as api from "../util/api";
+import * as ui from "../util/ui";
 import AccountEditor from "../shared/AccountEditor";
 
-const CustomerRegisterPage = withMessageContainer(() => {
+const CustomerRegisterPage = ui.withMessageContainer(() => {
     return (
         <Fragment>
             <h3 className="text-center p-2">

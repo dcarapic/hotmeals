@@ -16,6 +16,7 @@ namespace hotmeals_server.Model
         public Guid CustomerId { get; set; }
         public Guid RestaurantId { get; set; }
         public int StatusId { get; set; }
+        public DateTime DateCreated {get; set;}
 
         public virtual UserRecord Customer { get; set; }
         public virtual RestaurantRecord Restaurant { get; set; }
