@@ -19,6 +19,7 @@ namespace hotmeals_server.Model
         public string Description { get; set; }
         public string PhoneNumber { get; set; }
         public DateTime DateCreated {get; set;}
+        public int Version {get; set;}
 
         public virtual UserRecord Owner { get; set; }
         public virtual ICollection<MenuItemRecord> MenuItems { get; set; }

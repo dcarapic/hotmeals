@@ -1,7 +1,6 @@
-import React, { Fragment, useState } from "react";
+import React, { FormEvent, Fragment, useState } from "react";
 import * as ui from "../util/ui";
 import { Col, Form, InputGroup } from "react-bootstrap";
-import { FormEvent } from "react-dom/node_modules/@types/react";
 import { LoadingButton } from "../shared/LoadingButton";
 import { RouterNavButton } from "../shared/RouterNav";
 import { useHistory } from "react-router-dom";
@@ -42,7 +41,7 @@ const CustomerHomePage = ui.withMessageContainer(() => {
             </Form>
             <h5 className="text-center p-2">... or ...</h5>
             <Col className="d-grid">
-                <RouterNavButton to="/restaurants">Select restaurant to order from</RouterNavButton>
+                <RouterNavButton to={routes.customerRestaurants}>Select restaurant to order from</RouterNavButton>
             </Col>
         </Fragment>
     );

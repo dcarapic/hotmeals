@@ -1,8 +1,7 @@
-import React, { Fragment, useState } from "react";
+import React, { FormEvent, Fragment, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import { Form } from "react-bootstrap";
-import { FormEvent } from "react-dom/node_modules/@types/react";
 import { useHistory } from "react-router-dom";
 import routes from "../routes";
 import { LoadingButton } from "../shared/LoadingButton";

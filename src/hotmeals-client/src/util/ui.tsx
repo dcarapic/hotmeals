@@ -1,7 +1,6 @@
-import React, { DependencyList, Fragment,  useContext, useEffect, useRef, useState } from "react";
+import React, { DependencyList, Fragment, FunctionComponent, useContext, useEffect, useRef, useState } from "react";
 import { Alert, Toast, ToastContainer } from "react-bootstrap";
 import { Variant } from "react-bootstrap/esm/types";
-import { FunctionComponent } from "react-dom/node_modules/@types/react";
 import * as api from "../util/api";
 
 /**
@@ -57,7 +56,7 @@ const generateMessageFromServerResponse = (response: api.ServerResponse, caption
     else
         msg = {
             caption: caption || `${response.requestDescription} - failed`,
-            description: "An error occurred while processing your request",
+            description: response.errorDetails || "An error occurred while processing your request",
             variant: "danger",
         };
     return msg;
@@ -96,7 +95,7 @@ const MessageServiceContainer = (
     const onToastClose = (toast: Message) => {
         let index = toasts.indexOf(toast);
         let newToasts = [...toasts];
-        newToasts.splice(index,index)
+        newToasts.splice(index, index);
         setToasts(newToasts);
     };
 
@@ -113,7 +112,7 @@ const MessageServiceContainer = (
                 {toasts.length > 0 && (
                     <ToastContainer position="bottom-center">
                         {toasts.map((t) => (
-                            <Toast bg={t.variant || "danger"} onClose={() => onToastClose(t)} autohide >
+                            <Toast bg={t.variant || "danger"} onClose={() => onToastClose(t)} autohide>
                                 <Toast.Header>
                                     <strong className="me-auto">{t.caption}</strong>
                                 </Toast.Header>
@@ -149,11 +148,10 @@ const useMessageService = () => useContext(MessageServiceContext);
 
 export { MessageServiceContext, MessageServiceContainer, useMessageService, withMessageContainer };
 
-
 /**
  * React hook which returns an abort signal which is automatically raised if a component has been dismounted.
  */
- const useAbortable = (): AbortSignal => {
+const useAbortable = (): AbortSignal => {
     let [controller] = useState(new AbortController());
     useEffect(() => {
         return () => controller.abort();

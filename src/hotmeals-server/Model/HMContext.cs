@@ -159,6 +159,8 @@ namespace hotmeals_server.Model
                     .IsRequired()
                     .HasColumnType("nvarchar(50)");
 
+                entity.Property(e => e.Version).IsConcurrencyToken().HasColumnType("int");
+
                 entity.Property(e => e.DateCreated).IsRequired().HasColumnType("datetime");
 
                 entity.HasOne(d => d.Owner)

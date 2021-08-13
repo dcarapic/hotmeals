@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect, useState } from "react";
-import { Alert, Button, Col,  Row } from "react-bootstrap";
+import { Alert, Button, Col, Row } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
@@ -10,32 +10,6 @@ import RestaurantEditor from "../shared/RestaurantEditor";
 import RestaurantDeleter from "../shared/RestaurantDeleter";
 
 
-const RestaurantList = (props: {
-    restaurants: model.RestaurantDTO[];
-    onEdit?: (id: string) => void;
-    onEditMenu?: (id: string) => void;
-    onViewOrders?: (id: string) => void;
-    onDelete?: (id: string) => void;
-}) => {
-    return (
-        <Fragment>
-            {props.restaurants.map((r, i) => {
-                return (
-                    <Fragment key={r.id}>
-                        {i > 0 && <hr />}
-                        <RestaurantListItem
-                            restaurant={r}
-                            onEdit={props.onEdit}
-                            onEditMenu={props.onEditMenu}
-                            onViewOrders={props.onViewOrders}
-                            onDelete={props.onDelete}
-                        />
-                    </Fragment>
-                );
-            })}
-        </Fragment>
-    );
-};
 const RestaurantListItem = (props: {
     restaurant: model.RestaurantDTO;
     onEdit?: (id: string) => void;
@@ -44,13 +18,17 @@ const RestaurantListItem = (props: {
     onDelete?: (id: string) => void;
 }) => {
     return (
-        <Row className="d-grid">
-            <Col>{props.restaurant.name}</Col>
-            <Col>
+        <div className="mb-3">
+            <div>
+                <strong>{props.restaurant.name}</strong>
+            </div>
+            <div>
                 <i>{props.restaurant.description}</i>
-            </Col>
-            <Col>☎{props.restaurant.phoneNumber}</Col>
-            <Col>
+            </div>
+            <div>
+                {props.restaurant.phoneNumber}
+            </div>
+            <div className="d-flex flex-wrap">
                 <Button
                     size="sm"
                     className="me-1 mb-1"
@@ -79,8 +57,8 @@ const RestaurantListItem = (props: {
                     onClick={() => props.onDelete && props.onDelete(props.restaurant.id)}>
                     Delete restaurant
                 </Button>
-            </Col>
-        </Row>
+            </div>
+        </div>
     );
 };
 
@@ -90,6 +68,7 @@ const OwnerRestaurants = ui.withMessageContainer(() => {
     const abort = ui.useAbortable();
 
     const [loading, setLoading] = useState(true);
+    const [loaded, setLoaded] = useState(false);
     const [restaurants, setRestaurants] = useState<model.RestaurantDTO[]>([]);
     const [editedRestaurant, setEditedRestaurant] = useState<model.RestaurantDTO | null>(null);
     const [restaurantToDelete, setRestaurantToDelete] = useState<model.RestaurantDTO | null>(null);
@@ -97,12 +76,12 @@ const OwnerRestaurants = ui.withMessageContainer(() => {
     const loadRestaurants = async () => {
         msgs.clearMessage();
         setLoading(true);
-        let response = await api.restaurantFetchAll(abort);
+        let response = await api.restaurantFetchAll(1, abort);
         if (response.isAborted) return;
         setLoading(false);
         msgs.setMessageFromResponse(response);
+        setLoaded(true);
         if (response.ok && response.result) {
-            console.log(JSON.stringify(response.result.restaurants));
             setRestaurants(response.result.restaurants);
         } else {
             setLoading(false);
@@ -136,11 +115,9 @@ const OwnerRestaurants = ui.withMessageContainer(() => {
     const onEditCancel = () => setEditedRestaurant(null);
     const onEditSaved = (savedRestaurant: model.RestaurantDTO) => {
         // Replace the edited restaurant with the updated copy
-        let copy = [...restaurants]
-        if(editedRestaurant!.id)
-            copy[copy.indexOf(editedRestaurant!)] = savedRestaurant
-        else
-            copy.push(savedRestaurant);
+        let copy = [...restaurants];
+        if (editedRestaurant!.id) copy[copy.indexOf(editedRestaurant!)] = savedRestaurant;
+        else copy.push(savedRestaurant);
         // Clear edited restaurant, this will hide the dialog
         setEditedRestaurant(null);
         setRestaurants(copy);
@@ -149,7 +126,7 @@ const OwnerRestaurants = ui.withMessageContainer(() => {
     const onDeleteCancel = () => setRestaurantToDelete(null);
     const onDeleted = () => {
         // Remove the restaurant
-        let copy = [...restaurants]
+        let copy = [...restaurants];
         copy.splice(copy.indexOf(restaurantToDelete!), 1);
         // Clear deleted restaurant, this will hide the dialog
         setRestaurantToDelete(null);
@@ -166,25 +143,35 @@ const OwnerRestaurants = ui.withMessageContainer(() => {
                     </Col>
                 </Row>
             )}
-            {!loading && (
-                <Fragment>
-                    <RestaurantList
-                        restaurants={restaurants}
-                        onEdit={editRestaurant}
-                        onViewOrders={viewOrders}
-                        onEditMenu={editMenu}
-                        onDelete={deleteRestaurant}
-                    />
-                    <Alert show={restaurants.length === 0} variant="primary">
-                        You do not have any restaurants at the moment.
-                    </Alert>
-                </Fragment>
+            {loaded && (
+                <div className="row mb-2">
+                    {restaurants.map((r, i) => {
+                        return (
+                            <div className="col-12" key={r.id}>
+                                <RestaurantListItem
+                                    restaurant={r}
+                                    onEdit={editRestaurant}
+                                    onViewOrders={viewOrders}
+                                    onEditMenu={editMenu}
+                                    onDelete={deleteRestaurant}
+                                />
+                            </div>
+                        );
+                    })}
+                </div>
             )}
+            <Alert show={loaded && restaurants.length === 0} variant="info">
+                You do not have any restaurants at the moment.
+            </Alert>
             <Button onClick={createNewRestaurant} className="mt-3" disabled={loading}>
                 Create new restaurant
             </Button>
-            {editedRestaurant && <RestaurantEditor restaurant={editedRestaurant} onCancel={onEditCancel} onSaved={onEditSaved} />}
-            {restaurantToDelete && <RestaurantDeleter restaurant={restaurantToDelete} onCancel={onDeleteCancel} onDeleted={onDeleted} />}
+            {editedRestaurant && (
+                <RestaurantEditor restaurant={editedRestaurant} onCancel={onEditCancel} onSaved={onEditSaved} />
+            )}
+            {restaurantToDelete && (
+                <RestaurantDeleter restaurant={restaurantToDelete} onCancel={onDeleteCancel} onDeleted={onDeleted} />
+            )}
         </Fragment>
     );
 });

@@ -120,7 +120,7 @@ const AppRoutes = () => {
 
     return (
         <Switch>
-            <Route exact path={routes.customerSearch}>
+            <Route path={routes.customerSearch}>
                 {RequiresAuthCustomer(currentUser.userData, <CustomerSearchPage />)}
             </Route>            
             <Route exact path={routes.customerOrder}>

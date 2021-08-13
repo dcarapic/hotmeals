@@ -27,6 +27,7 @@ namespace hotmeals_server.Controllers
 
         ILogger<RestaurantController> _log;
         private HMContext _db;
+        const int RestaurantsResultPageSize = 20;
 
         public RestaurantController(ILogger<RestaurantController> logger, HMContext db)
         {
@@ -36,30 +37,38 @@ namespace hotmeals_server.Controllers
 
         /// <summary>
         /// Returns the list of all restaurants. 
-        /// If the current user is a customer then all restaurants which can be ordered from are returned.
-        /// If the current user is a restaurant owner then only the restaurants from that user are returned.
+        /// If the current user is a customer then all restaurants which can be ordered from are returned. The results are paged.
+        /// If the current user is a restaurant owner then only the restaurants from that user are returned. The results are always in one page.
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        public async Task<IActionResult> GetAllRestaurants()
+        public async Task<IActionResult> GetAllRestaurants([FromQuery] int page = 1)
         {
+            IQueryable<RestaurantDTO> qry;
+            var totalPages = 1;
+
             if (this.CurrentUser.IsRestaurantOwner)
             {
-                var result = from r in _db.Restaurants
-                             where r.OwnerId == CurrentUser.Id
-                             orderby r.DateCreated
-                             select new RestaurantDTO(r.Id, r.Name, r.Description, r.PhoneNumber);
-                return Ok(new GetRestaurantsResponse(await result.ToArrayAsync()));
+                qry = from r in _db.Restaurants
+                      where r.OwnerId == CurrentUser.Id
+                      orderby r.DateCreated
+                      select new RestaurantDTO(r.Id, r.Name, r.Description, r.PhoneNumber);
+
             }
             else
             {
-                var result = from r in _db.Restaurants
-                             join o in _db.Users on r.OwnerId equals o.Id
-                             where !o.BlockedUsers.Any(x => x.UserId == CurrentUser.Id) && r.MenuItems.Any()
-                             orderby r.Name
-                             select new RestaurantDTO(r.Id, r.Name, r.Description, r.PhoneNumber);
-                return Ok(new GetRestaurantsResponse(await result.ToArrayAsync()));
+                qry = from r in _db.Restaurants
+                      join o in _db.Users on r.OwnerId equals o.Id
+                      where !o.BlockedUsers.Any(x => x.UserId == CurrentUser.Id) && r.MenuItems.Any()
+                      orderby r.Name
+                      select new RestaurantDTO(r.Id, r.Name, r.Description, r.PhoneNumber);
+
+                var total = (int)(await qry.CountAsync());
+                totalPages = total == 0 ? 0 : (total / RestaurantsResultPageSize) + 1;
+                qry = qry.Skip(page - 1).Take(RestaurantsResultPageSize);
             }
+
+            return Ok(new GetRestaurantsResponse(await qry.ToArrayAsync(), TotalPages: totalPages, Page: 1));
         }
 
         /// <summary>
@@ -82,6 +91,7 @@ namespace hotmeals_server.Controllers
             restaurant.Description = req.Description.Trim();
             restaurant.PhoneNumber = req.PhoneNumber.Trim();
             restaurant.DateCreated = DateTime.UtcNow;
+            restaurant.Version = 1;
             _db.Restaurants.Add(restaurant);
 
             await _db.SaveChangesAsync();
@@ -116,6 +126,7 @@ namespace hotmeals_server.Controllers
             restaurant.Name = req.Name.Trim();
             restaurant.Description = req.Description.Trim();
             restaurant.PhoneNumber = req.PhoneNumber.Trim();
+            restaurant.Version = +1;
             await _db.SaveChangesAsync();
             return Ok(new UpdateRestaurantResponse(new RestaurantDTO(
                 Id: restaurant.Id,

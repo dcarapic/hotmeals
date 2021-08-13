@@ -1,10 +1,9 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { FormEvent, Fragment, useEffect, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../util/model";
-import { Plus } from "react-bootstrap-icons";
-import { Button, Col, Form, InputGroup, Pagination, Row } from "react-bootstrap";
-import { FormEvent } from "react-dom/node_modules/@types/react";
+import { Plus, EmojiFrown } from "react-bootstrap-icons";
+import { Alert, Button, Col, Form, InputGroup, Pagination, Row } from "react-bootstrap";
 import { LoadingButton } from "../shared/LoadingButton";
 import { RouterNavButton } from "../shared/RouterNav";
 import { useHistory, useLocation, useParams } from "react-router-dom";
@@ -17,7 +16,9 @@ const SearchResultItem = (props: {
 }) => {
     return (
         <div className="mb-3">
-            <div className="bg-secondary text-white mb-1 px-2"><small>{props.item.restaurantName}</small></div>
+            <div className="bg-secondary text-white mb-1 px-2">
+                <small>{props.item.restaurantName}</small>
+            </div>
             <div className="row ">
                 <div className="col-7">{props.item.name}</div>
                 <div className="col-3">
@@ -123,11 +124,14 @@ const CustomerSearchPage = ui.withMessageContainer(() => {
             )}
 
             {searched && pageInfo && pageInfo.totalPages > 1 && (
-                <ServerResponsePagination pageInfo={pageInfo} onPageChanged={performSearch} />
+                <ServerResponsePagination pageInfo={pageInfo} onPageChanged={performSearch} disabled={searching} />
             )}
+            <Alert show={searched && items.length == 0} variant="info">
+                No such food, <EmojiFrown/>. Try something else?
+            </Alert>
             <h5 className="text-center p-2">... or ...</h5>
             <Col className="d-grid">
-                <RouterNavButton to="/restaurants">Select restaurant to order from</RouterNavButton>
+                <RouterNavButton to={routes.customerRestaurants}>Select restaurant to order from</RouterNavButton>
             </Col>
         </Fragment>
     );

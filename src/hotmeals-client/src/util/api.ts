@@ -49,10 +49,10 @@ export async function userUpdate(
     );
 }
 
-export async function restaurantFetchAll(abort?: AbortSignal): Promise<ServerResponse<GetRestaurantsResponse>> {
+export async function restaurantFetchAll(page: number, abort?: AbortSignal): Promise<ServerResponse<GetRestaurantsResponse>> {
     return await request<void, GetRestaurantsResponse>(
         "Fetch all restaurants",
-        "api/restaurants",
+        `api/restaurants?page=${page}`,
         "GET",
         undefined,
         abort
@@ -278,7 +278,7 @@ export type UpdateUserResponse = APIResponse & {
     user: model.UserDTO;
 };
 
-export type GetRestaurantsResponse = APIResponse & {
+export type GetRestaurantsResponse = APIResponse & PagingInformation & {
     restaurants: model.RestaurantDTO[];
 };
 
@@ -426,6 +426,8 @@ async function updateResultFromBody<T>(response: ServerResponse<T>): Promise<voi
 
 async function extractErrorDetails(response: Response): Promise<string> {
     try {
+        if(response.status === 500)
+            return "Error occurred on the server. Please try again later."
         let json: any = await response.json();
         if (json.errorMessage) return json.errorMessage;
         // Parse .NET model validation error
@@ -441,7 +443,7 @@ async function extractErrorDetails(response: Response): Promise<string> {
         }
         return json.toString();
     } catch (e) {
-        return await response.text();
+        return "Failed to process server response. Please try again later.";
     }
 }
 
