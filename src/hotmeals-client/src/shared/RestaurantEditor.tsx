@@ -49,7 +49,13 @@ const RestaurantEditor = (props: {
     };
 
     return (
-        <Modal onHide={props.onCancel} show={true}>
+        <Modal
+            onHide={() => {
+                if (submitting) return;
+                props.onCancel();
+            }}
+            show={true}
+            backdrop="static">
             <Modal.Header closeButton>
                 <Modal.Title>Edit restaurant </Modal.Title>
             </Modal.Header>
@@ -92,7 +98,7 @@ const RestaurantEditor = (props: {
                 </Col>
             </Modal.Body>
             <Modal.Footer>
-                <Button variant="secondary" onClick={props.onCancel}>
+                <Button variant="secondary" disabled={submitting} onClick={props.onCancel}>
                     Cancel
                 </Button>
                 <LoadingButton variant="primary" type="submit" loading={submitting} onClick={onSave}>

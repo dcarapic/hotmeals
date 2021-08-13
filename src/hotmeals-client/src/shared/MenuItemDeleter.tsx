@@ -1,4 +1,4 @@
-import React, {  useState } from "react";
+import React, { useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../util/model";
@@ -24,7 +24,13 @@ const MenuItemDeleter = (props: { menuItem: model.MenuItemDTO; onCancel: () => v
     };
 
     return (
-        <Modal onHide={props.onCancel} show={true}>
+        <Modal
+            onHide={() => {
+                if (submitting) return;
+                props.onCancel();
+            }}
+            show={true}
+            backdrop="static">
             <Modal.Header closeButton>
                 <Modal.Title>Delete menuItem </Modal.Title>
             </Modal.Header>
@@ -33,7 +39,7 @@ const MenuItemDeleter = (props: { menuItem: model.MenuItemDTO; onCancel: () => v
                 <ui.MessageServiceContainer serverResponse={serverResponse} />
             </Modal.Body>
             <Modal.Footer>
-                <Button variant="secondary" onClick={props.onCancel}>
+                <Button variant="secondary" disabled={submitting} onClick={props.onCancel}>
                     Cancel
                 </Button>
                 <LoadingButton variant="danger" type="submit" loading={submitting} onClick={onDelete}>

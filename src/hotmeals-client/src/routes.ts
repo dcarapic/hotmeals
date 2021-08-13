@@ -3,7 +3,8 @@ const routes = {
     login :  "/login",
     userAccount :  "/account",
     customerRegister :  "/customer-register",
-    customerOrder:  "/customer-order",
+    customerSearch :  "/search/:searchQuery",
+    customerOrder:  "/order",
     customerRestaurants:  "/customer-restaurants",
     customerOrders:  "/customer-orders",
     ownerRegister:  "/owner-register",
@@ -13,6 +14,7 @@ const routes = {
     ownerRestaurants:  "/owner-restaurants",
     ownerRestaurantMenu:  "/owner-restaurants/:restaurantId/menu",
     
+    getCustomerSearch: (searchExpression: string) => `/search/${encodeURI(searchExpression.trim())}`,
     getOwnerOrdersForRestaurant: (restaurantId: string) =>  `/owner-orders/${restaurantId}`,
     getOwnerRestaurantMenu: (restaurantId: string) =>  `/owner-restaurants/${restaurantId}/menu`,
 }

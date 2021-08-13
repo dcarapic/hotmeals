@@ -22,6 +22,7 @@ const MenuItemEditor = (props: {
             setValidated(true);
             return;
         }
+        setValidated(false);
         let name: string = formRef.current?.formName.value;
         let description: string = formRef.current?.formDescription.value;
         let price: number = formRef.current?.formPrice.value;
@@ -50,7 +51,13 @@ const MenuItemEditor = (props: {
     };
 
     return (
-        <Modal onHide={props.onCancel} show={true}>
+        <Modal
+            onHide={() => {
+                if (submitting) return;
+                props.onCancel();
+            }}
+            show={true}
+            backdrop="static">
             <Modal.Header closeButton>
                 <Modal.Title>Edit menuItem </Modal.Title>
             </Modal.Header>
@@ -83,8 +90,9 @@ const MenuItemEditor = (props: {
                             <Form.Control
                                 type="number"
                                 min={0}
-                                max={999999}
+                                max={99999}
                                 readOnly={submitting}
+                                step=".01"
                                 defaultValue={props.menuItem?.price}
                                 required
                             />
@@ -94,7 +102,7 @@ const MenuItemEditor = (props: {
                 </Col>
             </Modal.Body>
             <Modal.Footer>
-                <Button variant="secondary" onClick={props.onCancel}>
+                <Button variant="secondary" disabled={submitting} onClick={props.onCancel}>
                     Cancel
                 </Button>
                 <LoadingButton variant="primary" type="submit" loading={submitting} onClick={onSave}>

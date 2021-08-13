@@ -1,16 +1,11 @@
-import React, {  useState } from "react";
+import React, { useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../util/model";
 import { Button, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
 
-
-const RestaurantDeleter = (props: {
-    restaurant: model.RestaurantDTO;
-    onCancel: () => void;
-    onDeleted: () => void;
-}) => {
+const RestaurantDeleter = (props: { restaurant: model.RestaurantDTO; onCancel: () => void; onDeleted: () => void }) => {
     const [submitting, setSubmitting] = useState(false);
     const [serverResponse, setServerResponse] = useState<api.ServerResponse<any> | null>(null);
     const abort = ui.useAbortable();
@@ -29,7 +24,13 @@ const RestaurantDeleter = (props: {
     };
 
     return (
-        <Modal onHide={props.onCancel} show={true}>
+        <Modal
+            onHide={() => {
+                if (submitting) return;
+                props.onCancel();
+            }}
+            show={true}
+            backdrop="static">
             <Modal.Header closeButton>
                 <Modal.Title>Delete restaurant </Modal.Title>
             </Modal.Header>
@@ -38,7 +39,7 @@ const RestaurantDeleter = (props: {
                 <ui.MessageServiceContainer serverResponse={serverResponse} />
             </Modal.Body>
             <Modal.Footer>
-                <Button variant="secondary" onClick={props.onCancel}>
+                <Button variant="secondary" disabled={submitting} onClick={props.onCancel}>
                     Cancel
                 </Button>
                 <LoadingButton variant="danger" type="submit" loading={submitting} onClick={onDelete}>

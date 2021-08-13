@@ -25,6 +25,7 @@ import Loading from "./shared/Loading";
 import TopNav from "./shared/TopNav";
 import { CurrentUserContext, ApplicationUser, useCurrentUser } from "./user";
 import GlobalErrorBoundary from "./util/globalErrorHandling";
+import CustomerSearchPage from "./pages/CustomerSearchPage";
 
 /**
  * Main application component.
@@ -65,9 +66,9 @@ const App = () => {
             <CurrentUserContext.Provider value={currentUser}>
                 <BrowserRouter>
                     <TopNav />
-                    <Container className="mt-2">
-                        <Row className="justify-content-md-center">
-                            <Col lg="8">
+                    <Container className="py-4">
+                        <Row className="justify-content-center">
+                            <Col style={{maxWidth: "768px"}}>
                                 <AppRoutes />
                             </Col>
                         </Row>
@@ -81,17 +82,34 @@ const App = () => {
 const AppRoutes = () => {
     const currentUser = useCurrentUser();
 
-    // Wraps component to:
-    // - Redirects to login page in case the user is not authenticated
-    // - Displays main component or an alternate component if the user is a restaurant owner
-    const RequiresAuth = (user: model.UserDTO | null, component: JSX.Element, alternateOwnerComponent?: JSX.Element) => {
+    const RequiresAuth = (user: model.UserDTO | null, customerComponent: JSX.Element, ownerComponent: JSX.Element) => {
         if (!user)  {
             console.log(`Redirecting to login`);
             return <Redirect to="/login" />;
         }
-        if (user.isRestaurantOwner && alternateOwnerComponent) return alternateOwnerComponent;
+        if (user.isRestaurantOwner) return ownerComponent;
+        if (!user.isRestaurantOwner) return customerComponent;
+        return customerComponent;
+    };
+    
+    const RequiresAuthCustomer = (user: model.UserDTO | null, component: JSX.Element) => {
+        if (!user)  {
+            console.log(`Redirecting to login`);
+            return <Redirect to="/login" />;
+        }
+        if (user.isRestaurantOwner) return <NotFoundPage />;
         return component;
     };
+  
+    const RequiresAuthOwner = (user: model.UserDTO | null, component: JSX.Element) => {
+        if (!user)  {
+            console.log(`Redirecting to login`);
+            return <Redirect to="/login" />;
+        }
+        if (!user.isRestaurantOwner) return <NotFoundPage />;
+        return component;
+    };
+
 
     if (currentUser.isLoading)
         return (
@@ -102,46 +120,51 @@ const AppRoutes = () => {
 
     return (
         <Switch>
-            <Route exact path={routes.login}>
-                <LoginPage />
-            </Route>
-            <Route exact path={routes.userAccount}>
-                {RequiresAuth(currentUser.userData, <CustomerAccountPage />, <OwnerAccountPage />)}
-            </Route>
-            <Route exact path={routes.customerRegister}>
-                <CustomerRegisterPage />
-            </Route>
+            <Route exact path={routes.customerSearch}>
+                {RequiresAuthCustomer(currentUser.userData, <CustomerSearchPage />)}
+            </Route>            
             <Route exact path={routes.customerOrder}>
-                {RequiresAuth(currentUser.userData, <CustomerOrdering />)}
+                {RequiresAuthCustomer(currentUser.userData, <CustomerOrdering />)}
             </Route>
             <Route exact path={routes.customerRestaurants}>
-                {RequiresAuth(currentUser.userData, <CustomerRestaurants />)}
+                {RequiresAuthCustomer(currentUser.userData, <CustomerRestaurants />)}
             </Route>
             <Route exact path={routes.customerOrders}>
-                {RequiresAuth(currentUser.userData, <CustomerOrders />)}
+                {RequiresAuthCustomer(currentUser.userData, <CustomerOrders />)}
             </Route>
 
-            <Route exact path={routes.ownerRegister}>
-                <OwnerRegisterPage />
-            </Route>
             <Route exact path={routes.ownerOrders}>
-                {RequiresAuth(currentUser.userData, <OwnerOrders />)}
+                {RequiresAuthOwner(currentUser.userData, <OwnerOrders />)}
             </Route>
             <Route exact path={routes.ownerRestaurantOrders}>
-                {RequiresAuth(currentUser.userData, <OwnerOrders />)}
+                {RequiresAuthOwner(currentUser.userData, <OwnerOrders />)}
             </Route>
             <Route exact path={routes.ownerBlockedUsers}>
-                {RequiresAuth(currentUser.userData, <OwnerBlockedUsers />)}
+                {RequiresAuthOwner(currentUser.userData, <OwnerBlockedUsers />)}
             </Route>
             <Route exact path={routes.ownerRestaurants}>
-                {RequiresAuth(currentUser.userData, <OwnerRestaurants />)}
+                {RequiresAuthOwner(currentUser.userData, <OwnerRestaurants />)}
             </Route>
             <Route exact path={routes.ownerRestaurantMenu}>
-                {RequiresAuth(currentUser.userData, <OwnerRestaurantMenu />)}
+                {RequiresAuthOwner(currentUser.userData, <OwnerRestaurantMenu />)}
             </Route>
             <Route exact path={routes.homePage}>
                 {RequiresAuth(currentUser.userData, <CustomerHomePage />, <OwnerHomePage />)}
             </Route>
+
+            <Route exact path={routes.login}>
+                <LoginPage />
+            </Route>
+            <Route exact path={routes.customerRegister}>
+                <CustomerRegisterPage />
+            </Route>
+            <Route exact path={routes.ownerRegister}>
+                <OwnerRegisterPage />
+            </Route>
+            <Route exact path={routes.userAccount}>
+                {RequiresAuth(currentUser.userData, <CustomerAccountPage />, <OwnerAccountPage />)}
+            </Route>
+
             <Route>
                 <NotFoundPage />
             </Route>

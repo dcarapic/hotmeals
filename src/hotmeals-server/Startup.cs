@@ -20,8 +20,10 @@ namespace hotmeals_server
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private readonly IWebHostEnvironment env;
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
+            this.env = env;
             Configuration = configuration;
         }
 
@@ -77,7 +79,12 @@ namespace hotmeals_server
                 options.Cookie.HttpOnly = false;
             });
 
-            services.AddDbContext<Model.HMContext>(o => o.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<Model.HMContext>(o =>
+            {
+                o.UseSqlite(Configuration.GetConnectionString("DefaultConnection"));
+                if (env.IsDevelopment())
+                    o.EnableSensitiveDataLogging();
+            });
 
         }
 
@@ -105,7 +112,7 @@ namespace hotmeals_server
 
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseDelay(1); // TODO: Remove later
+            //app.UseDelay(1); // TODO: Remove later
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

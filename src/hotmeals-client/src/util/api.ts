@@ -230,6 +230,13 @@ export type APIResponse = {
     errorMessage: string;
 };
 
+
+export type PagingInformation = {
+    totalPages: number;
+    page: number;
+};
+
+
 export type LoginRequest = {
     email: string;
     password: string;
@@ -340,9 +347,7 @@ export type UnblockUserRequest = {
 
 
 
-export type SearchFoodResponse = APIResponse & {
-    totalPages: number;
-    page: number;
+export type SearchFoodResponse = PagingInformation & PagingInformation & {
     items: model.OrderSelectionMenuItemDTO[];
 };
 

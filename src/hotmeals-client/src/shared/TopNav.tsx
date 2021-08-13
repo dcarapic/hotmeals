@@ -6,6 +6,7 @@ import srcHotMeals from "../assets/HotMeals.svg";
 import srcAccount from "../assets/Account.svg";
 import { RouterNavLink } from "./RouterNav";
 import { useCurrentUser } from "../user";
+import routes from "../routes";
 
 const AccountImage = () => {
     const [showMenu, setShowMenu] = useState(false);
@@ -21,6 +22,7 @@ const AccountImage = () => {
         <Fragment>
             <Image
                 role="button"
+                style={{height: "40px" }}
                 src={srcAccount}
                 onClick={(e) => {
                     setShowMenu(true);
@@ -54,12 +56,12 @@ const AccountImage = () => {
 const TopNav = () => {
     const currentUser = useCurrentUser();
     return (
-        <Navbar bg="primary">
-            <Container fluid>
+        <Navbar bg="primary" sticky='top'>
+            <Container>
                 <Navbar.Brand>
-                    <RouterNavLink to="/" className="p-0">
-                        <Image src={srcLogo} className="me-2" />
-                        <Image src={srcHotMeals} />
+                    <RouterNavLink to={routes.homePage} className="p-0">
+                        <Image src={srcLogo} fluid className="me-2" style={{height: "40px" }} />
+                        <Image src={srcHotMeals} style={{height: "30px" }} fluid />
                     </RouterNavLink>
                 </Navbar.Brand>
                 {currentUser.userData && <AccountImage />}
