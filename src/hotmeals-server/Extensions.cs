@@ -19,7 +19,7 @@ namespace hotmeals_server
         /// Adds an antiforgery token to every GET request. 
         /// Validate every mutating request (POST, PUT, DELETE, PATCH) for antiforgery token.
         /// </summary>
-        public static IApplicationBuilder UseAntiforgery(this IApplicationBuilder app)
+        public static IApplicationBuilder UseAntiforgery(this IApplicationBuilder app, string tokenName)
         {
             var antiforgery = (IAntiforgery)app.ApplicationServices.GetService(typeof(IAntiforgery));
             return app.Use(next => async context =>
@@ -30,7 +30,8 @@ namespace hotmeals_server
                         // Add CSRF coopkie for antiforgery
                         var tokens = antiforgery.GetAndStoreTokens(context);
                         // Add CSRF cookie which is to be read by API and returned via 'X-XSRF-TOKEN' header field
-                        context.Response.Cookies.Append("X-XSRF-TOKEN", tokens.RequestToken, new CookieOptions() { HttpOnly = false });
+                        // Note: This must match the 
+                        context.Response.Cookies.Append(tokenName, tokens.RequestToken, new CookieOptions() { HttpOnly = false });
                     }
                     else if (context.Request.Method == HttpMethods.Patch || context.Request.Method == HttpMethods.Post || context.Request.Method == HttpMethods.Put || context.Request.Method == HttpMethods.Delete)
                     {

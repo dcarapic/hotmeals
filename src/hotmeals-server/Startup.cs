@@ -40,7 +40,6 @@ namespace hotmeals_server
                 opt.AddDebug();
             });
 
-
             // Prevent access to the web server from anywhere else except our SPA application.
             services.AddCors(options =>
             {
@@ -58,7 +57,7 @@ namespace hotmeals_server
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "hotmeals_server", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "HotMeals", Version = "v1" });
             });
 
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(opt =>
@@ -75,13 +74,12 @@ namespace hotmeals_server
             {
                 // The client should provide the second cookie value via the header field 'X-XSRF-TOKEN'
                 options.HeaderName = "X-XSRF-TOKEN";
-                //options.Cookie.Name = "XSRF-TOKEN";
-                options.Cookie.HttpOnly = false;
             });
 
             services.AddDbContext<Model.HMContext>(o =>
             {
                 o.UseSqlite(Configuration.GetConnectionString("DefaultConnection"));
+                // Enable logging of parameter values to log when in dev mode
                 if (env.IsDevelopment())
                     o.EnableSensitiveDataLogging();
             });
@@ -98,12 +96,13 @@ namespace hotmeals_server
                 app.UseSwagger();
                 app.UseSwaggerUI(c =>
                 {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "hotmeals_server v1");
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "HotMeals API v1");
                     c.RoutePrefix = string.Empty;
                 });
             }
             app.UseRouting();
-            app.UseAntiforgery();
+            // Note: Must match teh AddAntiforgery above
+            app.UseAntiforgery("X-XSRF-TOKEN");
 
             if (env.IsDevelopment())
                 app.UseCors("DevPolicy");
@@ -117,23 +116,6 @@ namespace hotmeals_server
             {
                 endpoints.MapControllers();
             });
-
-            // List routes (for easier debugging)
-            var features = app.ServerFeatures.Get<Microsoft.AspNetCore.Hosting.Server.Features.IServerAddressesFeature>();
-            if (features != null)
-            {
-                foreach (var address in features.Addresses)
-                {
-                    log.Log(LogLevel.Information, "Listening on {url}", address);
-                }
-            }
-            log.Log(LogLevel.Information, "Available routes:");
-            var routes = actionProvider.ActionDescriptors.Items.Where(x => x.AttributeRouteInfo != null);
-            foreach (var route in routes)
-            {
-                log.Log(LogLevel.Debug, $"{route.AttributeRouteInfo.Template}");
-            }
-
         }
     }
 }
