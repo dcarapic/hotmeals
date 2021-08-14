@@ -6,7 +6,13 @@ import { useHistory } from "react-router-dom";
 import { useCurrentUser } from "../state/user";
 import { LoadingButton } from "./LoadingButton";
 
-const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: boolean }) => {
+enum AccountEditorType {
+    OwnerRegistration = 1,
+    CustomerRegistration = 2,
+    AccountSettings = 3
+}
+
+const AccountEditor = (props: { type: AccountEditorType }) => {
     const currentUser = useCurrentUser();
     const msgs = ui.useAlertMessageService();
     const history = useHistory();
@@ -49,7 +55,7 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
 
         setValidated(false);
         setSubmitting(true);
-        if(props.isRegistration) {
+        if(props.type === AccountEditorType.CustomerRegistration || props.type === AccountEditorType.OwnerRegistration) {
             let response = await api.userRegister({
                 email,
                 firstName,
@@ -58,7 +64,7 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
                 addressCity,
                 addressStreet,
                 password,
-                isRestaurantOwner: props.isRestaurantOwner,
+                isRestaurantOwner: props.type === AccountEditorType.OwnerRegistration,
             }, abort);
             if(response.isAborted) return;
             setSubmitting(false);
@@ -96,7 +102,7 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
                         type="email"
                         placeholder="Enter your email"
                         maxLength={100}
-                        readOnly={submitting || !props.isRegistration}
+                        readOnly={submitting || props.type !== AccountEditorType.AccountSettings}
                         defaultValue={currentUser.userData?.email}
                         required
                     />
@@ -166,14 +172,14 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
 
                 <Form.Group className="mb-2" controlId="formPassword">
                     <Form.Label>
-                        {props.isRegistration ? "Password" : "Enter new password value to change your password"}
+                        {props.type !==  AccountEditorType.AccountSettings ? "Password" : "Enter new password value to change your password"}
                     </Form.Label>
                     <Form.Control
                         type="password"
-                        placeholder={props.isRegistration ? "Enter your password" : "Change your password"}
+                        placeholder={props.type !==  AccountEditorType.AccountSettings ? "Enter your password" : "Change your password"}
                         maxLength={500}
                         readOnly={submitting}
-                        required={props.isRegistration}
+                        required={props.type !==  AccountEditorType.AccountSettings}
                     />
                     <Form.Control.Feedback type="invalid">Please enter your password</Form.Control.Feedback>
                 </Form.Group>
@@ -185,12 +191,12 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
                         placeholder="Confirm your password"
                         maxLength={500}
                         readOnly={submitting}
-                        required={props.isRegistration}
+                        required={props.type !==  AccountEditorType.AccountSettings}
                     />
                     <Form.Control.Feedback type="invalid">Please confirm your password</Form.Control.Feedback>
                 </Form.Group>
                 <LoadingButton variant="primary" type="submit" loading={submitting} className="mb-3">
-                    {props.isRegistration ? "Register" : "Save changes"}
+                    {props.type !==  AccountEditorType.AccountSettings ? "Register" : "Save changes"}
                 </LoadingButton>
             </Form>
             <Alert show={saved} variant="success">
@@ -199,4 +205,4 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
         </Fragment>
     );
 };
-export default AccountEditor;
+export {AccountEditor, AccountEditorType};

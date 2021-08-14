@@ -62,7 +62,7 @@ const RestaurantListItem = (props: {
     );
 };
 
-const OwnerRestaurants = ui.withAlertMessageContainer(() => {
+const OwnerRestaurantListPage = ui.withAlertMessageContainer(() => {
     const msgs = ui.useAlertMessageService();
     const history = useHistory();
     const abort = ui.useAbortable();
@@ -175,4 +175,4 @@ const OwnerRestaurants = ui.withAlertMessageContainer(() => {
         </Fragment>
     );
 });
-export default OwnerRestaurants;
+export default OwnerRestaurantListPage;

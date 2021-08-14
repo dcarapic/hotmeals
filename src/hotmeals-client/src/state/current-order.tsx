@@ -53,7 +53,7 @@ const CurrentOrderProvider = (props : React.PropsWithChildren<any>) => {
             if (currentOrder.order) orderItems = [...currentOrder.order.items];
 
             let orderItem = orderItems.find(
-                (x) => x.menuItemId == item.menuItemId && x.restaurantId == item.restaurantId
+                (x) => x.menuItemId === item.menuItemId && x.restaurantId === item.restaurantId
             );
             if (orderItem) {
                 if (quantity === 0) orderItems.splice(orderItems.indexOf(orderItem));

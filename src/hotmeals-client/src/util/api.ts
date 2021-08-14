@@ -202,14 +202,14 @@ export async function searchFood(
     );
 }
 
-export async function placeOrder(
+export async function orderPlace(
     req: PlaceOrderRequest,
     abort?: AbortSignal
 ): Promise<ServerResponse<PlaceOrderResponse>> {
     return await request<PlaceOrderRequest, PlaceOrderResponse>("Place order", `api/orders`, "POST", req, abort);
 }
 
-export async function fetchOrder(orderId: string, abort?: AbortSignal): Promise<ServerResponse<PlaceOrderResponse>> {
+export async function orderFetch(orderId: string, abort?: AbortSignal): Promise<ServerResponse<PlaceOrderResponse>> {
     orderId = encodeURIComponent(orderId);
     return await request<PlaceOrderRequest, PlaceOrderResponse>(
         "Fetch order",
@@ -220,11 +220,27 @@ export async function fetchOrder(orderId: string, abort?: AbortSignal): Promise<
     );
 }
 
-export async function fetchAllOrders(abort?: AbortSignal): Promise<ServerResponse<PlaceOrderResponse>> {
-    return await request<PlaceOrderRequest, PlaceOrderResponse>("Fetch orders", `api/orders`, "GET", undefined, abort);
+export async function ordersFetchActive(page: number, abort?: AbortSignal): Promise<ServerResponse<GetOrdersResponse>> {
+    return await request<PlaceOrderRequest, GetOrdersResponse>(
+        "Fetch orders",
+        `api/orders/active?page=${page}`,
+        "GET",
+        undefined,
+        abort
+    );
 }
 
-export async function updateOrderStatus(
+export async function ordersFetchCompleted(page: number, abort?: AbortSignal): Promise<ServerResponse<GetOrdersResponse>> {
+    return await request<PlaceOrderRequest, GetOrdersResponse>(
+        "Fetch orders",
+        `api/orders/completed?page=${page}`,
+        "GET",
+        undefined,
+        abort
+    );
+}
+
+export async function orderUpdateStatus(
     orderId: string,
     status: model.OrderStatus,
     abort?: AbortSignal

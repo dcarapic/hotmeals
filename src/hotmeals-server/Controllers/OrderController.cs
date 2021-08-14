@@ -36,14 +36,32 @@ namespace hotmeals_server.Controllers
         }
 
         /// <summary>
-        /// Returns the list of all orders. 
+        /// Returns the list of all active orders. 
         /// If the current user is a customer then all orders of that customer are returned. 
-        /// If the current user is a restaurant owner then order for all restaurants are returned.
+        /// If the current user is a restaurant owner then orders for all restaurants are returned.
         /// The results are paged.
         /// </summary>
         /// <returns></returns>
-        [HttpGet]
-        public async Task<IActionResult> GetAllOrders([FromQuery] int page = 1)
+        [HttpGet("active")]
+        public async Task<IActionResult> GetActiveOrders([FromQuery] int page = 1)
+        {
+            return await GetOrders(new OrderStatus[] { OrderStatus.Placed, OrderStatus.Accepted, OrderStatus.Shipped, OrderStatus.Delivered, OrderStatus.Received }, page);
+        }
+
+        /// <summary>
+        /// Returns the list of all completed orders. 
+        /// If the current user is a customer then all orders of that customer are returned. 
+        /// If the current user is a restaurant owner then orders for all restaurants are returned.
+        /// The results are paged.
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("completed")]
+        public async Task<IActionResult> GetCompletedOrders([FromQuery] int page = 1)
+        {
+            return await GetOrders(new OrderStatus[] { OrderStatus.Received, OrderStatus.Canceled }, page);
+        }
+
+        private async Task<IActionResult> GetOrders(OrderStatus[] statuses, int page)
         {
             IQueryable<OrderDTO> qry;
             var totalPages = 1;
@@ -53,7 +71,7 @@ namespace hotmeals_server.Controllers
                 qry = from o in _db.Orders.Include(x => x.OrderItems).Include(x => x.OrderHistory)
                       join r in _db.Restaurants on o.RestaurantId equals r.Id
                       join c in _db.Users on o.CustomerId equals c.Id
-                      where r.OwnerId == CurrentUser.Id
+                      where r.OwnerId == CurrentUser.Id && statuses.Contains(o.Status)
                       orderby r.DateCreated
                       select new OrderDTO(o.Id, o.RestaurantId, r.Name, o.CustomerId, c.Email, c.FirstName, c.LastName, o.Status, o.DateCreated, o.Total, o.OrderItems.Select(x => new OrderItemDTO(x.MenuItemName, x.MenuItemDescription, x.PricePerItem, x.Position, x.Quantity)).ToArray(), o.OrderHistory.Select(x => new OrderHistoryDTO(x.Status, x.DateChanged)).ToArray());
 
@@ -63,7 +81,7 @@ namespace hotmeals_server.Controllers
                 qry = from o in _db.Orders.Include(x => x.OrderItems).Include(x => x.OrderHistory)
                       join r in _db.Restaurants on o.RestaurantId equals r.Id
                       join c in _db.Users on o.CustomerId equals c.Id
-                      where o.CustomerId == CurrentUser.Id
+                      where o.CustomerId == CurrentUser.Id && statuses.Contains(o.Status)
                       orderby r.DateCreated
                       select new OrderDTO(o.Id, o.RestaurantId, r.Name, o.CustomerId, c.Email, c.FirstName, c.LastName, o.Status, o.DateCreated, o.Total, o.OrderItems.Select(x => new OrderItemDTO(x.MenuItemName, x.MenuItemDescription, x.PricePerItem, x.Position, x.Quantity)).ToArray(), o.OrderHistory.Select(x => new OrderHistoryDTO(x.Status, x.DateChanged)).ToArray());
             }
@@ -175,8 +193,7 @@ namespace hotmeals_server.Controllers
             // Validate status
             switch (req.Status)
             {
-                case OrderStatus.Placed:
-                    return BadRequest(new APIResponse(false, $"Invalid status {req.Status.ToString()}!"));
+                case OrderStatus.Placed: // Placed is only when order is being placed
 
                 case OrderStatus.Accepted:
                     if (o.Status != OrderStatus.Placed)

@@ -2,7 +2,7 @@ import React, { Fragment, useEffect, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../state/model";
-import { Button, Col, Form, Row } from "react-bootstrap";
+import { Col,  Row } from "react-bootstrap";
 import { useCurrentOrder } from "../state/current-order";
 import { Redirect, useHistory } from "react-router-dom";
 import routes from "../routes";
@@ -36,7 +36,7 @@ const CustomerOrdering = ui.withAlertMessageContainer(() => {
             let items = response.result.menuItems.map((x) => ({ ...x, quantity: 0 }));
             // After loading the items update their quantity to match ordered quantity
             for (let orderedMenuItem of currentOrder.order.items) {
-                let menuItem = items.find((x) => x.menuItemId == orderedMenuItem.menuItemId);
+                let menuItem = items.find((x) => x.menuItemId === orderedMenuItem.menuItemId);
                 if (menuItem) menuItem.quantity = orderedMenuItem.quantity;
             }
             setMenuItems(items);
@@ -75,7 +75,7 @@ const CustomerOrdering = ui.withAlertMessageContainer(() => {
     const onStoppedWaitingForConfirmation  = (order: model.OrderDTO) => {
         setPlacingOrder(false);
         currentOrder.removeOrder();
-        history.push(routes.customerOrders);
+        history.push(routes.ordersActive);
     }
 
     const onOrderPlaced = (order: model.OrderDTO) => {
@@ -88,7 +88,7 @@ const CustomerOrdering = ui.withAlertMessageContainer(() => {
     const onOrderConfirmed = (order: model.OrderDTO) => {
         setPlacingOrder(false);
         currentOrder.removeOrder();
-        history.push(routes.customerOrders);
+        history.push(routes.ordersActive);
     };
 
     return (

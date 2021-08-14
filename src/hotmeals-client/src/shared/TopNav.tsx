@@ -3,7 +3,6 @@ import * as api from "../util/api";
 import { Badge, Button, Container, Image, Modal, Nav, Navbar, NavLink } from "react-bootstrap";
 import srcLogo from "../assets/Logo.svg";
 import srcHotMeals from "../assets/HotMeals.svg";
-import srcAccount from "../assets/Account.svg";
 import { RouterNavLink } from "./RouterNav";
 import { useCurrentUser } from "../state/user";
 import routes from "../routes";
@@ -17,6 +16,7 @@ const CurrentAccountIcon = () => {
     if (!currentUser.userData || currentUser.isLoading) return null;
 
     const performLogout = async () => {
+        setShowMenu(false);
         await api.userLogout();
         // we do not care if we fail the logout because the server is not available, just continue
         currentUser.setCurrentUser(null);
@@ -36,11 +36,8 @@ const CurrentAccountIcon = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <div className="d-grid">
-                        <RouterNavLink to="/account" onClick={() => setShowMenu(false)}>
+                        <RouterNavLink to={routes.userAccount} onClick={() => setShowMenu(false)}>
                             Account settings
-                        </RouterNavLink>
-                        <RouterNavLink to="/orders" onClick={() => setShowMenu(false)}>
-                            Your orders
                         </RouterNavLink>
                         <NavLink onClick={performLogout}>Logout</NavLink>
                     </div>

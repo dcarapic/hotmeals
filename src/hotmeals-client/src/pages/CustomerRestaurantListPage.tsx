@@ -33,7 +33,7 @@ const RestaurantListItem = (props: { restaurant: model.RestaurantDTO; onSelect?:
     );
 };
 
-const CustomerRestaurants = ui.withAlertMessageContainer(() => {
+const CustomerRestaurantListPage = ui.withAlertMessageContainer(() => {
     const msgs = ui.useAlertMessageService();
     const history = useHistory();
     const abort = ui.useAbortable();
@@ -62,7 +62,7 @@ const CustomerRestaurants = ui.withAlertMessageContainer(() => {
     };
 
     const onSelectRestaurant = (restaurantId: string) => {
-        let restaurant = items.find(x=>x.id == restaurantId);
+        let restaurant = items.find(x=>x.id === restaurantId);
         if(!restaurant)return;
 
         order.createOrder(restaurant.id, restaurant.name);
@@ -94,10 +94,10 @@ const CustomerRestaurants = ui.withAlertMessageContainer(() => {
             {loaded && pageInfo && pageInfo.totalPages > 1 && (
                 <ServerResponsePagination pageInfo={pageInfo} onPageChanged={loadPage} disabled={loading} />
             )}
-            <Alert show={loaded && items.length == 0} variant="info">
+            <Alert show={loaded && items.length === 0} variant="info">
                 It appears there are no restaurants offering food at the moment.
             </Alert>
         </Fragment>
     );
 });
-export default CustomerRestaurants;
+export default CustomerRestaurantListPage;

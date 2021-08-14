@@ -83,7 +83,7 @@ namespace hotmeals_server.Model
     public record PlaceOrderResponse(OrderDTO Order);
 
     public record GetOrderResponse(OrderDTO Order);
-    public record GetOrdersResponse(OrderDTO[] Order, int TotalPages, int Page);
+    public record GetOrdersResponse(OrderDTO[] Orders, int TotalPages, int Page);
 
 
     public record UpdateOrderRequest([Required] OrderStatus Status);

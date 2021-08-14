@@ -1,5 +1,5 @@
 import React, { Fragment } from "react";
-import AccountEditor from "../shared/AccountEditor";
+import {AccountEditor, AccountEditorType} from "../shared/AccountEditor";
 import * as ui from "../util/ui";
 
 const OwnerRegisterPage = ui.withAlertMessageContainer(() => {
@@ -8,7 +8,7 @@ const OwnerRegisterPage = ui.withAlertMessageContainer(() => {
             <h3 className="text-center p-2">
                Register as a new restaurant owner
             </h3>
-            <AccountEditor isRegistration={true} isRestaurantOwner={true} />
+            <AccountEditor type={AccountEditorType.OwnerRegistration} />
         </Fragment>
     );
 });

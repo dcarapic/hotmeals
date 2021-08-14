@@ -43,7 +43,7 @@ const BlockedUserListItem = (props: { blockedUser: model.BlockedUserDTO; onDelet
     );
 };
 
-const OwnerBlockedUsers = ui.withAlertMessageContainer(() => {
+const OwnerBlockedUsersPage = ui.withAlertMessageContainer(() => {
     const msgs = ui.useAlertMessageService();
     const abort = ui.useAbortable();
 
@@ -110,4 +110,4 @@ const OwnerBlockedUsers = ui.withAlertMessageContainer(() => {
         </Fragment>
     );
 });
-export default OwnerBlockedUsers;
+export default OwnerBlockedUsersPage;

@@ -58,7 +58,7 @@ const MenuItemListItem = (props: {
     );
 };
 
-const OwnerRestaurantMenu = ui.withAlertMessageContainer(() => {
+const OwnerRestaurantMenuPage = ui.withAlertMessageContainer(() => {
     const msgs = ui.useAlertMessageService();
     const abort = ui.useAbortable();
     const { restaurantId } = useParams<any>();
@@ -152,4 +152,4 @@ const OwnerRestaurantMenu = ui.withAlertMessageContainer(() => {
         </Fragment>
     );
 });
-export default OwnerRestaurantMenu;
+export default OwnerRestaurantMenuPage;

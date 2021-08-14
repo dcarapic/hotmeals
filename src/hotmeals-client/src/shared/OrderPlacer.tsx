@@ -30,7 +30,7 @@ const OrderPlacer = (props: {
             restaurantId: props.order.restaurantId,
             items: props.order.items.map((x) => ({ menuItemId: x.menuItemId, price: x.price, quantity: x.quantity })),
         };
-        let response = await api.placeOrder(req, abort);
+        let response = await api.orderPlace(req, abort);
         if (response.isAborted) return;
         setPlacing(false);
         setServerResponse(response);
@@ -48,7 +48,7 @@ const OrderPlacer = (props: {
         }
         setCanceling(true);
         setServerResponse(null);
-        let response = await api.updateOrderStatus(placedOrder!.orderId, "Canceled", abort);
+        let response = await api.orderUpdateStatus(placedOrder!.orderId, "Canceled", abort);
         if (response.isAborted) return;
         setCanceling(false);
         setServerResponse(response);

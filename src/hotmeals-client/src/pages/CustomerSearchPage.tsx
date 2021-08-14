@@ -2,7 +2,7 @@ import React, { FormEvent, Fragment, useEffect, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../state/model";
-import { Alert, Button, Col, Form, InputGroup, Pagination, Row } from "react-bootstrap";
+import { Alert, Button, Col, Form, InputGroup } from "react-bootstrap";
 import { LoadingButton } from "../shared/LoadingButton";
 import { RouterNavButton } from "../shared/RouterNav";
 import { useHistory, useLocation, useParams } from "react-router-dom";
@@ -48,7 +48,6 @@ const CustomerSearchPage = ui.withAlertMessageContainer(() => {
     const { searchQuery } = useParams<any>();
 
     const params = new URLSearchParams(useLocation().search);
-    let pageQuery = params.get("page");
 
     const [searching, setSearching] = useState(false);
     const [searched, setSearched] = useState(false);
@@ -133,7 +132,7 @@ const CustomerSearchPage = ui.withAlertMessageContainer(() => {
             {searched && pageInfo && pageInfo.totalPages > 1 && (
                 <ServerResponsePagination pageInfo={pageInfo} onPageChanged={searchCore} disabled={searching} />
             )}
-            <Alert show={searched && items.length == 0} variant="info" className="text-center">
+            <Alert show={searched && items.length === 0} variant="info" className="text-center">
                 <i className="bi bi-emoji-frown"></i>Sorry, nobody is offering what you are searching for.
                 <i className="bi bi-emoji-frown"></i>
                 <br />
