@@ -1,7 +1,7 @@
-import React, {  useState } from "react";
+import React, { useState } from "react";
 import * as api from "./util/api";
 import * as ui from "./util/ui";
-import * as model from "./util/model";
+import * as model from "./state/model";
 import { Container, Col, Row } from "react-bootstrap";
 import { BrowserRouter, Switch, Route, Redirect } from "react-router-dom";
 import CustomerAccountPage from "./pages/CustomerAccountPage";
@@ -23,9 +23,10 @@ import routes from "./routes";
 import Loading from "./shared/Loading";
 
 import TopNav from "./shared/TopNav";
-import { CurrentUserContext, ApplicationUser, useCurrentUser } from "./user";
-import GlobalErrorBoundary from "./util/globalErrorHandling";
+import { ApplicationUserContext, ApplicationUser, useCurrentUser } from "./state/user";
+import GlobalErrorBoundary from "./util/global-error-handling";
 import CustomerSearchPage from "./pages/CustomerSearchPage";
+import { CurrentOrderProvider } from "./state/current-order";
 
 /**
  * Main application component.
@@ -63,18 +64,22 @@ const App = () => {
     }, []);
     return (
         <GlobalErrorBoundary>
-            <CurrentUserContext.Provider value={currentUser}>
-                <BrowserRouter>
-                    <TopNav />
-                    <Container className="py-4">
-                        <Row className="justify-content-center">
-                            <Col style={{maxWidth: "768px"}}>
-                                <AppRoutes />
-                            </Col>
-                        </Row>
-                    </Container>
-                </BrowserRouter>
-            </CurrentUserContext.Provider>
+            <BrowserRouter>
+                <ApplicationUserContext.Provider value={currentUser}>
+                    <CurrentOrderProvider>
+                        <ui.ToastMessageServiceContainer>
+                            <TopNav />
+                            <Container className="py-4 hm-sticky-margin">
+                                <Row className="justify-content-center">
+                                    <Col style={{ maxWidth: "768px" }}>
+                                        <AppRoutes />
+                                    </Col>
+                                </Row>
+                            </Container>
+                        </ui.ToastMessageServiceContainer>
+                    </CurrentOrderProvider>
+                </ApplicationUserContext.Provider>
+            </BrowserRouter>
         </GlobalErrorBoundary>
     );
 };
@@ -83,7 +88,7 @@ const AppRoutes = () => {
     const currentUser = useCurrentUser();
 
     const RequiresAuth = (user: model.UserDTO | null, customerComponent: JSX.Element, ownerComponent: JSX.Element) => {
-        if (!user)  {
+        if (!user) {
             console.log(`Redirecting to login`);
             return <Redirect to="/login" />;
         }
@@ -91,25 +96,24 @@ const AppRoutes = () => {
         if (!user.isRestaurantOwner) return customerComponent;
         return customerComponent;
     };
-    
+
     const RequiresAuthCustomer = (user: model.UserDTO | null, component: JSX.Element) => {
-        if (!user)  {
+        if (!user) {
             console.log(`Redirecting to login`);
             return <Redirect to="/login" />;
         }
         if (user.isRestaurantOwner) return <NotFoundPage />;
         return component;
     };
-  
+
     const RequiresAuthOwner = (user: model.UserDTO | null, component: JSX.Element) => {
-        if (!user)  {
+        if (!user) {
             console.log(`Redirecting to login`);
             return <Redirect to="/login" />;
         }
         if (!user.isRestaurantOwner) return <NotFoundPage />;
         return component;
     };
-
 
     if (currentUser.isLoading)
         return (
@@ -122,7 +126,7 @@ const AppRoutes = () => {
         <Switch>
             <Route path={routes.customerSearch}>
                 {RequiresAuthCustomer(currentUser.userData, <CustomerSearchPage />)}
-            </Route>            
+            </Route>
             <Route exact path={routes.customerOrder}>
                 {RequiresAuthCustomer(currentUser.userData, <CustomerOrdering />)}
             </Route>

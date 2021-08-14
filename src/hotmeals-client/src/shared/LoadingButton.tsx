@@ -23,7 +23,7 @@ const LoadingButton = (props: ButtonProps & { loading: boolean }) => {
             ) : props.children
 
     return (
-        <Button {...otherProps} disabled={loading}>
+        <Button {...otherProps} disabled={loading || props.disabled}>
             {c}
         </Button>
     );

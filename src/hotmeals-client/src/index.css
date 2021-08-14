@@ -1,4 +1,31 @@
-body {
-  margin: 0;
-  padding: 0;
+:root {
+  --nav-height: 60px;
+  --nav-margin: 58px;
+  --nav-font: 36px
+}
+
+.hm-navbar {
+  height: var(--nav-height);
+  min-height: var(--nav-height);
+  max-height: var(--nav-height);
+}
+
+.hm-navbar-icon {
+  font-size: var(--nav-font);
+  line-height: 100%;
+  cursor: pointer;
+}
+
+.hm-sticky-padder {
+  height: var(--nav-margin);
+  min-height: var(--nav-margin);
+  max-height: var(--nav-margin);
+}
+
+.hm-sticky-margin {
+  margin-top: var(--nav-margin);
+}
+
+.hm-navbar-badge {
+  transform: translate(-20px, 20px);
 }

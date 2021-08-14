@@ -13,23 +13,30 @@ namespace hotmeals_server.Model
     /// Restaurant information returned by server.
     /// </summary>
     public record RestaurantDTO(Guid Id, string Name, string Description, string PhoneNumber);
-    
+
     /// <summary>
     /// Restaurant menu iteminformation returned by server.
     /// </summary>
-    public record MenuItemDTO(Guid Id, Guid RestaurantId, string Name, string Description, decimal Price);    
-  
+    public record MenuItemDTO(Guid MenuItemId, Guid RestaurantId, string Name, string Description, decimal Price);
+
     /// <summary>
     /// Restaurant menu item information returned by server.
     /// </summary>
-    public record BlockedUserDTO(string Email, string FirstName, string LastName, string AddressCityZip, string AddressCity, string AddressStreet);    
+    public record BlockedUserDTO(string Email, string FirstName, string LastName, string AddressCityZip, string AddressCity, string AddressStreet);
 
-
-  
     /// <summary>
     /// Search menu item returned by server.
     /// </summary>
-    public record OrderSelectionMenuItemDTO(Guid Id, Guid RestaurantId, string RestaurantName, string Name, string Description, decimal Price);    
+    public record SearchResultItemDTO(Guid MenuItemId, Guid RestaurantId, string RestaurantName, string Name, string Description, decimal Price);
+
+    /// <summary>
+    /// Order information returned by server.
+    /// </summary>
+    public record OrderDTO(Guid OrderId, Guid RestaurantId, string RestaurantName, Guid CustomerId, string CustomerEmail, string CustomerFirstName, string CustomerLastName, OrderStatus CurrentStatus, DateTime CreatedAt, decimal Total, OrderItemDTO[] Items, OrderHistoryDTO[] History);
+    public record OrderItemDTO(string Name, string Description, decimal Price, int Position, int Quantity);
+    public record OrderHistoryDTO(OrderStatus Status, DateTime ChangedAt);
+
+
 
     /// <summary>
     /// Base API response containing success code and an error message in case of failing to perform the operation.
@@ -39,7 +46,6 @@ namespace hotmeals_server.Model
 
     public record LoginRequest([Required][MaxLength(100)] string Email, [Required][MaxLength(500)] string Password);
     public record LoginResponse(UserDTO User) : APIResponse(true, null);
-
 
 
     public record RegisterUserRequest([Required][MaxLength(100)] string Email, [Required][MaxLength(100)] string FirstName, [Required][MaxLength(100)] string LastName, [Required][MaxLength(20)] string AddressCityZip, [Required][MaxLength(100)] string AddressCity, [Required][MaxLength(200)] string AddressStreet, [Required][MaxLength(500)] string Password, bool IsRestaurantOwner);
@@ -59,10 +65,10 @@ namespace hotmeals_server.Model
 
     public record GetMenuItemsResponse(Guid RestaurantId, string RestaurantName, string RestaurantDescription, string RestaurantPhoneNumber, MenuItemDTO[] MenuItems) : APIResponse(true, null);
 
-    public record NewMenuItemRequest([Required][MaxLength(100)] string Name, [Required][MaxLength(2000)] string Description, [Required][Range(0, 999999)]decimal Price);
+    public record NewMenuItemRequest([Required][MaxLength(100)] string Name, [Required][MaxLength(2000)] string Description, [Required][Range(0, 999999)] decimal Price);
     public record NewMenuItemResponse(MenuItemDTO MenuItem) : APIResponse(true, null);
 
-    public record UpdateMenuItemRequest([Required][MaxLength(100)] string Name, [Required][MaxLength(2000)] string Description, [Required][Range(0, 999999)]decimal Price);
+    public record UpdateMenuItemRequest([Required][MaxLength(100)] string Name, [Required][MaxLength(2000)] string Description, [Required][Range(0, 999999)] decimal Price);
     public record UpdateMenuItemResponse(MenuItemDTO MenuItem) : APIResponse(true, null);
 
 
@@ -70,6 +76,17 @@ namespace hotmeals_server.Model
     public record BlockUserRequest([Required][MaxLength(100)] string Email);
     public record UnBlockUserRequest([Required][MaxLength(100)] string Email);
 
-    public record SearchFoodResponse(OrderSelectionMenuItemDTO[] Items, int TotalPages, int Page);
+    public record SearchFoodResponse(SearchResultItemDTO[] Items, int TotalPages, int Page);
+
+    public record PlaceOrderRequest([Required] Guid RestaurantId, [Required] PlaceOrderRequestMenuItem[] Items);
+    public record PlaceOrderRequestMenuItem([Required] Guid MenuItemId, [Required][Range(0, 999999)] decimal Price, [Required][Range(1, 99)] int Quantity);
+    public record PlaceOrderResponse(OrderDTO Order);
+
+    public record GetOrderResponse(OrderDTO Order);
+    public record GetOrdersResponse(OrderDTO[] Order, int TotalPages, int Page);
+
+
+    public record UpdateOrderRequest([Required] OrderStatus Status);
+    public record UpdateOrderResponse(OrderDTO Order);
 
 }

@@ -3,7 +3,7 @@ import * as api from "../util/api";
 import * as ui from "../util/ui";
 import { Col } from "react-bootstrap";
 
-const CustomerOrders = ui.withMessageContainer(() => {
+const CustomerOrders = ui.withAlertMessageContainer(() => {
     return (
         <Fragment>
             <h3 className="text-center p-2">Your orders</h3>

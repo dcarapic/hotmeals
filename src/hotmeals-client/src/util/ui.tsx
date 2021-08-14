@@ -12,31 +12,12 @@ export type Message = {
     variant?: Variant;
 };
 
-/**
- * Description of a service which can display messages to the user.
- */
-export type MessageService = {
-    setMessage: (message: Message) => void;
-    setMessageFromResponse: (response: api.ServerResponse, caption?: string) => void;
-    showToast: (message: Message) => void;
-    clearMessage: () => void;
-};
-
-/**
- * React context for the message service.
- */
-const MessageServiceContext = React.createContext<MessageService>({
-    setMessage: () => {},
-    setMessageFromResponse: () => {},
-    showToast: () => {},
-    clearMessage: () => {},
-});
 
 /**
  * Helper function which generates a message from a server response of a request which is not successful.
  * In case there is no error then null is returned.
  */
-const generateMessageFromServerResponse = (response: api.ServerResponse, caption?: string): Message | null => {
+ const generateMessageFromServerResponse = (response: api.ServerResponse, caption?: string): Message | null => {
     if (response.ok || response.isAborted) return null;
     let msg: Message;
     if (response.isBadRequest)
@@ -62,21 +43,39 @@ const generateMessageFromServerResponse = (response: api.ServerResponse, caption
     return msg;
 };
 
+
+/**
+ * Description of a service which can display alert messages to the user.
+ */
+export type AlertService = {
+    setMessage: (message: Message) => void;
+    setMessageFromResponse: (response: api.ServerResponse, caption?: string) => void;
+    clearMessage: () => void;
+};
+
+/**
+ * React context for the alert message service.
+ */
+const AlertServiceContext = React.createContext<AlertService>({
+    setMessage: () => {},
+    setMessageFromResponse: () => {},
+    clearMessage: () => {},
+});
+
+
 /**
  * Message service container which can display a message.
  * It also provides the message service context so that a nested child component can also use the context to display a message.
  */
 
-const MessageServiceContainer = (
+const AlertMessageServiceContainer = (
     props: React.PropsWithChildren<{ message?: Message | null; serverResponse?: api.ServerResponse | null }>
 ) => {
     const [msg, setMsg] = useState<Message | null>(null);
-    const [toasts, setToasts] = useState<Message[]>([]);
-    const [msgService] = useState<MessageService>({
+    const [msgService] = useState<AlertService>({
         setMessage: (message: Message) => {
             setMsg(message);
         },
-        showToast: (message: Message) => {},
         setMessageFromResponse: (response: api.ServerResponse, caption?: string) =>
             setMsg(generateMessageFromServerResponse(response, caption)),
         clearMessage: () => setMsg(null),
@@ -92,15 +91,8 @@ const MessageServiceContainer = (
         if (alertRef.current) alertRef.current.scrollIntoView();
     });
 
-    const onToastClose = (toast: Message) => {
-        let index = toasts.indexOf(toast);
-        let newToasts = [...toasts];
-        newToasts.splice(index, index);
-        setToasts(newToasts);
-    };
-
     return (
-        <MessageServiceContext.Provider value={msgService}>
+        <AlertServiceContext.Provider value={msgService}>
             <Fragment>
                 {props.children}
                 {finalMessage && (
@@ -109,6 +101,77 @@ const MessageServiceContainer = (
                         <p>{finalMessage.description}</p>
                     </Alert>
                 )}
+            </Fragment>
+        </AlertServiceContext.Provider>
+    );
+};
+
+/**
+ * Higher order component which wraps the given component with AlertMessageServiceContainer.
+ * Makes it easy to provide alert message per component.
+ */
+const withAlertMessageContainer = (WrappedComponent: React.ComponentType) => {
+    let wrapped: FunctionComponent = (props) => (
+        <AlertMessageServiceContainer>
+            <WrappedComponent {...props} />
+        </AlertMessageServiceContainer>
+    );
+    return wrapped;
+};
+
+/**
+ * Hook for consuming AppErrorUI context. Enables child controls to display an error on the AppErrorUI component.
+ */
+const useAlertMessageService = () => useContext(AlertServiceContext);
+
+export { AlertServiceContext, AlertMessageServiceContainer, useAlertMessageService, withAlertMessageContainer };
+
+
+
+
+/**
+ * Description of a service which can display toast messages to the user.
+ */
+ export type ToastService = {
+    showToast: (message: Message) => void;
+};
+
+/**
+ * React context for the alert message service.
+ */
+const ToastServiceContext = React.createContext<ToastService>({
+    showToast: () => {},
+});
+
+
+/**
+ * Message service container which can display a message.
+ * It also provides the message service context so that a nested child component can also use the context to display a message.
+ */
+
+const ToastMessageServiceContainer = (
+    props: React.PropsWithChildren<any>
+) => {
+    const [toasts, setToasts] = useState<Message[]>([]);
+    const [toastService] = useState<ToastService>({
+        showToast: (message: Message) => {
+            let newToasts = [...toasts];
+            newToasts.push(message);
+            setToasts(newToasts);
+        },
+    });
+
+    const onToastClose = (toast: Message) => {
+        let index = toasts.indexOf(toast);
+        let newToasts = [...toasts];
+        newToasts.splice(index, index);
+        setToasts(newToasts);
+    };
+
+    return (
+        <ToastServiceContext.Provider value={toastService}>
+            <Fragment>
+                {props.children}
                 {toasts.length > 0 && (
                     <ToastContainer position="bottom-center">
                         {toasts.map((t) => (
@@ -122,21 +185,19 @@ const MessageServiceContainer = (
                     </ToastContainer>
                 )}
             </Fragment>
-        </MessageServiceContext.Provider>
+        </ToastServiceContext.Provider>
     );
 };
 
 /**
- * Higher order component which wraps the given component with MessageServiceContainer.
- * Makes it easy to provide error display UI per component.
- * @param WrappedComponent
- * @returns
+ * Higher order component which wraps the given component with ToastMessageServiceContainer.
+ * Makes it easy to provide alert message per component.
  */
-const withMessageContainer = (WrappedComponent: React.ComponentType) => {
+const withToastMessageContainer = (WrappedComponent: React.ComponentType) => {
     let wrapped: FunctionComponent = (props) => (
-        <MessageServiceContainer>
+        <ToastMessageServiceContainer>
             <WrappedComponent {...props} />
-        </MessageServiceContainer>
+        </ToastMessageServiceContainer>
     );
     return wrapped;
 };
@@ -144,9 +205,14 @@ const withMessageContainer = (WrappedComponent: React.ComponentType) => {
 /**
  * Hook for consuming AppErrorUI context. Enables child controls to display an error on the AppErrorUI component.
  */
-const useMessageService = () => useContext(MessageServiceContext);
+const useToastMessageService = () => useContext(ToastServiceContext);
 
-export { MessageServiceContext, MessageServiceContainer, useMessageService, withMessageContainer };
+export { ToastServiceContext, ToastMessageServiceContainer, useToastMessageService, withToastMessageContainer };
+
+
+
+
+
 
 /**
  * React hook which returns an abort signal which is automatically raised if a component has been dismounted.

@@ -3,12 +3,12 @@ import * as api from "../util/api";
 import * as ui from "../util/ui";
 import { Alert, Col, Form, Row } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
-import { useCurrentUser } from "../user";
+import { useCurrentUser } from "../state/user";
 import { LoadingButton } from "./LoadingButton";
 
 const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: boolean }) => {
     const currentUser = useCurrentUser();
-    const msgs = ui.useMessageService();
+    const msgs = ui.useAlertMessageService();
     const history = useHistory();
     const abort = ui.useAbortable();
 
@@ -16,7 +16,7 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
     const [saved, setSaved] = useState(false);
     const [validated, setValidated] = useState(false);
 
-    const handleSubmit = async (e: FormEvent) => {
+    const saveChanges = async (e: FormEvent) => {
         let form: any = e.currentTarget;
         e.preventDefault();
         e.stopPropagation();
@@ -89,7 +89,7 @@ const AccountEditor = (props: { isRegistration: boolean; isRestaurantOwner: bool
     };
     return (
         <Fragment>
-            <Form onSubmit={handleSubmit} noValidate validated={validated}>
+            <Form onSubmit={saveChanges} noValidate validated={validated}>
                 <Form.Group className="mb-2" controlId="formEmail">
                     <Form.Label>Email address</Form.Label>
                     <Form.Control

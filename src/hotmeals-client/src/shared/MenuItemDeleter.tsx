@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
-import * as model from "../util/model";
+import * as model from "../state/model";
 import { Button, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
 
@@ -10,11 +10,11 @@ const MenuItemDeleter = (props: { menuItem: model.MenuItemDTO; onCancel: () => v
     const [serverResponse, setServerResponse] = useState<api.ServerResponse<any> | null>(null);
     const abort = ui.useAbortable();
 
-    const onDelete = async () => {
+    const deleteMenuItem = async () => {
         setSubmitting(true);
         setServerResponse(null);
 
-        let response = await api.menuItemDelete(props.menuItem.id, props.menuItem.restaurantId, abort);
+        let response = await api.menuItemDelete(props.menuItem.menuItemId, props.menuItem.restaurantId, abort);
         if (response.isAborted) return;
         setSubmitting(false);
         setServerResponse(response);
@@ -24,25 +24,19 @@ const MenuItemDeleter = (props: { menuItem: model.MenuItemDTO; onCancel: () => v
     };
 
     return (
-        <Modal
-            onHide={() => {
-                if (submitting) return;
-                props.onCancel();
-            }}
-            show={true}
-            backdrop="static">
-            <Modal.Header closeButton>
+        <Modal show={true} backdrop="static">
+            <Modal.Header closeButton={false}>
                 <Modal.Title>Delete menuItem </Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 Are you sure you wish to delete menu item "{props.menuItem?.name}"?
-                <ui.MessageServiceContainer serverResponse={serverResponse} />
+                <ui.AlertMessageServiceContainer serverResponse={serverResponse} />
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="secondary" disabled={submitting} onClick={props.onCancel}>
                     Cancel
                 </Button>
-                <LoadingButton variant="danger" type="submit" loading={submitting} onClick={onDelete}>
+                <LoadingButton variant="danger" type="submit" loading={submitting} onClick={deleteMenuItem}>
                     Delete
                 </LoadingButton>
             </Modal.Footer>

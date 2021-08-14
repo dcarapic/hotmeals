@@ -4,7 +4,7 @@ import { Col } from "react-bootstrap";
 import routes from "../routes";
 import { RouterNavButton } from "../shared/RouterNav";
 
-const OwnerHomePage = ui.withMessageContainer(() => {
+const OwnerHomePage = ui.withAlertMessageContainer(() => {
 
     return (
         <Fragment>

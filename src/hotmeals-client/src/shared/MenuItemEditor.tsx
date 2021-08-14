@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
-import * as model from "../util/model";
+import * as model from "../state/model";
 import { Button, Col, Form, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
 
@@ -17,7 +17,7 @@ const MenuItemEditor = (props: {
 
     const formRef = useRef<any>();
 
-    const onSave = async () => {
+    const saveChanges = async () => {
         if (formRef.current?.checkValidity() === false) {
             setValidated(true);
             return;
@@ -29,7 +29,7 @@ const MenuItemEditor = (props: {
         setSubmitting(true);
         setServerResponse(null);
 
-        if (!props.menuItem.id) {
+        if (!props.menuItem.menuItemId) {
             let req: api.NewMenuItemRequest = { name, description, price };
             let response = await api.menuItemAdd(props.menuItem.restaurantId, req, abort);
             if (response.isAborted) return;
@@ -40,7 +40,7 @@ const MenuItemEditor = (props: {
             }
         } else {
             let req: api.UpdateMenuItemRequest = { name, description, price };
-            let response = await api.menuItemUpdate(props.menuItem.id, props.menuItem.restaurantId, req, abort);
+            let response = await api.menuItemUpdate(props.menuItem.menuItemId, props.menuItem.restaurantId, req, abort);
             if (response.isAborted) return;
             setSubmitting(false);
             setServerResponse(response);
@@ -51,19 +51,13 @@ const MenuItemEditor = (props: {
     };
 
     return (
-        <Modal
-            onHide={() => {
-                if (submitting) return;
-                props.onCancel();
-            }}
-            show={true}
-            backdrop="static">
-            <Modal.Header closeButton>
+        <Modal show={true} backdrop="static">
+            <Modal.Header closeButton={false}>
                 <Modal.Title>Edit menuItem </Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <Col className="d-grid">
-                    <Form onSubmit={onSave} noValidate validated={validated} ref={formRef}>
+                    <Form onSubmit={saveChanges} noValidate validated={validated} ref={formRef}>
                         <Form.Group className="mb-2" controlId="formName">
                             <Form.Label>Menu name</Form.Label>
                             <Form.Control
@@ -98,14 +92,14 @@ const MenuItemEditor = (props: {
                             />
                         </Form.Group>
                     </Form>
-                    <ui.MessageServiceContainer serverResponse={serverResponse} />
+                    <ui.AlertMessageServiceContainer serverResponse={serverResponse} />
                 </Col>
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="secondary" disabled={submitting} onClick={props.onCancel}>
                     Cancel
                 </Button>
-                <LoadingButton variant="primary" type="submit" loading={submitting} onClick={onSave}>
+                <LoadingButton variant="primary" type="submit" loading={submitting} onClick={saveChanges}>
                     Save
                 </LoadingButton>
             </Modal.Footer>

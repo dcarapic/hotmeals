@@ -94,9 +94,11 @@ namespace hotmeals_server.Model
                     .IsRequired()
                     .HasColumnType("guid");
 
-                entity.Property(e => e.StatusId).HasColumnType("int");
+                entity.Property(e => e.Status).HasColumnType("int");
 
                 entity.Property(e => e.DateCreated).IsRequired().HasColumnType("datetime");
+
+                entity.Property(e => e.Total).HasColumnType("decimal(9,2)");
 
                 entity.HasOne(d => d.Customer)
                     .WithMany(p => p.Orders)
@@ -105,6 +107,26 @@ namespace hotmeals_server.Model
                 entity.HasOne(d => d.Restaurant)
                     .WithMany(p => p.Orders)
                     .HasForeignKey(d => d.RestaurantId);
+            });
+
+            
+            modelBuilder.Entity<OrderHistoryRecord>(entity =>
+            {
+                entity.ToTable("OrderHistory");
+
+                entity.Property(e => e.Id).HasColumnType("guid");
+
+                entity.Property(e => e.OrderId)
+                    .IsRequired()
+                    .HasColumnType("guid");
+
+                entity.Property(e => e.Status).HasColumnType("int");
+
+                entity.Property(e => e.DateChanged).IsRequired().HasColumnType("datetime");
+
+                entity.HasOne(d => d.Order)
+                    .WithMany(p => p.OrderHistory)
+                    .HasForeignKey(d => d.OrderId);
             });
 
             modelBuilder.Entity<OrderItemRecord>(entity =>

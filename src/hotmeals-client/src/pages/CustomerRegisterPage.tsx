@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import * as ui from "../util/ui";
 import AccountEditor from "../shared/AccountEditor";
 
-const CustomerRegisterPage = ui.withMessageContainer(() => {
+const CustomerRegisterPage = ui.withAlertMessageContainer(() => {
     return (
         <Fragment>
             <h3 className="text-center p-2">

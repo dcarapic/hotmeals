@@ -1,11 +1,13 @@
 import React, { Fragment, useEffect, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
-import * as model from "../util/model";
+import * as model from "../state/model";
 import { Alert, Button, Col, Row } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
 import Loading from "../shared/Loading";
 import { ServerResponsePagination } from "../shared/ServerResponsePagination";
+import { useCurrentOrder } from "../state/current-order";
+import routes from "../routes";
 
 const RestaurantListItem = (props: { restaurant: model.RestaurantDTO; onSelect?: (id: string) => void }) => {
     return (
@@ -31,11 +33,12 @@ const RestaurantListItem = (props: { restaurant: model.RestaurantDTO; onSelect?:
     );
 };
 
-const CustomerRestaurants = ui.withMessageContainer(() => {
-    const msgs = ui.useMessageService();
+const CustomerRestaurants = ui.withAlertMessageContainer(() => {
+    const msgs = ui.useAlertMessageService();
     const history = useHistory();
     const abort = ui.useAbortable();
-
+    const order = useCurrentOrder();
+    
     const [loading, setLoading] = useState(false);
     const [loaded, setLoaded] = useState(false);
     const [pageInfo, setPageInfo] = useState<api.PagingInformation>();
@@ -58,7 +61,13 @@ const CustomerRestaurants = ui.withMessageContainer(() => {
         }
     };
 
-    const onSelectRestaurant = (restaurantId: string) => {};
+    const onSelectRestaurant = (restaurantId: string) => {
+        let restaurant = items.find(x=>x.id == restaurantId);
+        if(!restaurant)return;
+
+        order.createOrder(restaurant.id, restaurant.name);
+        history.push(routes.customerOrder);
+    };
 
     return (
         <Fragment>

@@ -1,7 +1,7 @@
 import React, { Fragment, useEffect, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
-import * as model from "../util/model";
+import * as model from "../state/model";
 import { Alert, Button, Col, Row } from "react-bootstrap";
 import Loading from "../shared/Loading";
 import BlockedUserUnblocker from "../shared/BlockedUserUnblocker";
@@ -43,8 +43,8 @@ const BlockedUserListItem = (props: { blockedUser: model.BlockedUserDTO; onDelet
     );
 };
 
-const OwnerBlockedUsers = ui.withMessageContainer(() => {
-    const msgs = ui.useMessageService();
+const OwnerBlockedUsers = ui.withAlertMessageContainer(() => {
+    const msgs = ui.useAlertMessageService();
     const abort = ui.useAbortable();
 
     const [loading, setLoading] = useState(true);
@@ -76,7 +76,7 @@ const OwnerBlockedUsers = ui.withMessageContainer(() => {
         setUserToUnblock(r!);
     };
 
-    const onUnblockCancel = () => setUserToUnblock(null);
+    const onUnblockCanceled = () => setUserToUnblock(null);
     const onUnblocked = () => {
         // Remove the menu item
         let copy = [...blockedUsers];
@@ -105,7 +105,7 @@ const OwnerBlockedUsers = ui.withMessageContainer(() => {
                 </Fragment>
             )}
             {userToUnblock && (
-                <BlockedUserUnblocker blockedUser={userToUnblock} onCancel={onUnblockCancel} onUnblocked={onUnblocked} />
+                <BlockedUserUnblocker blockedUser={userToUnblock} onCancel={onUnblockCanceled} onUnblocked={onUnblocked} />
             )}
         </Fragment>
     );

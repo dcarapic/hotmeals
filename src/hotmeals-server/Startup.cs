@@ -54,7 +54,12 @@ namespace hotmeals_server
                 options.AddPolicy("ProdPolicy", builder => { });
             });
 
-            services.AddControllers();
+            services.AddControllers().AddJsonOptions(opts =>
+            {
+                var enumConverter = new System.Text.Json.Serialization.JsonStringEnumConverter();
+                opts.JsonSerializerOptions.Converters.Add(enumConverter);
+            });
+            
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "HotMeals", Version = "v1" });
@@ -74,6 +79,7 @@ namespace hotmeals_server
             {
                 // The client should provide the second cookie value via the header field 'X-XSRF-TOKEN'
                 options.HeaderName = "X-XSRF-TOKEN";
+                options.Cookie.HttpOnly = false;
             });
 
             services.AddDbContext<Model.HMContext>(o =>

@@ -1,17 +1,15 @@
 import React, { FormEvent, Fragment, useState } from "react";
 import * as ui from "../util/ui";
-import { Col, Form, InputGroup } from "react-bootstrap";
-import { LoadingButton } from "../shared/LoadingButton";
+import { Button, Col, Form, InputGroup } from "react-bootstrap";
 import { RouterNavButton } from "../shared/RouterNav";
 import { useHistory } from "react-router-dom";
 import routes from "../routes";
 
-const CustomerHomePage = ui.withMessageContainer(() => {
-    const [searching, setSearching] = useState(false);
+const CustomerHomePage = ui.withAlertMessageContainer(() => {
     const [validated, setValidated] = useState(false);
     const history = useHistory();
 
-    const handleSearch = async (e: FormEvent) => {
+    const search = async (e: FormEvent) => {
         let form: any = e.currentTarget;
         e.preventDefault();
         e.stopPropagation();
@@ -25,17 +23,15 @@ const CustomerHomePage = ui.withMessageContainer(() => {
     return (
         <Fragment>
             <h3 className="text-center p-2">Search for food</h3>
-            <Form onSubmit={handleSearch} noValidate validated={validated}>
+            <Form onSubmit={search} noValidate validated={validated}>
                 <Form.Group className="mb-3" controlId="formSearch">
                     <InputGroup>
                         <Form.Control
                             type="text"
                             placeholder="Enter name of the food you would like to order"
-                            readOnly={searching}
                             required
                         />
-                        <LoadingButton loading={searching} type="submit" variant="outline-secondary">🔍</LoadingButton>
-                        <Form.Control.Feedback type="invalid">Please enter some text</Form.Control.Feedback>
+                        <Button type="submit" variant="outline-secondary"><i className="bi-search"></i></Button>
                     </InputGroup>
                 </Form.Group>
             </Form>

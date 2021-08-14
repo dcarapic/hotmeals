@@ -50,7 +50,7 @@ namespace hotmeals_server.Controllers
                        join o in _db.Users on r.OwnerId equals o.Id
                        where !o.BlockedUsers.Any(x => x.UserId == CurrentUser.Id) // prevent listing from blocked owners
                        where mi.Name.ToLower().Contains(searchExpression.ToLower())
-                       select new OrderSelectionMenuItemDTO(mi.Id, mi.RestaurantId, r.Name, mi.Name, mi.Description, mi.Price));
+                       select new SearchResultItemDTO(mi.Id, mi.RestaurantId, r.Name, mi.Name, mi.Description, mi.Price));
                        
                        //select new OrderSelectionMenuItemDTO(mi.Id, mi.RestaurantId, r.Name, mi.Name, mi.Description, mi.Price));
             var total = (int)(await qry.CountAsync());

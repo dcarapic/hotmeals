@@ -108,5 +108,7 @@ namespace hotmeals_server.Controllers
 
     }
 
-    public record CurrentUserData(Guid Id, string Email, bool IsRestaurantOwner);
+    public record CurrentUserData(Guid Id, string Email, bool IsRestaurantOwner) {
+        public bool IsCustomer => !IsRestaurantOwner;
+    }
 }

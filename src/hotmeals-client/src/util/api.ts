@@ -1,4 +1,4 @@
-import * as model from "./model";
+import * as model from "../state/model";
 
 let serverUrl: string;
 if (process.env.NODE_ENV === "production") serverUrl = "/";
@@ -49,7 +49,10 @@ export async function userUpdate(
     );
 }
 
-export async function restaurantFetchAll(page: number, abort?: AbortSignal): Promise<ServerResponse<GetRestaurantsResponse>> {
+export async function restaurantFetchAll(
+    page: number,
+    abort?: AbortSignal
+): Promise<ServerResponse<GetRestaurantsResponse>> {
     return await request<void, GetRestaurantsResponse>(
         "Fetch all restaurants",
         `api/restaurants?page=${page}`,
@@ -154,10 +157,7 @@ export async function menuItemDelete(
     );
 }
 
-
-export async function blockedUsersFetchAll(
-    abort?: AbortSignal
-): Promise<ServerResponse<GetBlockedUsersResponse>> {
+export async function blockedUsersFetchAll(abort?: AbortSignal): Promise<ServerResponse<GetBlockedUsersResponse>> {
     return await request<void, GetBlockedUsersResponse>(
         "Fetch blocked users",
         `api/blocked-users`,
@@ -171,13 +171,7 @@ export async function blockedUsersAdd(
     req: BlockUserRequest,
     abort?: AbortSignal
 ): Promise<ServerResponse<APIResponse>> {
-    return await request<BlockUserRequest, APIResponse>(
-        "Block user",
-        `api/blocked-users`,
-        "POST",
-        req,
-        abort
-    );
+    return await request<BlockUserRequest, APIResponse>("Block user", `api/blocked-users`, "POST", req, abort);
 }
 
 export async function blockedUsersRemove(
@@ -198,12 +192,50 @@ export async function searchFood(
     page: number,
     abort?: AbortSignal
 ): Promise<ServerResponse<SearchFoodResponse>> {
-    searchExpression = encodeURI(searchExpression);
+    searchExpression = encodeURIComponent(searchExpression);
     return await request<void, SearchFoodResponse>(
         "Search for food",
         `api/search/${searchExpression}?page=${page}`,
         "GET",
         undefined,
+        abort
+    );
+}
+
+export async function placeOrder(
+    req: PlaceOrderRequest,
+    abort?: AbortSignal
+): Promise<ServerResponse<PlaceOrderResponse>> {
+    return await request<PlaceOrderRequest, PlaceOrderResponse>("Place order", `api/orders`, "POST", req, abort);
+}
+
+export async function fetchOrder(orderId: string, abort?: AbortSignal): Promise<ServerResponse<PlaceOrderResponse>> {
+    orderId = encodeURIComponent(orderId);
+    return await request<PlaceOrderRequest, PlaceOrderResponse>(
+        "Fetch order",
+        `api/orders/${orderId}`,
+        "GET",
+        undefined,
+        abort
+    );
+}
+
+export async function fetchAllOrders(abort?: AbortSignal): Promise<ServerResponse<PlaceOrderResponse>> {
+    return await request<PlaceOrderRequest, PlaceOrderResponse>("Fetch orders", `api/orders`, "GET", undefined, abort);
+}
+
+export async function updateOrderStatus(
+    orderId: string,
+    status: model.OrderStatus,
+    abort?: AbortSignal
+): Promise<ServerResponse<UpdateOrderResponse>> {
+    orderId = encodeURIComponent(orderId);
+    const req: UpdateOrderRequest = { status };
+    return await request<UpdateOrderRequest, UpdateOrderResponse>(
+        "Update order status",
+        `api/orders/${orderId}`,
+        "PUT",
+        req,
         abort
     );
 }
@@ -230,12 +262,10 @@ export type APIResponse = {
     errorMessage: string;
 };
 
-
 export type PagingInformation = {
     totalPages: number;
     page: number;
 };
-
 
 export type LoginRequest = {
     email: string;
@@ -278,9 +308,10 @@ export type UpdateUserResponse = APIResponse & {
     user: model.UserDTO;
 };
 
-export type GetRestaurantsResponse = APIResponse & PagingInformation & {
-    restaurants: model.RestaurantDTO[];
-};
+export type GetRestaurantsResponse = APIResponse &
+    PagingInformation & {
+        restaurants: model.RestaurantDTO[];
+    };
 
 export type NewRestaurantRequest = {
     name: string;
@@ -303,7 +334,7 @@ export type UpdateRestaurantResponse = APIResponse & {
 };
 
 export type GetMenuItemsResponse = APIResponse & {
-    restaurantId: string
+    restaurantId: string;
     restaurantName: string;
     restaurantDescription: string;
     restaurantPhoneNumber: string;
@@ -330,9 +361,6 @@ export type UpdateMenuItemResponse = APIResponse & {
     menuItem: model.MenuItemDTO;
 };
 
-
-
-
 export type GetBlockedUsersResponse = APIResponse & {
     blockedUsers: model.BlockedUserDTO[];
 };
@@ -345,18 +373,46 @@ export type UnblockUserRequest = {
     email: string;
 };
 
+export type SearchFoodResponse = APIResponse &
+    PagingInformation & {
+        items: model.SearchResultItemDTO[];
+    };
 
-
-export type SearchFoodResponse = PagingInformation & PagingInformation & {
-    items: model.OrderSelectionMenuItemDTO[];
+export type PlaceOrderRequest = {
+    restaurantId: string;
+    items: PlaceOrderRequestMenuItem[];
 };
 
+export type PlaceOrderRequestMenuItem = {
+    menuItemId: string;
+    price: number;
+    quantity: number;
+};
 
+export type PlaceOrderResponse = APIResponse & {
+    order: model.OrderDTO;
+};
 
+export type GetOrderResponse = APIResponse & {
+    order: model.OrderDTO;
+};
+
+export type GetOrdersResponse = APIResponse &
+    PagingInformation & {
+        orders: model.OrderDTO[];
+    };
+
+export type UpdateOrderRequest = {
+    status: model.OrderStatus;
+};
+
+export type UpdateOrderResponse = APIResponse & {
+    order: model.OrderDTO;
+};
 
 // Helper functions
 
-async function request<TReq = void, TResp = void>(
+async function request<TReq, TResp extends APIResponse>(
     requestDescription: string,
     route: string,
     method: "GET" | "POST" | "DELETE" | "PUT",
@@ -426,8 +482,7 @@ async function updateResultFromBody<T>(response: ServerResponse<T>): Promise<voi
 
 async function extractErrorDetails(response: Response): Promise<string> {
     try {
-        if(response.status === 500)
-            return "Error occurred on the server. Please try again later."
+        if (response.status === 500) return "Error occurred on the server. Please try again later.";
         let json: any = await response.json();
         if (json.errorMessage) return json.errorMessage;
         // Parse .NET model validation error
@@ -450,6 +505,7 @@ async function extractErrorDetails(response: Response): Promise<string> {
 function getCookie(cname: string): string {
     var name = cname + "=";
     var decodedCookie = decodeURIComponent(document.cookie);
+    console.log(`getCookie(${cname}) - from ${decodedCookie} `);
     var ca = decodedCookie.split(";");
     for (var i = 0; i < ca.length; i++) {
         var c = ca[i];
@@ -457,7 +513,9 @@ function getCookie(cname: string): string {
             c = c.substring(1);
         }
         if (c.indexOf(name) === 0) {
-            return c.substring(name.length, c.length);
+            const cookie = c.substring(name.length, c.length);
+            console.log(`... found ${cookie} `);
+            return cookie;
         }
     }
     return "";

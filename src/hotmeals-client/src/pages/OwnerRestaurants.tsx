@@ -3,7 +3,7 @@ import { Alert, Button, Col, Row } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
-import * as model from "../util/model";
+import * as model from "../state/model";
 import routes from "../routes";
 import Loading from "../shared/Loading";
 import RestaurantEditor from "../shared/RestaurantEditor";
@@ -62,8 +62,8 @@ const RestaurantListItem = (props: {
     );
 };
 
-const OwnerRestaurants = ui.withMessageContainer(() => {
-    const msgs = ui.useMessageService();
+const OwnerRestaurants = ui.withAlertMessageContainer(() => {
+    const msgs = ui.useAlertMessageService();
     const history = useHistory();
     const abort = ui.useAbortable();
 
@@ -112,7 +112,7 @@ const OwnerRestaurants = ui.withMessageContainer(() => {
         history.push(routes.getOwnerOrdersForRestaurant(id));
     };
 
-    const onEditCancel = () => setEditedRestaurant(null);
+    const onEditCanceled = () => setEditedRestaurant(null);
     const onEditSaved = (savedRestaurant: model.RestaurantDTO) => {
         // Replace the edited restaurant with the updated copy
         let copy = [...restaurants];
@@ -123,7 +123,7 @@ const OwnerRestaurants = ui.withMessageContainer(() => {
         setRestaurants(copy);
     };
 
-    const onDeleteCancel = () => setRestaurantToDelete(null);
+    const onDeleteCanceled = () => setRestaurantToDelete(null);
     const onDeleted = () => {
         // Remove the restaurant
         let copy = [...restaurants];
@@ -167,10 +167,10 @@ const OwnerRestaurants = ui.withMessageContainer(() => {
                 Create new restaurant
             </Button>
             {editedRestaurant && (
-                <RestaurantEditor restaurant={editedRestaurant} onCancel={onEditCancel} onSaved={onEditSaved} />
+                <RestaurantEditor restaurant={editedRestaurant} onCancel={onEditCanceled} onSaved={onEditSaved} />
             )}
             {restaurantToDelete && (
-                <RestaurantDeleter restaurant={restaurantToDelete} onCancel={onDeleteCancel} onDeleted={onDeleted} />
+                <RestaurantDeleter restaurant={restaurantToDelete} onCancel={onDeleteCanceled} onDeleted={onDeleted} />
             )}
         </Fragment>
     );

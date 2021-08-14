@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
-import * as model from "../util/model";
+import * as model from "../state/model";
 import { Button, Col, Form, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
 
@@ -16,7 +16,7 @@ const RestaurantEditor = (props: {
     const abort = ui.useAbortable();
 
     const formRef = useRef<any>();
-    const onSave = async () => {
+    const saveChanges = async () => {
         if (formRef.current?.checkValidity() === false) {
             setValidated(true);
             return;
@@ -49,19 +49,13 @@ const RestaurantEditor = (props: {
     };
 
     return (
-        <Modal
-            onHide={() => {
-                if (submitting) return;
-                props.onCancel();
-            }}
-            show={true}
-            backdrop="static">
-            <Modal.Header closeButton>
+        <Modal show={true} backdrop="static">
+            <Modal.Header closeButton={false}>
                 <Modal.Title>Edit restaurant </Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <Col className="d-grid">
-                    <Form onSubmit={onSave} noValidate validated={validated} ref={formRef}>
+                    <Form onSubmit={saveChanges} noValidate validated={validated} ref={formRef}>
                         <Form.Group className="mb-2" controlId="formName">
                             <Form.Label>Restaurant name</Form.Label>
                             <Form.Control
@@ -94,14 +88,14 @@ const RestaurantEditor = (props: {
                             />
                         </Form.Group>
                     </Form>
-                    <ui.MessageServiceContainer serverResponse={serverResponse} />
+                    <ui.AlertMessageServiceContainer serverResponse={serverResponse} />
                 </Col>
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="secondary" disabled={submitting} onClick={props.onCancel}>
                     Cancel
                 </Button>
-                <LoadingButton variant="primary" type="submit" loading={submitting} onClick={onSave}>
+                <LoadingButton variant="primary" type="submit" loading={submitting} onClick={saveChanges}>
                     Save
                 </LoadingButton>
             </Modal.Footer>

@@ -126,7 +126,8 @@ namespace hotmeals_server.Controllers
             restaurant.Name = req.Name.Trim();
             restaurant.Description = req.Description.Trim();
             restaurant.PhoneNumber = req.PhoneNumber.Trim();
-            restaurant.Version = +1;
+            // TODO: Get version from request and not from the db object
+            restaurant.Version += 1;
             await _db.SaveChangesAsync();
             return Ok(new UpdateRestaurantResponse(new RestaurantDTO(
                 Id: restaurant.Id,
@@ -161,23 +162,40 @@ namespace hotmeals_server.Controllers
 
         /// <summary>
         /// Gets the restaurant menu.
+        /// If the current user is a customer then menu items are returned only if the customer is not blocked.
+        /// If the current user is a restaurant he can only request menu from his own restaurant.
         /// </summary>
         /// <returns></returns>
         [HttpGet("{restaurantId}/menu")]
         public async Task<IActionResult> GetRestaurantMenu(Guid restaurantId)
         {
-            if (!this.CurrentUser.IsRestaurantOwner)
-                return Unauthorized("You are not a restaurant owner!");
-
-            var restaurant = await _db.Restaurants.Include(r => r.MenuItems).FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Id == restaurantId);
-            if (restaurant == null)
-                return BadRequest(new APIResponse(false, "The restaurant does not exist. Have you perhaps deleted it?"));
-
-
-            var result = from mi in restaurant.MenuItems
-                         orderby mi.DateCreated
-                         select new MenuItemDTO(mi.Id, mi.RestaurantId, mi.Name, mi.Description, mi.Price);
-            return Ok(new GetMenuItemsResponse(restaurant.Id, restaurant.Name, restaurant.Description, restaurant.PhoneNumber, result.ToArray()));
+            IQueryable<MenuItemDTO> qry;
+            RestaurantRecord restaurant;
+            if (this.CurrentUser.IsCustomer)
+            {
+                restaurant = await (from r in _db.Restaurants
+                                    join o in _db.Users on r.OwnerId equals o.Id
+                                    where !o.BlockedUsers.Any(x => x.UserId == CurrentUser.Id) && r.MenuItems.Any()
+                                    where r.Id == restaurantId
+                                    select r).FirstOrDefaultAsync();
+                if (restaurant == null)
+                    return BadRequest(new APIResponse(false, "The restaurant does not exist. Have you perhaps deleted it?"));
+                qry = from mi in _db.MenuItems
+                      where mi.RestaurantId == restaurant.Id
+                      orderby mi.DateCreated
+                      select new MenuItemDTO(mi.Id, mi.RestaurantId, mi.Name, mi.Description, mi.Price);
+            }
+            else
+            {
+                restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Id == restaurantId);
+                if (restaurant == null)
+                    return BadRequest(new APIResponse(false, "The restaurant does not exist. Have you perhaps deleted it?"));
+                qry = from mi in _db.MenuItems
+                      where mi.RestaurantId == restaurant.Id
+                      orderby mi.DateCreated
+                      select new MenuItemDTO(mi.Id, mi.RestaurantId, mi.Name, mi.Description, mi.Price);
+            }
+            return Ok(new GetMenuItemsResponse(restaurant.Id, restaurant.Name, restaurant.Description, restaurant.PhoneNumber, await qry.ToArrayAsync()));
         }
 
         /// <summary>
@@ -207,7 +225,7 @@ namespace hotmeals_server.Controllers
 
             await _db.SaveChangesAsync();
             return Ok(new NewMenuItemResponse(new MenuItemDTO(
-                Id: menuItem.Id,
+                MenuItemId: menuItem.Id,
                 RestaurantId: restaurantId,
                 Name: menuItem.Name,
                 Description: menuItem.Description,
@@ -244,7 +262,7 @@ namespace hotmeals_server.Controllers
             menuItem.Price = req.Price;
             await _db.SaveChangesAsync();
             return Ok(new UpdateMenuItemResponse(new MenuItemDTO(
-                Id: menuItem.Id,
+                MenuItemId: menuItem.Id,
                 RestaurantId: restaurantId,
                 Name: menuItem.Name,
                 Description: menuItem.Description,

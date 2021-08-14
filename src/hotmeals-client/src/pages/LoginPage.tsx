@@ -6,18 +6,18 @@ import { useHistory } from "react-router-dom";
 import routes from "../routes";
 import { LoadingButton } from "../shared/LoadingButton";
 import { RouterNavLink } from "../shared/RouterNav";
-import { useCurrentUser } from "../user";
+import { useCurrentUser } from "../state/user";
 
-const LoginPage = ui.withMessageContainer(() => {
+const LoginPage = ui.withAlertMessageContainer(() => {
     const currentUser = useCurrentUser();
-    const msgs = ui.useMessageService();
+    const msgs = ui.useAlertMessageService();
     const history = useHistory();
     const abort = ui.useAbortable();
 
     const [submitting, setSubmitting] = useState(false);
     const [validated, setValidated] = useState(false);
 
-    const handleSubmit = async (e: FormEvent) => {
+    const login = async (e: FormEvent) => {
         let form: any = e.currentTarget;
         e.preventDefault();
         e.stopPropagation();
@@ -47,7 +47,7 @@ const LoginPage = ui.withMessageContainer(() => {
             <h3 className="text-center p-2">
                 Welcome to HotMeals, the best place to order your hot and fast food delivery!
             </h3>
-            <Form onSubmit={handleSubmit} noValidate validated={validated}>
+            <Form onSubmit={login} noValidate validated={validated}>
                 <Form.Group className="mb-3" controlId="formEmail">
                     <Form.Label>Email address</Form.Label>
                     <Form.Control

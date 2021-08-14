@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
-import * as model from "../util/model";
+import * as model from "../state/model";
 import { Button, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
 
@@ -14,7 +14,7 @@ const BlockedUserUnblocker = (props: {
     const [serverResponse, setServerResponse] = useState<api.ServerResponse<any> | null>(null);
     const abort = ui.useAbortable();
 
-    const onDelete = async () => {
+    const unblockUser = async () => {
         setSubmitting(true);
         setServerResponse(null);
 
@@ -34,13 +34,13 @@ const BlockedUserUnblocker = (props: {
             </Modal.Header>
             <Modal.Body>
                 Are you sure you wish to unblock customer {props.blockedUser.firstName} {props.blockedUser.lastName}?
-                <ui.MessageServiceContainer serverResponse={serverResponse} />
+                <ui.AlertMessageServiceContainer serverResponse={serverResponse} />
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="secondary" onClick={props.onCancel}>
                     Cancel
                 </Button>
-                <LoadingButton variant="warning" type="submit" loading={submitting} onClick={onDelete}>
+                <LoadingButton variant="warning" type="submit" loading={submitting} onClick={unblockUser}>
                     Unblock
                 </LoadingButton>
             </Modal.Footer>

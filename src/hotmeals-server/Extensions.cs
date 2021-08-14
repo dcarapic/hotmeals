@@ -31,7 +31,7 @@ namespace hotmeals_server
                         var tokens = antiforgery.GetAndStoreTokens(context);
                         // Add CSRF cookie which is to be read by API and returned via 'X-XSRF-TOKEN' header field
                         // Note: This must match the 
-                        context.Response.Cookies.Append(tokenName, tokens.RequestToken, new CookieOptions() { HttpOnly = false });
+                        context.Response.Cookies.Append(tokenName, tokens.RequestToken, new CookieOptions() { HttpOnly = false, SameSite=SameSiteMode.None });
                     }
                     else if (context.Request.Method == HttpMethods.Patch || context.Request.Method == HttpMethods.Post || context.Request.Method == HttpMethods.Put || context.Request.Method == HttpMethods.Delete)
                     {

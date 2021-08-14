@@ -3,7 +3,7 @@ import { Row, Col, Alert, Button } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
-import * as model from "../util/model";
+import * as model from "../state/model";
 import MenuItemEditor from "../shared/MenuItemEditor";
 import MenuItemDeleter from "../shared/MenuItemDeleter";
 import Loading from "../shared/Loading";
@@ -18,7 +18,7 @@ const MenuItemList = (props: {
         <Fragment>
             {props.menuItems.map((mi, i) => {
                 return (
-                    <Fragment key={mi.id}>
+                    <Fragment key={mi.menuItemId}>
                         {i > 0 && <hr />}
                         <MenuItemListItem menuItem={mi} onEdit={props.onEdit} onDelete={props.onDelete} />
                     </Fragment>
@@ -43,14 +43,14 @@ const MenuItemListItem = (props: {
                     size="sm"
                     className="me-1 mb-1"
                     variant="success"
-                    onClick={() => props.onEdit && props.onEdit(props.menuItem.id)}>
+                    onClick={() => props.onEdit && props.onEdit(props.menuItem.menuItemId)}>
                     Edit item
                 </Button>
                 <Button
                     size="sm"
                     className="me-1 mb-1"
                     variant="danger"
-                    onClick={() => props.onDelete && props.onDelete(props.menuItem.id)}>
+                    onClick={() => props.onDelete && props.onDelete(props.menuItem.menuItemId)}>
                     Delete
                 </Button>
             </Col>
@@ -58,8 +58,8 @@ const MenuItemListItem = (props: {
     );
 };
 
-const OwnerRestaurantMenu = ui.withMessageContainer(() => {
-    const msgs = ui.useMessageService();
+const OwnerRestaurantMenu = ui.withAlertMessageContainer(() => {
+    const msgs = ui.useAlertMessageService();
     const abort = ui.useAbortable();
     const { restaurantId } = useParams<any>();
     if (!restaurantId) return <NotFoundPage />;
@@ -78,7 +78,6 @@ const OwnerRestaurantMenu = ui.withMessageContainer(() => {
         setLoading(false);
         msgs.setMessageFromResponse(response);
         if (response.ok && response.result) {
-            console.log(JSON.stringify(response.result.menuItems));
             setMenuItems(response.result.menuItems);
             setTitle(`Menu for '${response.result.restaurantName}'`)
         } else {
@@ -93,22 +92,22 @@ const OwnerRestaurantMenu = ui.withMessageContainer(() => {
     }, []);
 
     const createNewMenuItem = () => {
-        setEditedMenuItem({ id: "", restaurantId, name: "", description: "", price: 0 });
+        setEditedMenuItem({ menuItemId: "", restaurantId, name: "", description: "", price: 0 });
     };
     const editMenuItem = (id: string) => {
-        let r = menuItems.find((x) => x.id === id);
+        let r = menuItems.find((x) => x.menuItemId === id);
         setEditedMenuItem(r!);
     };
     const deleteMenuItem = (id: string) => {
-        let r = menuItems.find((x) => x.id === id);
+        let r = menuItems.find((x) => x.menuItemId === id);
         setMenuItemToDelete(r!);
     };
 
-    const onEditCancel = () => setEditedMenuItem(null);
+    const onEditCanceled = () => setEditedMenuItem(null);
     const onEditSaved = (savedMenuItem: model.MenuItemDTO) => {
         // Replace the edited menu item with the updated copy
         let copy = [...menuItems];
-        if(editedMenuItem!.id)
+        if(editedMenuItem!.menuItemId)
             copy[copy.indexOf(editedMenuItem!)] = savedMenuItem;
         else
             copy.push(savedMenuItem);
@@ -117,7 +116,7 @@ const OwnerRestaurantMenu = ui.withMessageContainer(() => {
         setMenuItems(copy);
     };
 
-    const onDeleteCancel = () => setMenuItemToDelete(null);
+    const onDeleteCanceled = () => setMenuItemToDelete(null);
     const onDeleted = () => {
         // Remove the menu item
         let copy = [...menuItems];
@@ -148,8 +147,8 @@ const OwnerRestaurantMenu = ui.withMessageContainer(() => {
             <Button onClick={createNewMenuItem} className="mt-3" disabled={loading}>
                 Create new menu item
             </Button>
-            {editedMenuItem && <MenuItemEditor menuItem={editedMenuItem} onCancel={onEditCancel} onSaved={onEditSaved} />}
-            {menuItemToDelete && <MenuItemDeleter menuItem={menuItemToDelete} onCancel={onDeleteCancel} onDeleted={onDeleted} />}
+            {editedMenuItem && <MenuItemEditor menuItem={editedMenuItem} onCancel={onEditCanceled} onSaved={onEditSaved} />}
+            {menuItemToDelete && <MenuItemDeleter menuItem={menuItemToDelete} onCancel={onDeleteCanceled} onDeleted={onDeleted} />}
         </Fragment>
     );
 });
