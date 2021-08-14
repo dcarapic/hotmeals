@@ -59,7 +59,7 @@ namespace hotmeals_server
                 var enumConverter = new System.Text.Json.Serialization.JsonStringEnumConverter();
                 opts.JsonSerializerOptions.Converters.Add(enumConverter);
             });
-            
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "HotMeals", Version = "v1" });
@@ -89,6 +89,11 @@ namespace hotmeals_server
                 if (env.IsDevelopment())
                     o.EnableSensitiveDataLogging();
             });
+            // In production, the React files will be served from this directory
+            services.AddSpaStaticFiles(configuration =>
+            {
+                configuration.RootPath = "client/build";
+            });
 
         }
 
@@ -103,9 +108,12 @@ namespace hotmeals_server
                 app.UseSwaggerUI(c =>
                 {
                     c.SwaggerEndpoint("/swagger/v1/swagger.json", "HotMeals API v1");
-                    c.RoutePrefix = string.Empty;
+                    c.RoutePrefix = "swagger";
                 });
             }
+            app.UseStaticFiles();
+            app.UseSpaStaticFiles();
+
             app.UseRouting();
             // Note: Must match teh AddAntiforgery above
             app.UseAntiforgery("X-XSRF-TOKEN");
@@ -121,6 +129,9 @@ namespace hotmeals_server
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+            });
+            app.UseSpa(spa =>
+            {
             });
         }
     }
