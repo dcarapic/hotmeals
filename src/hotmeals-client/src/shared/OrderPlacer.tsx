@@ -4,7 +4,7 @@ import * as ui from "../util/ui";
 import * as model from "../state/model";
 import { Button, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
-import { NewOrder } from "./NewOrderControls";
+import { OrderDetails } from "./OrderDetails";
 import Loading from "./Loading";
 
 const OrderPlacer = (props: {
@@ -69,7 +69,7 @@ const OrderPlacer = (props: {
             </Modal.Header>
             <Modal.Body>
                 {!waitingConfirmation ? (
-                    <NewOrder order={props.order} disabled={true} />
+                    <OrderDetails order={props.order} disabled={true} />
                 ) : (
                     <div className="row">
                         <div className="col-8">

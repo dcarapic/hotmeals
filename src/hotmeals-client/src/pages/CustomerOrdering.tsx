@@ -7,7 +7,7 @@ import { useCurrentOrder } from "../state/current-order";
 import { Redirect, useHistory } from "react-router-dom";
 import routes from "../routes";
 import Loading from "../shared/Loading";
-import { NewOrderMenuItem, NewOrder } from "../shared/NewOrderControls";
+import {  OrderDetails, OrderMenuItem } from "../shared/OrderDetails";
 import OrderPlacer from "../shared/OrderPlacer";
 
 const CustomerOrdering = ui.withAlertMessageContainer(() => {
@@ -62,6 +62,16 @@ const CustomerOrdering = ui.withAlertMessageContainer(() => {
         }
     };
 
+    const changeStatus = (status: model.OrderStatus) => {
+        // Status can no longer be changed by the order details
+        if(placingOrder)
+            return;
+        if(status === 'Placed')
+            setPlacingOrder(true);
+        else if(status === 'Canceled')
+            currentOrder.removeOrder(); 
+    }
+
     const placeOrder = () => {
         setPlacingOrder(true);
     };
@@ -96,11 +106,10 @@ const CustomerOrdering = ui.withAlertMessageContainer(() => {
             <div className="sticky-top">
                 <h3 className="text-center p-2 hm-sticky-padder">Order your food</h3>
                 <div className="border rounded mb-4 bg-light shadow">
-                    <NewOrder
+                    <OrderDetails
                         order={currentOrder.order}
                         onQuantityChanged={changeQuantity}
-                        onRequestPlaceOrder={placeOrder}
-                        onRequestCancelOrder={clearOrder}
+                        onRequestStatusChange={changeStatus}
                     />
                 </div>
             </div>
@@ -116,7 +125,7 @@ const CustomerOrdering = ui.withAlertMessageContainer(() => {
                     {menuItems.map((r, i) => {
                         return (
                             <div className="col-md-6" key={r.menuItemId}>
-                                <NewOrderMenuItem item={r} onQuantityChanged={changeQuantity} />
+                                <OrderMenuItem item={r} onQuantityChanged={changeQuantity} />
                             </div>
                         );
                     })}

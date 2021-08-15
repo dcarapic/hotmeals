@@ -5,46 +5,47 @@ import * as model from "../state/model";
 import { Button, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
 
-const BlockedUserUnblocker = (props: {
-    blockedUser: model.BlockedUserDTO;
+const OrderStatusChanger = (props: {
+    order: model.OrderDTO;
+    status: model.OrderStatus;
     onCancel: () => void;
-    onUnblocked: () => void;
+    onStatusChanged: (order: model.OrderDTO) => void;
 }) => {
     const [submitting, setSubmitting] = useState(false);
     const [serverResponse, setServerResponse] = useState<api.ServerResponse<any> | null>(null);
     const abort = ui.useAbortable();
 
-    const unblockUser = async () => {
+    const updateStatus = async () => {
         setSubmitting(true);
         setServerResponse(null);
 
-        let response = await api.blockedUsersRemove({ email: props.blockedUser.email }, abort);
+        let response = await api.orderUpdateStatus(props.order.orderId, props.status, abort);
         if (response.isAborted) return;
         setSubmitting(false);
         setServerResponse(response);
         if (response.ok && response.result) {
-            props.onUnblocked();
+            props.onStatusChanged(response.result.order);
         }
     };
 
     return (
-        <Modal onHide={props.onCancel} show={true}>
-            <Modal.Header closeButton>
-                <Modal.Title>Unblock customer</Modal.Title>
+        <Modal show={true} backdrop="static">
+            <Modal.Header closeButton={false}>
+                <Modal.Title>Update order</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                Are you sure you wish to unblock customer {props.blockedUser.firstName} {props.blockedUser.lastName}?
+                Are you sure you wish to change the order status to <strong>{props.status}</strong>?
                 <ui.AlertMessageServiceContainer serverResponse={serverResponse} />
             </Modal.Body>
             <Modal.Footer>
-                <Button variant="secondary" onClick={props.onCancel}>
+                <Button variant="secondary" disabled={submitting} onClick={props.onCancel}>
                     Cancel
                 </Button>
-                <LoadingButton variant="warning" type="submit" loading={submitting} onClick={unblockUser}>
-                    Unblock
+                <LoadingButton variant={props.status === 'Canceled'? 'danger' : 'primary' } type="submit" loading={submitting} onClick={updateStatus}>
+                    Confirm
                 </LoadingButton>
             </Modal.Footer>
         </Modal>
     );
 };
-export default BlockedUserUnblocker;
+export default OrderStatusChanger;

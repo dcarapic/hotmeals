@@ -8,8 +8,8 @@ Set-Location ..
 
 Set-Location hotmeals-server
 dotnet build
-Set-Location ..
 if ($LASTEXITCODE -ne 0) { exit }
+Set-Location ..
 
 xcopy .\hotmeals-client\build\ .\hotmeals-server\client\build\ /e /r /y
 

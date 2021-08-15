@@ -6,7 +6,7 @@ const OrdersCompletedPage = ui.withAlertMessageContainer(() => {
     return (
         <Fragment>
             <h3 className="text-center p-2">Your completed orders</h3>
-            <OrderList type={OrderListType.ActiveOrders} />
+            <OrderList type={OrderListType.CompleteOrders} />
         </Fragment>
     );
 });

@@ -32,9 +32,35 @@ namespace hotmeals_server.Model
     /// <summary>
     /// Order information returned by server.
     /// </summary>
-    public record OrderDTO(Guid OrderId, Guid RestaurantId, string RestaurantName, Guid CustomerId, string CustomerEmail, string CustomerFirstName, string CustomerLastName, OrderStatus CurrentStatus, DateTime CreatedAt, decimal Total, OrderItemDTO[] Items, OrderHistoryDTO[] History);
+    public record OrderDTO(Guid OrderId, Guid RestaurantId, string RestaurantName, Guid CustomerId, string CustomerEmail, string CustomerFirstName, string CustomerLastName, OrderStatus CurrentStatus, DateTime CreatedAt, decimal Total, OrderItemDTO[] Items, OrderHistoryDTO[] History)
+    {
+        /// <summary>
+        /// Setter which accept UTC date and converts it to local date and stores it to CreatedAt property.
+        /// </summary>
+        /// <value></value>
+        public DateTime CreatedAtUtc
+        {
+            init
+            {
+                this.CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(value, TimeZoneInfo.Local);
+            }
+        }
+    };
+
     public record OrderItemDTO(string Name, string Description, decimal Price, int Position, int Quantity);
-    public record OrderHistoryDTO(OrderStatus Status, DateTime ChangedAt);
+    public record OrderHistoryDTO(OrderStatus Status, DateTime ChangedAt){
+        /// <summary>
+        /// Setter which accept UTC date and converts it to local date and stores it to ChangedAt property.
+        /// </summary>
+        /// <value></value>
+        public DateTime ChangedAtUtc
+        {
+            init
+            {
+                this.ChangedAt = TimeZoneInfo.ConvertTimeFromUtc(value, TimeZoneInfo.Local);
+            }
+        }
+    };
 
 
 

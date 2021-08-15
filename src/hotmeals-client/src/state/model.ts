@@ -54,7 +54,7 @@ export type NewOrderItem = MenuItemBase & {
 }
 
 
-export type OrderStatus = 'Placed' | 'Confirmed' | 'Shipped' | 'Delivered' | 'Received' | 'Canceled';
+export type OrderStatus = 'Placed' | 'Accepted' | 'Shipped' | 'Delivered' | 'Received' | 'Canceled';
 
 export type OrderDTO = {
     orderId: string;
@@ -65,7 +65,7 @@ export type OrderDTO = {
     customerFirstName: string;
     customerLastName: string;
     currentStatus: OrderStatus;
-    createdAt: Date;
+    createdAt: string;
     items: OrderItemDTO[];
     history: OrderHistoryDTO[];
     total: number;
@@ -73,7 +73,7 @@ export type OrderDTO = {
 
 export type OrderHistoryDTO = {
     status: OrderStatus;
-    changedAt: Date;
+    changedAt: string;
 };
 
 

@@ -4,7 +4,7 @@ import * as ui from "../util/ui";
 import * as model from "../state/model";
 import { Alert, Button, Col, Row } from "react-bootstrap";
 import Loading from "../shared/Loading";
-import BlockedUserUnblocker from "../shared/BlockedUserUnblocker";
+import BlockedUserUpdater, { BlockedUserUpdateType } from "../shared/BlockedUserUpdater";
 
 const BlockedUserList = (props: { blockedUsers: model.BlockedUserDTO[]; onDelete?: (email: string) => void }) => {
     return (
@@ -105,7 +105,7 @@ const OwnerBlockedUsersPage = ui.withAlertMessageContainer(() => {
                 </Fragment>
             )}
             {userToUnblock && (
-                <BlockedUserUnblocker blockedUser={userToUnblock} onCancel={onUnblockCanceled} onUnblocked={onUnblocked} />
+                <BlockedUserUpdater type={BlockedUserUpdateType.UnblockUser} userEmail={userToUnblock.email} onCancel={onUnblockCanceled} onBlockChanged={onUnblocked} />
             )}
         </Fragment>
     );

@@ -108,10 +108,10 @@ namespace hotmeals_server
                 app.UseSwaggerUI(c =>
                 {
                     c.SwaggerEndpoint("/swagger/v1/swagger.json", "HotMeals API v1");
-                    c.RoutePrefix = "swagger";
+                    //c.RoutePrefix = "swagger";
                 });
             }
-            app.UseStaticFiles();
+            //app.UseStaticFiles();
             app.UseSpaStaticFiles();
 
             app.UseRouting();

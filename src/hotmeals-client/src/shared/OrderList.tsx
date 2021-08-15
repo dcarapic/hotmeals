@@ -5,43 +5,16 @@ import * as model from "../state/model";
 import { Alert, Button, Col, Row } from "react-bootstrap";
 import Loading from "./Loading";
 import { ServerResponsePagination } from "./ServerResponsePagination";
-
-const OrderItem = (props: { order: model.OrderDTO }) => {
-    return (
-        <div className="mb-3">
-            <div>
-                <strong>{props.order.restaurantName}</strong>
-            </div>
-            <div>
-                <Button size="sm" variant="danger" onClick={() => {}}>
-                    Cancel order
-                </Button>
-                <Button size="sm" variant="success" onClick={() => {}}>
-                    Accept order
-                </Button>
-                <Button size="sm" variant="primary" onClick={() => {}}>
-                    Order shipped
-                </Button>
-                <Button size="sm" variant="primary" onClick={() => {}}>
-                    Delivered
-                </Button>
-                <Button size="sm" variant="primary" onClick={() => {}}>
-                    Received
-                </Button>
-                <Button size="sm" variant="warning" onClick={() => {}}>
-                    Block customer
-                </Button>
-            </div>
-        </div>
-    );
-};
+import { OrderDetails } from "./OrderDetails";
+import OrderStatusChanger from "./OrderStatusChanger";
+import BlockedUserUpdater, { BlockedUserUpdateType } from "./BlockedUserUpdater";
 
 enum OrderListType {
     ActiveOrders = 1,
-    CompleteOrders = 2
+    CompleteOrders = 2,
 }
 
-const OrderList = (props: {restaurantId?: string, type: OrderListType}) => {
+const OrderList = (props: { restaurantId?: string; type: OrderListType }) => {
     const msgs = ui.useAlertMessageService();
     const abort = ui.useAbortable();
 
@@ -49,6 +22,10 @@ const OrderList = (props: {restaurantId?: string, type: OrderListType}) => {
     const [loaded, setLoaded] = useState(false);
     const [pageInfo, setPageInfo] = useState<api.PagingInformation>();
     const [items, setItems] = useState<model.OrderDTO[]>([]);
+    const [orderToUpdate, setOrderToUpdate] = useState<{ order: model.OrderDTO; status: model.OrderStatus } | null>(
+        null
+    );
+    const [emailToBlock, setEmailToBlock] = useState<string | null>(null);
 
     useEffect(() => {
         loadPage(1);
@@ -57,10 +34,8 @@ const OrderList = (props: {restaurantId?: string, type: OrderListType}) => {
     const loadPage = async (page: number) => {
         setLoading(true);
         let response;
-        if(props.type === OrderListType.ActiveOrders)
-            response = await api.ordersFetchActive(page, abort);
-        else
-            response = await api.ordersFetchCompleted(page, abort);
+        if (props.type === OrderListType.ActiveOrders) response = await api.ordersFetchActive(page, abort);
+        else response = await api.ordersFetchCompleted(page, abort);
         if (response.isAborted) return;
         msgs.setMessageFromResponse(response);
         if (response.ok && response.result) {
@@ -72,7 +47,30 @@ const OrderList = (props: {restaurantId?: string, type: OrderListType}) => {
         setLoading(false);
     };
 
-    const statusUpdate = (orderId: string, status: model.OrderStatus) => {};
+    const statusUpdate = (orderId: string, status: model.OrderStatus) => {
+        let item = items.find((x) => x.orderId === orderId);
+        setOrderToUpdate({ order: item!, status: status });
+    };
+
+    const blockCustomer = (email: string) => {
+        setEmailToBlock(email);
+    };
+
+    const onUpdateCanceled = () => setOrderToUpdate(null);
+    const onUpdated = (updatedOrder: model.OrderDTO) => {
+        // Replace the order with the updated copy
+        let copy = [...items];
+        copy[copy.indexOf(orderToUpdate!.order)] = updatedOrder;
+        // Clear edited restaurant, this will hide the dialog
+        setOrderToUpdate(null);
+        setItems(copy);
+    };
+
+    const onBlockCanceled = () => setEmailToBlock(null);
+    const onBlocked = () => {
+        // For now we do not do anything special, owner can block multiple times without issues
+        setEmailToBlock(null);
+    };
 
     return (
         <Fragment>
@@ -83,25 +81,44 @@ const OrderList = (props: {restaurantId?: string, type: OrderListType}) => {
                     </Col>
                 </Row>
             )}
-            {loaded && (
-                <div className="row mb-2">
-                    {items.map((r, i) => {
-                        return (
-                            <div className="col-md-6" key={r.orderId}>
-                                <OrderItem order={r} />
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
+            {loaded &&
+                items.map((r, i) => {
+                    return (
+                        <div key={r.orderId} className="mb-4">
+                            <OrderDetails
+                                order={r}
+                                onRequestStatusChange={(status) => statusUpdate(r.orderId, status)}
+                                onRequestBlockUser={blockCustomer}
+                            />
+                        </div>
+                    );
+                })}
 
             {loaded && pageInfo && pageInfo.totalPages > 1 && (
                 <ServerResponsePagination pageInfo={pageInfo} onPageChanged={loadPage} disabled={loading} />
             )}
             <Alert show={loaded && items.length === 0} variant="info">
-                {props.type === OrderListType.ActiveOrders ? "You have no active orders." : "You have no completed orders."}
+                {props.type === OrderListType.ActiveOrders
+                    ? "You have no active orders."
+                    : "You have no completed orders."}
             </Alert>
+            {orderToUpdate && (
+                <OrderStatusChanger
+                    order={orderToUpdate.order}
+                    status={orderToUpdate.status}
+                    onCancel={onUpdateCanceled}
+                    onStatusChanged={onUpdated}
+                />
+            )}
+            {emailToBlock && (
+                <BlockedUserUpdater
+                    type={BlockedUserUpdateType.BlockUser}
+                    userEmail={emailToBlock}
+                    onCancel={onBlockCanceled}
+                    onBlockChanged={onBlocked}
+                />
+            )}
         </Fragment>
     );
 };
-export {OrderList, OrderListType};
+export { OrderList, OrderListType };
