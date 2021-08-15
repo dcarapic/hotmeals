@@ -2,18 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Antiforgery;
-using Microsoft.AspNetCore.Authentication.Cookies;
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using Microsoft.IdentityModel.Tokens;
 
 
 namespace hotmeals_server
@@ -65,21 +64,22 @@ namespace hotmeals_server
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "HotMeals", Version = "v1" });
             });
 
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(opt =>
+            services.AddAuthentication(opt =>
             {
-                // As we are Web API there is no login page, just return 401 in case we are not authenticated
-                opt.Events.OnRedirectToLogin = (ctx) =>
+                opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(opt =>
+            {
+                opt.SaveToken = true;
+                opt.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
                 {
-                    ctx.Response.StatusCode = 401;
-                    return Task.CompletedTask;
+                    ValidateIssuer = true,
+                    ValidIssuer = Configuration["Jwt:Issuer"],
+                    ValidateAudience = true,
+                    ValidAudience = Configuration["Jwt:Audience"],
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
                 };
-            });
-            // Add CSRF antiforgery token
-            services.AddAntiforgery(options =>
-            {
-                // The client should provide the second cookie value via the header field 'X-XSRF-TOKEN'
-                options.HeaderName = "X-XSRF-TOKEN";
-                options.Cookie.HttpOnly = false;
             });
 
             services.AddDbContext<Model.HMContext>(o =>
@@ -116,8 +116,6 @@ namespace hotmeals_server
             app.UseSpaStaticFiles();
 
             app.UseRouting();
-            // Note: Must match teh AddAntiforgery above
-            app.UseAntiforgery("X-XSRF-TOKEN");
 
             if (env.IsDevelopment())
                 app.UseCors("DevPolicy");
@@ -126,6 +124,7 @@ namespace hotmeals_server
 
             app.UseAuthentication();
             app.UseAuthorization();
+
             //app.UseDelay(1); // TODO: Remove later
             app.UseEndpoints(endpoints =>
             {

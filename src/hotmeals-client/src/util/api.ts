@@ -1,4 +1,5 @@
 import * as model from "../state/model";
+import * as jwt from "../state/jwt-token";
 
 let serverUrl: string;
 if (process.env.NODE_ENV === "production") serverUrl = "/";
@@ -15,25 +16,33 @@ export async function userAuthenticate(abort?: AbortSignal): Promise<ServerRespo
         abort
     );
 }
+
 export async function userLogin(req: LoginRequest, abort?: AbortSignal): Promise<ServerResponse<LoginResponse>> {
-    return await request<LoginRequest, LoginResponse>("Login", "api/user/login", "POST", req, abort);
+    let response = await request<LoginRequest, LoginResponse>("Login", "api/user/login", "POST", req, abort);
+    // If login successful then preserve token
+    if (response.ok && response.result) jwt.setJWTToken(response.result.jwtToken, response.result.expiresInSeconds);
+    return response;
 }
 
-export async function userLogout(abort?: AbortSignal): Promise<ServerResponse> {
-    return await request("Logout", "api/user/logout", "POST", undefined, abort);
+export async function userLogout(abort?: AbortSignal): Promise<void> {
+    await request("Logout", "api/user/logout", "POST", undefined, abort);
+    jwt.clearJWTToken();
 }
 
 export async function userRegister(
     req: RegisterUserRequest,
     abort?: AbortSignal
 ): Promise<ServerResponse<RegisterUserResponse>> {
-    return await request<RegisterUserRequest, RegisterUserResponse>(
+    let response = await request<RegisterUserRequest, RegisterUserResponse>(
         `Register new ${req.isRestaurantOwner ? "restaurant owner" : "customer"}`,
         "api/user",
         "POST",
         req,
         abort
     );
+    // If login successful then preserve token
+    if (response.ok && response.result) jwt.setJWTToken(response.result.jwtToken, response.result.expiresInSeconds);
+    return response;
 }
 
 export async function userUpdate(
@@ -230,7 +239,10 @@ export async function ordersFetchActive(page: number, abort?: AbortSignal): Prom
     );
 }
 
-export async function ordersFetchCompleted(page: number, abort?: AbortSignal): Promise<ServerResponse<GetOrdersResponse>> {
+export async function ordersFetchCompleted(
+    page: number,
+    abort?: AbortSignal
+): Promise<ServerResponse<GetOrdersResponse>> {
     return await request<PlaceOrderRequest, GetOrdersResponse>(
         "Fetch orders",
         `api/orders/completed?page=${page}`,
@@ -290,6 +302,8 @@ export type LoginRequest = {
 
 export type LoginResponse = APIResponse & {
     user: model.UserDTO;
+    jwtToken: string;
+    expiresInSeconds: number;
 };
 
 export type AuthenticateResponse = APIResponse & {
@@ -309,6 +323,8 @@ export type RegisterUserRequest = {
 
 export type RegisterUserResponse = APIResponse & {
     user: model.UserDTO;
+    jwtToken: string;
+    expiresInSeconds: number;
 };
 
 export type UpdateUserRequest = {
@@ -449,7 +465,8 @@ async function request<TReq, TResp extends APIResponse>(
     };
     if (abort) init.signal = abort;
     if (request) init.body = JSON.stringify(request);
-    if (method !== "GET") headers["X-XSRF-TOKEN"] = getCookie("X-XSRF-TOKEN");
+    let jwtToken = jwt.getJWTToken();
+    if (jwtToken.token) headers["Authorization"] = `Bearer ${jwtToken.token}`;
 
     try {
         const url = serverUrl + route;
@@ -497,9 +514,14 @@ async function updateResultFromBody<T>(response: ServerResponse<T>): Promise<voi
 }
 
 async function extractErrorDetails(response: Response): Promise<string> {
+    let errorMessage = "Failed to process server response. Please try again later.";
     try {
         if (response.status === 500) return "Error occurred on the server. Please try again later.";
-        let json: any = await response.json();
+        if (response.status === 401)
+            errorMessage = "You are not logged in or your credentials have expired. Please login again.";
+        if (response.status === 403) errorMessage = "You do not have permission to access requested resource.";
+        let text = await response.text();
+        let json: any = JSON.parse(text);
         if (json.errorMessage) return json.errorMessage;
         // Parse .NET model validation error
         if (json.errors) {
@@ -514,25 +536,6 @@ async function extractErrorDetails(response: Response): Promise<string> {
         }
         return json.toString();
     } catch (e) {
-        return "Failed to process server response. Please try again later.";
+        return errorMessage;
     }
-}
-
-function getCookie(cname: string): string {
-    var name = cname + "=";
-    var decodedCookie = decodeURIComponent(document.cookie);
-    console.log(`getCookie(${cname}) - from ${decodedCookie} `);
-    var ca = decodedCookie.split(";");
-    for (var i = 0; i < ca.length; i++) {
-        var c = ca[i];
-        while (c.charAt(0) === " ") {
-            c = c.substring(1);
-        }
-        if (c.indexOf(name) === 0) {
-            const cookie = c.substring(name.length, c.length);
-            console.log(`... found ${cookie} `);
-            return cookie;
-        }
-    }
-    return "";
 }

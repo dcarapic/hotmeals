@@ -71,11 +71,13 @@ namespace hotmeals_server.Model
 
 
     public record LoginRequest([Required][MaxLength(100)] string Email, [Required][MaxLength(500)] string Password);
-    public record LoginResponse(UserDTO User) : APIResponse(true, null);
+    public record LoginResponse(UserDTO User, String JwtToken, int ExpiresInSeconds) : APIResponse(true, null);
+
+    public record AuthenticateResponse(UserDTO User) : APIResponse(true, null);
 
 
     public record RegisterUserRequest([Required][MaxLength(100)] string Email, [Required][MaxLength(100)] string FirstName, [Required][MaxLength(100)] string LastName, [Required][MaxLength(20)] string AddressCityZip, [Required][MaxLength(100)] string AddressCity, [Required][MaxLength(200)] string AddressStreet, [Required][MaxLength(500)] string Password, bool IsRestaurantOwner);
-    public record RegisterUserResponse(UserDTO User) : APIResponse(true, null);
+    public record RegisterUserResponse(UserDTO User, String JwtToken, int ExpiresInSeconds) : APIResponse(true, null);
 
     public record UpdateUserRequest([Required][MaxLength(100)] string FirstName, [Required][MaxLength(100)] string LastName, [Required][MaxLength(20)] string AddressCityZip, [Required][MaxLength(100)] string AddressCity, [Required][MaxLength(200)] string AddressStreet, [MaxLength(500)] string NewPassword) : APIResponse(true, null);
     public record UpdateUserResponse(UserDTO User) : APIResponse(true, null);

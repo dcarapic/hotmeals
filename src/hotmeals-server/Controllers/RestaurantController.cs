@@ -47,19 +47,18 @@ namespace hotmeals_server.Controllers
             IQueryable<RestaurantDTO> qry;
             var totalPages = 1;
 
-            if (this.CurrentUser.IsRestaurantOwner)
+            if (this.ApplicationUser.IsRestaurantOwner)
             {
                 qry = from r in _db.Restaurants
-                      where r.OwnerId == CurrentUser.Id
+                      where r.OwnerId == ApplicationUser.Id
                       orderby r.DateCreated
                       select new RestaurantDTO(r.Id, r.Name, r.Description, r.PhoneNumber);
-
             }
             else
             {
                 qry = from r in _db.Restaurants
                       join o in _db.Users on r.OwnerId equals o.Id
-                      where !o.BlockedUsers.Any(x => x.UserId == CurrentUser.Id) && r.MenuItems.Any()
+                      where !o.BlockedUsers.Any(x => x.UserId == ApplicationUser.Id) && r.MenuItems.Any()
                       orderby r.Name
                       select new RestaurantDTO(r.Id, r.Name, r.Description, r.PhoneNumber);
 
@@ -75,18 +74,15 @@ namespace hotmeals_server.Controllers
         /// Adds a new restaurant for the currently logged on user.
         /// </summary>
         [HttpPost]
+        [Authorize(Roles = RoleOwner)]
         public async Task<IActionResult> AddRestaurant([FromBody] NewRestaurantRequest req)
         {
-            if (!this.CurrentUser.IsRestaurantOwner)
-                return Unauthorized("You are not a restaurant owner!");
-
-
-            var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Name.ToLower() == req.Name.ToLower());
+            var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == ApplicationUser.Id && x.Name.ToLower() == req.Name.ToLower());
             if (restaurant != null)
                 return BadRequest(new APIResponse(false, "You already have a restaurant with the same name!"));
 
             restaurant = new RestaurantRecord();
-            restaurant.OwnerId = CurrentUser.Id;
+            restaurant.OwnerId = ApplicationUser.Id;
             restaurant.Name = req.Name.Trim();
             restaurant.Description = req.Description.Trim();
             restaurant.PhoneNumber = req.PhoneNumber.Trim();
@@ -106,19 +102,17 @@ namespace hotmeals_server.Controllers
         /// Updates the restaurant of the currently logged on user.
         /// </summary>
         [HttpPut("{restaurantId}")]
+        [Authorize(Roles = RoleOwner)]
         public async Task<IActionResult> UpdateRestaurant(Guid restaurantId, [FromBody] UpdateRestaurantRequest req)
         {
-            if (!this.CurrentUser.IsRestaurantOwner)
-                return Unauthorized("You are not a restaurant owner!");
-
-            var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Id == restaurantId);
+            var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == ApplicationUser.Id && x.Id == restaurantId);
             if (restaurant == null)
                 return BadRequest(new APIResponse(false, "The restaurant does not exist. Have you perhaps deleted it?"));
 
             if (string.Compare(restaurant.Name, req.Name.Trim(), ignoreCase: true) != 0)
             {
                 // Name changed
-                var sameName = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Name.ToLower() == req.Name.ToLower());
+                var sameName = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == ApplicationUser.Id && x.Name.ToLower() == req.Name.ToLower());
                 if (sameName != null)
                     return BadRequest(new APIResponse(false, "You already have a restaurant with the same name!"));
             }
@@ -142,12 +136,10 @@ namespace hotmeals_server.Controllers
         /// <param name="restaurantId"></param>
         /// <returns></returns>
         [HttpDelete("{restaurantId}")]
+        [Authorize(Roles = RoleOwner)]
         public async Task<IActionResult> DeleteRestaurant(Guid restaurantId)
         {
-            if (!this.CurrentUser.IsRestaurantOwner)
-                return Unauthorized("You are not a restaurant owner!");
-
-            var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Id == restaurantId);
+            var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == ApplicationUser.Id && x.Id == restaurantId);
             if (restaurant == null)
                 return BadRequest(new APIResponse(false, "The restaurant does not exist. Have you perhaps already deleted it?"));
             if (restaurant.Orders.Any())
@@ -171,11 +163,11 @@ namespace hotmeals_server.Controllers
         {
             IQueryable<MenuItemDTO> qry;
             RestaurantRecord restaurant;
-            if (this.CurrentUser.IsCustomer)
+            if (this.ApplicationUser.IsCustomer)
             {
                 restaurant = await (from r in _db.Restaurants
                                     join o in _db.Users on r.OwnerId equals o.Id
-                                    where !o.BlockedUsers.Any(x => x.UserId == CurrentUser.Id) && r.MenuItems.Any()
+                                    where !o.BlockedUsers.Any(x => x.UserId == ApplicationUser.Id) && r.MenuItems.Any()
                                     where r.Id == restaurantId
                                     select r).FirstOrDefaultAsync();
                 if (restaurant == null)
@@ -187,7 +179,7 @@ namespace hotmeals_server.Controllers
             }
             else
             {
-                restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Id == restaurantId);
+                restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == ApplicationUser.Id && x.Id == restaurantId);
                 if (restaurant == null)
                     return BadRequest(new APIResponse(false, "The restaurant does not exist. Have you perhaps deleted it?"));
                 qry = from mi in _db.MenuItems
@@ -202,12 +194,10 @@ namespace hotmeals_server.Controllers
         /// Adds a new restaurant for the currently logged on user.
         /// </summary>
         [HttpPost("{restaurantId}/menu")]
+        [Authorize(Roles = RoleOwner)]
         public async Task<IActionResult> AddMenuItem(Guid restaurantId, [FromBody] NewMenuItemRequest req)
         {
-            if (!this.CurrentUser.IsRestaurantOwner)
-                return Unauthorized("You are not a restaurant owner!");
-
-            var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Id == restaurantId);
+            var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == ApplicationUser.Id && x.Id == restaurantId);
             if (restaurant == null)
                 return BadRequest(new APIResponse(false, "The restaurant does not exist. Have you perhaps already deleted it?"));
 
@@ -236,12 +226,10 @@ namespace hotmeals_server.Controllers
         /// Updates the restaurant of the currently logged on user.
         /// </summary>
         [HttpPut("{restaurantId}/menu/{menuItemId}")]
+        [Authorize(Roles = RoleOwner)]
         public async Task<IActionResult> UpdateMenuItem(Guid menuItemId, Guid restaurantId, [FromBody] UpdateMenuItemRequest req)
         {
-            if (!this.CurrentUser.IsRestaurantOwner)
-                return Unauthorized("You are not a restaurant owner!");
-
-            var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Id == restaurantId);
+            var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == ApplicationUser.Id && x.Id == restaurantId);
             if (restaurant == null)
                 return BadRequest(new APIResponse(false, "The restaurant does not exist. Have you perhaps already deleted it?"));
 
@@ -275,12 +263,10 @@ namespace hotmeals_server.Controllers
         /// <param name="restaurantId"></param>
         /// <returns></returns>
         [HttpDelete("{restaurantId}/menu/{menuItemId}")]
+        [Authorize(Roles = RoleOwner)]        
         public async Task<IActionResult> DeleteMenuItem(Guid menuItemId, Guid restaurantId)
         {
-            if (!this.CurrentUser.IsRestaurantOwner)
-                return Unauthorized("You are not a restaurant owner!");
-
-            var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == CurrentUser.Id && x.Id == restaurantId);
+            var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == ApplicationUser.Id && x.Id == restaurantId);
             if (restaurant == null)
                 return BadRequest(new APIResponse(false, "The restaurant does not exist. Have you perhaps already deleted it?"));
 

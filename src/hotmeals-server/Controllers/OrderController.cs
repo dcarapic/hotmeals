@@ -70,12 +70,13 @@ namespace hotmeals_server.Controllers
             IQueryable<OrderDTO> qry;
             var totalPages = 1;
 
-            if (this.CurrentUser.IsRestaurantOwner)
+            // Unfortunately we can not name the record constructor arguments within the query as it is not supported by IQueryable
+            if (this.ApplicationUser.IsRestaurantOwner)
             {
                 qry = from o in _db.Orders.Include(x => x.OrderItems).Include(x => x.OrderHistory)
                       join r in _db.Restaurants on o.RestaurantId equals r.Id
                       join c in _db.Users on o.CustomerId equals c.Id
-                      where r.OwnerId == CurrentUser.Id && statuses.Contains(o.Status)
+                      where r.OwnerId == ApplicationUser.Id && statuses.Contains(o.Status)
                       orderby r.DateCreated
                       select new OrderDTO(o.Id, o.RestaurantId, r.Name, o.CustomerId, c.Email, c.FirstName, c.LastName, o.Status, o.DateCreated, o.Total, o.OrderItems.Select(x => new OrderItemDTO(x.MenuItemName, x.MenuItemDescription, x.PricePerItem, x.Position, x.Quantity)).ToArray(), o.OrderHistory.Select(x => new OrderHistoryDTO(x.Status, x.DateChanged) { ChangedAtUtc = x.DateChanged }).ToArray()) { CreatedAtUtc = o.DateCreated };
 
@@ -85,7 +86,7 @@ namespace hotmeals_server.Controllers
                 qry = from o in _db.Orders.Include(x => x.OrderItems).Include(x => x.OrderHistory)
                       join r in _db.Restaurants on o.RestaurantId equals r.Id
                       join c in _db.Users on o.CustomerId equals c.Id
-                      where o.CustomerId == CurrentUser.Id && statuses.Contains(o.Status)
+                      where o.CustomerId == ApplicationUser.Id && statuses.Contains(o.Status)
                       orderby r.DateCreated
                       select new OrderDTO(o.Id, o.RestaurantId, r.Name, o.CustomerId, c.Email, c.FirstName, c.LastName, o.Status, o.DateCreated, o.Total, o.OrderItems.Select(x => new OrderItemDTO(x.MenuItemName, x.MenuItemDescription, x.PricePerItem, x.Position, x.Quantity)).ToArray(), o.OrderHistory.Select(x => new OrderHistoryDTO(x.Status, x.DateChanged) { ChangedAtUtc = x.DateChanged }).ToArray()) { CreatedAtUtc = o.DateCreated };
             }
@@ -107,12 +108,12 @@ namespace hotmeals_server.Controllers
         public async Task<IActionResult> GetOrder(Guid orderId)
         {
             IQueryable<OrderDTO> qry;
-            if (this.CurrentUser.IsRestaurantOwner)
+            if (this.ApplicationUser.IsRestaurantOwner)
             {
                 qry = from o in _db.Orders.Include(x => x.OrderItems).Include(x => x.OrderHistory)
                       join r in _db.Restaurants on o.RestaurantId equals r.Id
                       join c in _db.Users on o.CustomerId equals c.Id
-                      where r.OwnerId == CurrentUser.Id
+                      where r.OwnerId == ApplicationUser.Id
                       where o.Id == orderId
                       orderby r.DateCreated
                       select new OrderDTO(o.Id, o.RestaurantId, r.Name, o.CustomerId, c.Email, c.FirstName, c.LastName, o.Status, o.DateCreated, o.Total, o.OrderItems.Select(x => new OrderItemDTO(x.MenuItemName, x.MenuItemDescription, x.PricePerItem, x.Position, x.Quantity)).ToArray(), o.OrderHistory.Select(x => new OrderHistoryDTO(x.Status, x.DateChanged)).ToArray());
@@ -123,7 +124,7 @@ namespace hotmeals_server.Controllers
                 qry = from o in _db.Orders.Include(x => x.OrderItems).Include(x => x.OrderHistory)
                       join r in _db.Restaurants on o.RestaurantId equals r.Id
                       join c in _db.Users on o.CustomerId equals c.Id
-                      where o.CustomerId == CurrentUser.Id
+                      where o.CustomerId == ApplicationUser.Id
                       where o.Id == orderId
                       orderby r.DateCreated
                       select new OrderDTO(o.Id, o.RestaurantId, r.Name, o.CustomerId, c.Email, c.FirstName, c.LastName, o.Status, o.DateCreated, o.Total, o.OrderItems.Select(x => new OrderItemDTO(x.MenuItemName, x.MenuItemDescription, x.PricePerItem, x.Position, x.Quantity)).ToArray(), o.OrderHistory.Select(x => new OrderHistoryDTO(x.Status, x.DateChanged)).ToArray());
@@ -135,55 +136,57 @@ namespace hotmeals_server.Controllers
         }
 
         /// <summary>
-        /// Adds a new order for the currently logged on user.
+        /// Adds a new order for the currently logged on customer.
         /// </summary>
         [HttpPost]
+        [Authorize(Roles = RoleCustomer)]
         public async Task<IActionResult> PlaceOrder([FromBody] PlaceOrderRequest req)
         {
-            if (!this.CurrentUser.IsCustomer)
-                return Unauthorized(new APIResponse(false, "Only customers may place orders!"));
+            var restaurant = await _db.Restaurants.Include(x => x.MenuItems).Include(x => x.Owner).FirstOrDefaultAsync(x => x.Id == req.RestaurantId);
+            var currentUser = await _db.Users.FindAsync(this.ApplicationUser.Id);
+            
+            var order = new OrderRecord();
+            order.RestaurantId = req.RestaurantId;
+            order.Status = OrderStatus.Placed;
+            order.CustomerId = this.ApplicationUser.Id;
+            order.DateCreated = DateTime.UtcNow;
 
-            var r = await _db.Restaurants.Include(x => x.MenuItems).Include(x=>x.Owner).FirstOrDefaultAsync(x => x.Id == req.RestaurantId);
-            var u = await _db.Users.FindAsync(this.CurrentUser.Id);
-            var o = new OrderRecord();
-            o.RestaurantId = req.RestaurantId;
-            o.Status = OrderStatus.Placed;
-            o.CustomerId = this.CurrentUser.Id;
-            o.DateCreated = DateTime.UtcNow;
-
+            // Create order items
             for (var i = 0; i < req.Items.Length; i++)
             {
                 var reqItem = req.Items[i];
-                var menuItem = r.MenuItems.FirstOrDefault(x => x.Id == reqItem.MenuItemId);
+                var menuItem = restaurant.MenuItems.FirstOrDefault(x => x.Id == reqItem.MenuItemId);
                 if (menuItem == null)
                     return BadRequest(new APIResponse(false, "Unfortunately one of the menu items was removed by the restaurant owner. Please create a new order."));
                 if (menuItem.Price != reqItem.Price)
                     return BadRequest(new APIResponse(false, "Unfortunately one of the menu items price has change. Please create a new order."));
-                o.OrderItems.Add(new OrderItemRecord() { Position = i + 1, MenuItemName = menuItem.Name, MenuItemDescription = menuItem.Description, Quantity = reqItem.Quantity, PricePerItem = menuItem.Price });
+                order.OrderItems.Add(new OrderItemRecord() { Position = i + 1, MenuItemName = menuItem.Name, MenuItemDescription = menuItem.Description, Quantity = reqItem.Quantity, PricePerItem = menuItem.Price });
             }
-            o.Total = o.OrderItems.Sum(x=>Math.Round(x.PricePerItem * x.Quantity, 2));
-            o.OrderHistory.Add(new OrderHistoryRecord() { Status = OrderStatus.Placed, DateChanged = o.DateCreated });
+            order.Total = order.OrderItems.Sum(x => Math.Round(x.PricePerItem * x.Quantity, 2));
+            order.OrderHistory.Add(new OrderHistoryRecord() { Status = OrderStatus.Placed, DateChanged = order.DateCreated });
 
-            _db.Orders.Add(o);
+            _db.Orders.Add(order);
             await _db.SaveChangesAsync();
 
             var dto = new OrderDTO(
-                OrderId: o.Id,
-                RestaurantId: o.RestaurantId,
-                RestaurantName: r.Name,
-                CustomerId: o.CustomerId,
-                CustomerEmail: u.Email,
-                CustomerFirstName: u.FirstName,
-                CustomerLastName: u.LastName,
-                CurrentStatus: o.Status,
-                CreatedAt: TimeZoneInfo.ConvertTimeFromUtc(o.DateCreated, TimeZoneInfo.Local),
-                Total: o.Total,
-                Items: o.OrderItems.Select(x => new OrderItemDTO(x.MenuItemName, x.MenuItemDescription, x.PricePerItem, x.Position, x.Quantity)).ToArray(),
-                History: o.OrderHistory.Select(x => new OrderHistoryDTO(x.Status, x.DateChanged)).ToArray());
+                OrderId: order.Id,
+                RestaurantId: order.RestaurantId,
+                RestaurantName: restaurant.Name,
+                CustomerId: order.CustomerId,
+                CustomerEmail: currentUser.Email,
+                CustomerFirstName: currentUser.FirstName,
+                CustomerLastName: currentUser.LastName,
+                CurrentStatus: order.Status,
+                CreatedAt: TimeZoneInfo.ConvertTimeFromUtc(order.DateCreated, TimeZoneInfo.Local),
+                Total: order.Total,
+                Items: order.OrderItems.Select(x => new OrderItemDTO(x.MenuItemName, x.MenuItemDescription, x.PricePerItem, x.Position, x.Quantity)).ToArray(),
+                History: order.OrderHistory.Select(x => new OrderHistoryDTO(x.Status, x.DateChanged)).ToArray());
 
+            // Notify customer and owner over websockets
             await _hub.Clients.User(dto.CustomerEmail).SendAsync(NotificationHub.OrderUpdateNotification, dto);
-            await _hub.Clients.User(r.Owner.Email).SendAsync(NotificationHub.OrderUpdateNotification, dto);
+            await _hub.Clients.User(restaurant.Owner.Email).SendAsync(NotificationHub.OrderUpdateNotification, dto);
 
+            _log.LogInformation($"Customer {ApplicationUser.Email} placed a new order {order.Id} / {order.Total:n2} € for restaurant '{restaurant.Name}' ({restaurant.Owner.Email})");
             return Ok(new PlaceOrderResponse(dto));
         }
 
@@ -193,9 +196,9 @@ namespace hotmeals_server.Controllers
         [HttpPut("{orderId}")]
         public async Task<IActionResult> UpdateOrder(Guid orderId, [FromBody] UpdateOrderRequest req)
         {
-            var o = await _db.Orders.Include(x => x.OrderItems).Include(x => x.OrderHistory).Include(x => x.Customer).Include(x => x.Restaurant).ThenInclude(x => x.Owner).FirstOrDefaultAsync(x => x.Id == orderId);
+            var order = await _db.Orders.Include(x => x.OrderItems).Include(x => x.OrderHistory).Include(x => x.Customer).Include(x => x.Restaurant).ThenInclude(x => x.Owner).FirstOrDefaultAsync(x => x.Id == orderId);
             // Check if order exists and that the user can access it (is either customer or owner)
-            if (o == null || (this.CurrentUser.IsCustomer && o.CustomerId != this.CurrentUser.Id) || (this.CurrentUser.IsRestaurantOwner && o.Restaurant.OwnerId != this.CurrentUser.Id))
+            if (order == null || (this.ApplicationUser.IsCustomer && order.CustomerId != this.ApplicationUser.Id) || (this.ApplicationUser.IsRestaurantOwner && order.Restaurant.OwnerId != this.ApplicationUser.Id))
                 return BadRequest(new APIResponse(false, "Order does not exist!"));
 
             // Validate status
@@ -204,62 +207,63 @@ namespace hotmeals_server.Controllers
                 case OrderStatus.Placed: // Placed is only when order is being placed
 
                 case OrderStatus.Accepted:
-                    if (o.Status != OrderStatus.Placed)
-                        return BadRequest(new APIResponse(false, $"Order is {o.Status.ToString()}. You not mark it as accepted!"));
-                    if (!this.CurrentUser.IsRestaurantOwner)
+                    if (order.Status != OrderStatus.Placed)
+                        return BadRequest(new APIResponse(false, $"Order is {order.Status.ToString()}. You not mark it as accepted!"));
+                    if (!this.ApplicationUser.IsRestaurantOwner)
                         return BadRequest(new APIResponse(false, $"You do not have permission to change the order status to {req.Status.ToString()}!"));
                     break;
 
                 case OrderStatus.Shipped:
-                    if (o.Status != OrderStatus.Accepted)
-                        return BadRequest(new APIResponse(false, $"Order is {o.Status.ToString()}. You not mark it as shipped!"));
-                    if (!this.CurrentUser.IsRestaurantOwner)
+                    if (order.Status != OrderStatus.Accepted)
+                        return BadRequest(new APIResponse(false, $"Order is {order.Status.ToString()}. You not mark it as shipped!"));
+                    if (!this.ApplicationUser.IsRestaurantOwner)
                         return BadRequest(new APIResponse(false, $"You do not have permission to change the order status to {req.Status.ToString()}!"));
                     break;
 
                 case OrderStatus.Delivered:
-                    if (o.Status != OrderStatus.Shipped)
-                        return BadRequest(new APIResponse(false, $"Order is {o.Status.ToString()}. You may not mark it as delivered!"));
-                    if (!this.CurrentUser.IsRestaurantOwner)
+                    if (order.Status != OrderStatus.Shipped)
+                        return BadRequest(new APIResponse(false, $"Order is {order.Status.ToString()}. You may not mark it as delivered!"));
+                    if (!this.ApplicationUser.IsRestaurantOwner)
                         return BadRequest(new APIResponse(false, $"You do not have permission to change the order status to {req.Status.ToString()}!"));
                     break;
 
                 case OrderStatus.Received:
-                    if (o.Status != OrderStatus.Shipped && o.Status != OrderStatus.Delivered)
-                        return BadRequest(new APIResponse(false, $"Order is {o.Status.ToString()}. You may not mark it as received!"));
-                    if (!this.CurrentUser.IsCustomer)
+                    if (order.Status != OrderStatus.Shipped && order.Status != OrderStatus.Delivered)
+                        return BadRequest(new APIResponse(false, $"Order is {order.Status.ToString()}. You may not mark it as received!"));
+                    if (!this.ApplicationUser.IsCustomer)
                         return BadRequest(new APIResponse(false, $"You do not have permission to change the order status to {req.Status.ToString()}!"));
                     break;
 
                 case OrderStatus.Canceled:
-                    if (o.Status != OrderStatus.Placed)
-                        return BadRequest(new APIResponse(false, $"Order is {o.Status.ToString()}. You may no longer cancel it!"));
-                    if (!this.CurrentUser.IsCustomer)
+                    if (order.Status != OrderStatus.Placed)
+                        return BadRequest(new APIResponse(false, $"Order is {order.Status.ToString()}. You may no longer cancel it!"));
+                    if (!this.ApplicationUser.IsCustomer)
                         return BadRequest(new APIResponse(false, $"You do not have permission to change the order status to {req.Status.ToString()}!"));
                     break;
             }
 
-            o.Status = req.Status;
-            o.OrderHistory.Add(new OrderHistoryRecord() { Status = req.Status, DateChanged = DateTime.UtcNow });
+            order.Status = req.Status;
+            order.OrderHistory.Add(new OrderHistoryRecord() { Status = req.Status, DateChanged = DateTime.UtcNow });
             await _db.SaveChangesAsync();
 
             var dto = new OrderDTO(
-                OrderId: o.Id,
-                RestaurantId: o.RestaurantId,
-                RestaurantName: o.Restaurant.Name,
-                CustomerId: o.CustomerId,
-                CustomerEmail: o.Customer.Email,
-                CustomerFirstName: o.Customer.FirstName,
-                CustomerLastName: o.Customer.LastName,
-                CurrentStatus: o.Status,
-                CreatedAt: TimeZoneInfo.ConvertTimeFromUtc(o.DateCreated, TimeZoneInfo.Local),
-                Total: o.Total,
-                Items: o.OrderItems.Select(x => new OrderItemDTO(x.MenuItemName, x.MenuItemDescription, x.PricePerItem, x.Position, x.Quantity)).ToArray(),
-                History: o.OrderHistory.Select(x => new OrderHistoryDTO(x.Status, TimeZoneInfo.ConvertTimeFromUtc(x.DateChanged, TimeZoneInfo.Local))).ToArray());
+                OrderId: order.Id,
+                RestaurantId: order.RestaurantId,
+                RestaurantName: order.Restaurant.Name,
+                CustomerId: order.CustomerId,
+                CustomerEmail: order.Customer.Email,
+                CustomerFirstName: order.Customer.FirstName,
+                CustomerLastName: order.Customer.LastName,
+                CurrentStatus: order.Status,
+                CreatedAt: TimeZoneInfo.ConvertTimeFromUtc(order.DateCreated, TimeZoneInfo.Local),
+                Total: order.Total,
+                Items: order.OrderItems.Select(x => new OrderItemDTO(x.MenuItemName, x.MenuItemDescription, x.PricePerItem, x.Position, x.Quantity)).ToArray(),
+                History: order.OrderHistory.Select(x => new OrderHistoryDTO(x.Status, TimeZoneInfo.ConvertTimeFromUtc(x.DateChanged, TimeZoneInfo.Local))).ToArray());
 
-
+            // Notify customer and owner over websockets
             await _hub.Clients.User(dto.CustomerEmail).SendAsync(NotificationHub.OrderUpdateNotification, dto);
-            await _hub.Clients.User(o.Restaurant.Owner.Email).SendAsync(NotificationHub.OrderUpdateNotification, dto);
+            await _hub.Clients.User(order.Restaurant.Owner.Email).SendAsync(NotificationHub.OrderUpdateNotification, dto);
+            _log.LogInformation($"Customer {ApplicationUser.Email} updated the order {dto.OrderId} / {dto.Total:n2} € to status {req.Status} (restaurant '{order.Restaurant.Name}' / {order.Restaurant.Owner.Email})");
 
 
             return Ok(new PlaceOrderResponse(dto));
