@@ -2,34 +2,42 @@ import React, { Fragment, useCallback, useEffect, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../state/model";
-import { Badge, Button, Container, Image, Modal, Nav, Navbar, NavLink } from "react-bootstrap";
+import { Badge, Breadcrumb, Button, Container, Image, Modal, Nav, Navbar, NavLink } from "react-bootstrap";
 import srcLogo from "../assets/Logo.svg";
 import srcHotMeals from "../assets/HotMeals.svg";
 import { RouterNavLink } from "./RouterNav";
 import { clearCurrentUser, useCurrentUser } from "../state/user";
 import routes from "../routes";
 import { useCurrentOrder } from "../state/current-order";
-import { useHistory } from "react-router-dom";
+import { useHistory, useLocation } from "react-router-dom";
 import { useEvent } from "../util/ws-events";
 
 /** Navbar component */
 const TopNav = () => {
+    const loc = useLocation();
     return (
-        <Navbar bg="primary" className="hm-sticky-height" fixed="top">
-            <Container>
-                <Navbar.Brand>
-                    <RouterNavLink to={routes.homePage} className="p-0">
-                        <Image src={srcLogo} fluid className="me-2" style={{ height: "40px" }} />
-                        <Image src={srcHotMeals} style={{ height: "30px" }} fluid />
-                    </RouterNavLink>
-                </Navbar.Brand>
-                <Nav>
-                    <CurrentOrderIcon />
-                    <ActiveOrdersIcon />
-                    <CurrentAccountIcon />
-                </Nav>
-            </Container>
-        </Navbar>
+        <div className="hm-navbar">
+            <Navbar bg="primary">
+                <Container>
+                    <Navbar.Brand>
+                        <RouterNavLink to={routes.homePage} className="p-0">
+                            <Image src={srcLogo} fluid className="me-2" style={{ height: "40px" }} />
+                            <Image src={srcHotMeals} style={{ height: "30px" }} fluid />
+                        </RouterNavLink>
+                    </Navbar.Brand>
+                    <Nav>
+                        <CurrentOrderIcon />
+                        <ActiveOrdersIcon />
+                        <CurrentAccountIcon />
+                    </Nav>
+                </Container>
+            </Navbar>
+            <div className="bg-info text-light">
+                <Container>
+                    <RouterNavLink to={routes.homePage} className="link-dark my-0 py-0 mb-1">Home</RouterNavLink>
+                </Container>
+            </div>
+        </div>
     );
 };
 export default TopNav;

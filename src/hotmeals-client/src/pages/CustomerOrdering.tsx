@@ -20,7 +20,7 @@ const CustomerOrdering = ui.withAlertMessageContainer(() => {
     const [menuItems, setMenuItems] = useState<model.NewOrderItem[]>([]);
 
     const loadMenuItems = useCallback(async () => {
-        var currentOrder =getCurrentOrder();
+        var currentOrder = getCurrentOrder();
         if (!currentOrder) return;
         msgs.clearMessage();
         setLoading(true);
@@ -46,11 +46,9 @@ const CustomerOrdering = ui.withAlertMessageContainer(() => {
         loadMenuItems();
     }, [loadMenuItems]);
 
-    
     // If there is no current order then redirect to home page
     let currentOrder = getCurrentOrder();
     if (!currentOrder) return <Redirect to={routes.homePage} />;
-
 
     const changeQuantity = (menuItemId: string, quantity: number) => {
         if (!getCurrentOrder()) return;
@@ -68,7 +66,10 @@ const CustomerOrdering = ui.withAlertMessageContainer(() => {
         // Status can no longer be changed by the order details
         if (placingOrder) return;
         if (status === "Placed") setPlacingOrder(true);
-        else if (status === "Canceled") removeCurrentOrder();
+        else if (status === "Canceled") {
+            removeCurrentOrder();
+            history.push(routes.homePage);
+        }
     };
 
     const onPlacingCanceled = () => setPlacingOrder(false);
@@ -84,6 +85,7 @@ const CustomerOrdering = ui.withAlertMessageContainer(() => {
     const onOrderCanceled = (order: model.OrderDTO) => {
         setPlacingOrder(false);
         removeCurrentOrder();
+        history.push(routes.homePage);
     };
     const onOrderConfirmed = (order: model.OrderDTO) => {
         setPlacingOrder(false);

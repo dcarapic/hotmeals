@@ -2,33 +2,38 @@
 The navbar is fixed on top and we need some way to know exact height to be able to place stick controls at the correct position.
 */
 :root {
-  --nav-height: 60px;
-  --nav-margin: 58px;
-  --nav-font: 36px
+    --nav-height: 80px;
+    --nav-margin: 78px;
+    --nav-font: 36px;
 }
 
 .hm-navbar {
-  height: var(--nav-height);
-  min-height: var(--nav-height);
-  max-height: var(--nav-height);
+    height: var(--nav-height);
+    min-height: var(--nav-height);
+    max-height: var(--nav-height);
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0; 
+    z-index: 1021;
 }
 
 .hm-navbar-icon {
-  font-size: var(--nav-font);
-  line-height: 100%;
-  cursor: pointer;
+    font-size: var(--nav-font);
+    line-height: 100%;
+    cursor: pointer;
 }
 
 .hm-sticky-padder {
-  height: var(--nav-margin);
-  min-height: var(--nav-margin);
-  max-height: var(--nav-margin);
+    height: var(--nav-margin);
+    min-height: var(--nav-margin);
+    max-height: var(--nav-margin);
 }
 
 .hm-sticky-margin {
-  margin-top: var(--nav-margin);
+    margin-top: var(--nav-margin);
 }
 
 .hm-navbar-badge {
-  transform: translate(-20px, 20px);
+    transform: translate(-20px, 20px);
 }
