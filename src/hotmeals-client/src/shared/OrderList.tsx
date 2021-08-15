@@ -61,16 +61,30 @@ const OrderList = (props: {
     }, [loadPage]);
 
     // Update the list when we determine that an order has been updated
-    useEvent("OrderUpdated", (order: model.OrderDTO) => {
-        console.log(`OrderList: Order updated ${order.orderId}`);
-        setItems((current) => {
-            let item = current.find(x=>x.orderId === order.orderId);
-            if(!item) return current;
-            let copy = [...current]
-            copy[copy.indexOf(item)] = order;
-            return copy;
-        });
-    }, []); 
+    useEvent(
+        "OrderUpdated",
+        (order: model.OrderDTO) => {
+            console.log(`OrderList: Order updated ${order.orderId}`);
+            setItems((current) => {
+                let item = current.find((x) => x.orderId === order.orderId);
+                if (!item) {
+                    const shouldAdd = (props.type === OrderListType.ActiveOrders && model.isOrderActive(order)) || (props.type === OrderListType.CompleteOrders && !model.isOrderActive(order))
+                    if (shouldAdd) {
+                        let copy = [...current];
+                        copy.push(order);
+                        return copy;
+                        
+                    } else {
+                        return current;
+                    }
+                }
+                let copy = [...current];
+                copy[copy.indexOf(item)] = order;
+                return copy;
+            });
+        },
+        []
+    );
 
     const statusUpdate = (orderId: string, status: model.OrderStatus) => {
         let item = items.find((x) => x.orderId === orderId);

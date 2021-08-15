@@ -56,6 +56,15 @@ export type NewOrderItem = MenuItemBase & {
 
 export type OrderStatus = 'Placed' | 'Accepted' | 'Shipped' | 'Delivered' | 'Received' | 'Canceled';
 
+export function isOrderStatusActive(status : OrderStatus) : boolean {
+    return status !== 'Canceled' && status !== 'Received';
+}
+
+export function isOrderActive(order: OrderDTO) : boolean {
+    return isOrderStatusActive(order.currentStatus);
+}
+
+
 export type OrderDTO = {
     orderId: string;
     restaurantId: string

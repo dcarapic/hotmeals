@@ -1,5 +1,7 @@
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useState } from "react";
 import * as api from "../util/api";
+import * as ui from "../util/ui";
+import * as model from "../state/model";
 import { Badge, Button, Container, Image, Modal, Nav, Navbar, NavLink } from "react-bootstrap";
 import srcLogo from "../assets/Logo.svg";
 import srcHotMeals from "../assets/HotMeals.svg";
@@ -8,6 +10,7 @@ import { clearCurrentUser, useCurrentUser } from "../state/user";
 import routes from "../routes";
 import { useCurrentOrder } from "../state/current-order";
 import { useHistory } from "react-router-dom";
+import { useEvent } from "../util/ws-events";
 
 /** Navbar component */
 const TopNav = () => {
@@ -22,6 +25,7 @@ const TopNav = () => {
                 </Navbar.Brand>
                 <Nav>
                     <CurrentOrderIcon />
+                    <ActiveOrdersIcon />
                     <CurrentAccountIcon />
                 </Nav>
             </Container>
@@ -53,7 +57,9 @@ const CurrentAccountIcon = () => {
                 }}></i>
             <Modal show={showMenu} onHide={() => setShowMenu(false)} keyboard={false}>
                 <Modal.Header closeButton>
-                    <Modal.Title>{currentUser.firstName} {currentUser.lastName} ({currentUser.email})</Modal.Title>
+                    <Modal.Title>
+                        {currentUser.firstName} {currentUser.lastName} ({currentUser.email})
+                    </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <div className="d-grid">
@@ -96,6 +102,77 @@ const CurrentOrderIcon = () => {
             <div className="hm-navbar-badge">
                 <Badge pill bg="dark">
                     {currentOrder.items.length}
+                </Badge>
+            </div>
+        </Fragment>
+    );
+};
+
+/** Current order icon. Displayed if there is a current order. Displays a small badge with the number of currently ordered items. */
+const ActiveOrdersIcon = () => {
+    const currentUser = useCurrentUser();
+    const history = useHistory();
+    const abort = ui.useAbortable();
+    const [activeOrders, setActiveOrders] = useState<model.OrderDTO[]>([]);
+    const [hasMorePages, setHasMorePages] = useState<boolean>();
+
+    const loadActiveOrders = useCallback(async () => {
+        if (!currentUser) return;
+        let response = await api.ordersFetchActive(1, abort);
+        if (response.isAborted) return;
+        if (response.ok && response.result) {
+            setActiveOrders(response.result.orders);
+            setHasMorePages(response.result.totalPages > 1);
+        }
+    }, [abort, currentUser]);
+
+    useEffect(() => {
+        loadActiveOrders();
+    }, [loadActiveOrders]);
+
+    // Update the list when we determine that an order has been updated
+    useEvent(
+        "OrderUpdated",
+        (order: model.OrderDTO) => {
+            setActiveOrders((current) => {
+                if (!model.isOrderActive(order)) {
+                    let item = current.find((x) => x.orderId === order.orderId);
+                    if (!item) {
+                        return current;
+                    } else {
+                        let copy = [...current];
+                        copy.splice(copy.indexOf(item), 1);
+                        return copy;
+                    }
+                } else {
+                    let copy = [...current];
+                    let item = current.find((x) => x.orderId === order.orderId);
+                    if (item) copy[copy.indexOf(item)] = order;
+                    else copy.push(order);
+                    return copy;
+                }
+            });
+        },
+        []
+    );
+
+    if (!currentUser) return null;
+
+    const goToActiveOrders = () => {
+        history.push(routes.ordersActive);
+    };
+    return (
+        <Fragment>
+            <i
+                role="button"
+                className="bi bi-truck text-white hm-navbar-icon me-2"
+                onClick={(e) => {
+                    goToActiveOrders();
+                }}></i>
+            <div className="hm-navbar-badge">
+                <Badge pill bg="dark">
+                    {activeOrders.length}
+                    {hasMorePages && "+"}
                 </Badge>
             </div>
         </Fragment>
