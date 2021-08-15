@@ -158,6 +158,7 @@ const OrderDetails = (props: {
                         <Button
                             size="sm"
                             className="me-1"
+                            disabled={props.order.items.length === 0}
                             onClick={() => {
                                 if (!props.disabled && props.onRequestStatusChange)
                                     props.onRequestStatusChange("Placed");

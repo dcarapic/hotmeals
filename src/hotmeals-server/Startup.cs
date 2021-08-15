@@ -40,28 +40,28 @@ namespace hotmeals_server
             });
 
             // Prevent access to the web server from anywhere else except our SPA application.
-            services.AddCors(options =>
+            services.AddCors(opt =>
             {
                 // Dev policy for development
-                options.AddPolicy("DevPolicy",
+                opt.AddPolicy("DevPolicy",
                     builder => builder.WithOrigins("http://localhost:3000")
                         .AllowAnyMethod()
                         .AllowAnyHeader()
                         .AllowCredentials());
 
                 // Production prohibits everything except the source                        
-                options.AddPolicy("ProdPolicy", builder => { });
+                opt.AddPolicy("ProdPolicy", builder => { });
             });
 
-            services.AddControllers().AddJsonOptions(opts =>
+            services.AddControllers().AddJsonOptions(opt =>
             {
                 var enumConverter = new System.Text.Json.Serialization.JsonStringEnumConverter();
-                opts.JsonSerializerOptions.Converters.Add(enumConverter);
+                opt.JsonSerializerOptions.Converters.Add(enumConverter);
             });
 
-            services.AddSwaggerGen(c =>
+            services.AddSwaggerGen(opt =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "HotMeals", Version = "v1" });
+                opt.SwaggerDoc("v1", new OpenApiInfo { Title = "HotMeals", Version = "v1" });
             });
 
             services.AddAuthentication(opt =>
@@ -82,19 +82,26 @@ namespace hotmeals_server
                 };
             });
 
-            services.AddDbContext<Model.HMContext>(o =>
+            services.AddDbContext<Model.HMContext>(opt =>
             {
-                o.UseSqlite(Configuration.GetConnectionString("DefaultConnection"));
+                opt.UseSqlite(Configuration.GetConnectionString("DefaultConnection"));
                 // Enable logging of parameter values to log when in dev mode
                 if (env.IsDevelopment())
-                    o.EnableSensitiveDataLogging();
+                    opt.EnableSensitiveDataLogging();
             });
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
             {
                 configuration.RootPath = "client/build";
             });
-            services.AddSignalR();
+            services.AddSignalR(opt =>
+            {
+                opt.KeepAliveInterval = TimeSpan.FromMinutes(5);
+            }).AddJsonProtocol(opt =>
+            {
+                var enumConverter = new System.Text.Json.Serialization.JsonStringEnumConverter();
+                opt.PayloadSerializerOptions.Converters.Add(enumConverter);
+            });
 
         }
 

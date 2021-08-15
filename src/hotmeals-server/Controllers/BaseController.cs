@@ -35,7 +35,7 @@ namespace hotmeals_server.Controllers
         /// <summary>
         /// Number of seconds for how long the JWT token is valid (after which it expires)
         /// </summary>
-        public const int JwtTokenExpirationSeconds = 24 *60 * 60;
+        public const int JwtTokenExpirationSeconds = 7 * 24 * 60 * 60;
 
         /// <summary>
         /// Contains basic application user data.

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import * as api from "./util/api";
 import * as ui from "./util/ui";
 import * as model from "./state/model";
+import * as ws from "./util/ws-notifications";
 import { Container, Col, Row } from "react-bootstrap";
 import { BrowserRouter, Switch, Route, Redirect } from "react-router-dom";
 import CustomerHomePage from "./pages/CustomerHomePage";
@@ -44,23 +45,23 @@ const App = () => {
 
     // On the first load immediately try to authenticate the user.
     // This will only succeed if we have a valid cookie. If not we will not be able to set the current user and the login dialog will be displayed.
-    ui.useAbortableEffect((signal) => {
+    ui.useAbortableEffect(async (signal) => {
         setCurrentUser({ userData: currentUser.userData, isLoading: true, setCurrentUser: setCurrentUserCore });
-        const fetch = async () => {
-            console.log(`Fetching current user`);
-            const response = await api.userAuthenticate(signal);
-            console.log(`Result: ${JSON.stringify(response)}`);
-            if (response.isAborted) return;
-            if (response.ok && response.result)
-                setCurrentUser({
-                    userData: response.result.user,
-                    isLoading: false,
-                    setCurrentUser: setCurrentUserCore,
-                });
-            else setCurrentUser({ userData: null, isLoading: false, setCurrentUser: setCurrentUserCore });
-        };
-        fetch();
+        console.log(`Fetching current user`);
+        const response = await api.userAuthenticate(signal);
+        console.log(`Result: ${JSON.stringify(response)}`);
+        if (response.isAborted) return;
+        if (response.ok && response.result) {
+            setCurrentUser({
+                userData: response.result.user,
+                isLoading: false,
+                setCurrentUser: setCurrentUserCore,
+            });
+            ws.connect();
+        }
+        else setCurrentUser({ userData: null, isLoading: false, setCurrentUser: setCurrentUserCore });
     }, []);
+
     return (
         <GlobalErrorBoundary>
             <BrowserRouter>

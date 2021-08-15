@@ -5,6 +5,8 @@ let serverUrl: string;
 if (process.env.NODE_ENV === "production") serverUrl = "/";
 else serverUrl = "https://localhost:5001/";
 
+export {serverUrl };
+
 // API methods
 
 export async function userAuthenticate(abort?: AbortSignal): Promise<ServerResponse<AuthenticateResponse>> {

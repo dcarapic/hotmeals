@@ -8,13 +8,11 @@ export type JwtToken = {
 const getJWTToken = (): JwtToken => {
     let text = localStorage.getItem(JWT_LOCAL_STORAGE_KEY);
     if (text === null || text === "") {
-        console.log("jwt-token: no token found");
         return { token: null, expiresAt: null };
     }
     try {
         let storageToken: any = JSON.parse(text);
         if (storageToken && storageToken.token && storageToken.expiresAt) {
-            console.log("jwt-token: using token");
             return storageToken;
         }
     } catch {

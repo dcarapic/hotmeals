@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../state/model";
@@ -6,6 +6,7 @@ import { Button, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
 import { OrderDetails } from "./OrderDetails";
 import Loading from "./Loading";
+import { useNotificationSubscription } from "../util/ws-notifications";
 
 const OrderPlacer = (props: {
     order: model.NewOrder;
@@ -20,7 +21,7 @@ const OrderPlacer = (props: {
     const [placedOrder, setPlacedOrder] = useState<model.OrderDTO>();
     const [waitingConfirmation, setWaitingConfirmation] = useState(false);
     const [serverResponse, setServerResponse] = useState<api.ServerResponse<any> | null>(null);
-    
+
     const abort = ui.useAbortable();
 
     const placeOrder = async () => {
@@ -62,6 +63,18 @@ const OrderPlacer = (props: {
         props.onStoppedWaitingForConfirmation(placedOrder!);
     };
 
+    useNotificationSubscription(
+        "OrderUpdated",
+        (order: model.OrderDTO) => {
+            console.log(
+                `OrderPlacer: Order updated ${order.orderId} (waiting: ${waitingConfirmation} for order ${placedOrder?.orderId} ) `
+            );
+            if (waitingConfirmation && placedOrder && placedOrder.orderId === order.orderId)
+                props.onStoppedWaitingForConfirmation(placedOrder!);
+        },
+        [props, waitingConfirmation, placedOrder]
+    );
+
     return (
         <Modal show={true} backdrop="static">
             <Modal.Header closeButton={false}>
@@ -71,7 +84,7 @@ const OrderPlacer = (props: {
                 {!waitingConfirmation ? (
                     <OrderDetails order={props.order} disabled={true} />
                 ) : (
-                    <div className="row">
+                    <div className="row justify-content-center">
                         <div className="col-8">
                             <Loading showLabel label="Please wait until the restaurant confirms your order ..." />
                         </div>
@@ -86,15 +99,17 @@ const OrderPlacer = (props: {
                     </Button>
                 )}
                 <LoadingButton
-                    variant="secondary"
+                    variant={waitingConfirmation ? "danger" : "secondary"}
                     loading={canceling}
                     disabled={placing || canceling}
                     onClick={cancelOrder}>
                     Cancel
                 </LoadingButton>
-                <LoadingButton variant="danger" loading={placing} disabled={waitingConfirmation} onClick={placeOrder}>
-                    Place order
-                </LoadingButton>
+                {!waitingConfirmation && (
+                    <LoadingButton variant="danger" loading={placing} onClick={placeOrder}>
+                        Place order
+                    </LoadingButton>
+                )}
             </Modal.Footer>
         </Modal>
     );
