@@ -94,6 +94,7 @@ namespace hotmeals_server
             {
                 configuration.RootPath = "client/build";
             });
+            services.AddSignalR();
 
         }
 
@@ -129,6 +130,7 @@ namespace hotmeals_server
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<NotificationHub>("/api/ws");
             });
             app.UseSpa(spa =>
             {

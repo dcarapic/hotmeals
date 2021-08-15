@@ -12,7 +12,6 @@ function isPlacedOrderItem(item: any): item is model.OrderItemDTO {
 }
 
 function hasStatus(order: model.NewOrder | model.OrderDTO, status: model.OrderStatus): boolean {
-    if (!isPlacedOrder(order) && status === "Placed") return true;
     if (isPlacedOrder(order) && order.currentStatus === status) return true;
     return false;
 }
@@ -74,7 +73,7 @@ const OrderMenuItem = (props: {
     );
 };
 
-const OrderHistoryItem = (props : {hist: model.OrderHistoryDTO}) => {
+const OrderHistoryItem = (props: { hist: model.OrderHistoryDTO }) => {
     let color = "text-body";
     switch (props.hist.status) {
         case "Canceled":
@@ -106,7 +105,11 @@ const OrderDetails = (props: {
         <div>
             <div className="bg-secondary text-white mb-1 p-2 d-flex justify-content-between">
                 <strong>{props.order.restaurantName}</strong>
-                {isPlacedOrder(props.order) && <Badge pill bg="light" className="text-dark">{props.order.currentStatus}</Badge>}
+                {isPlacedOrder(props.order) && (
+                    <Badge pill bg="light" className="text-dark">
+                        {props.order.currentStatus}
+                    </Badge>
+                )}
             </div>
             <div>
                 {props.order.items.map((x) => (
@@ -124,18 +127,6 @@ const OrderDetails = (props: {
             </div>
             {!props.disabled && (
                 <div className="ms-1 mb-1 d-flex justify-content-end mb-1">
-                    {/* If new order then customer can place an order */}
-                    {!isPlacedOrder(props.order) && !user.userData?.isRestaurantOwner && (
-                        <Button
-                            size="sm"
-                            className="me-1"
-                            onClick={() => {
-                                if (!props.disabled && props.onRequestStatusChange)
-                                    props.onRequestStatusChange("Placed");
-                            }}>
-                            Place order
-                        </Button>
-                    )}
                     {/* If new order then customer can cancel order before placement */}
                     {!isPlacedOrder(props.order) && !user.userData?.isRestaurantOwner && (
                         <Button
@@ -160,6 +151,18 @@ const OrderDetails = (props: {
                                     props.onRequestStatusChange("Canceled");
                             }}>
                             Cancel order
+                        </Button>
+                    )}{" "}
+                    {/* If new order then customer can place an order */}
+                    {!isPlacedOrder(props.order) && !user.userData?.isRestaurantOwner && (
+                        <Button
+                            size="sm"
+                            className="me-1"
+                            onClick={() => {
+                                if (!props.disabled && props.onRequestStatusChange)
+                                    props.onRequestStatusChange("Placed");
+                            }}>
+                            Place order
                         </Button>
                     )}
                     {/* If placed order then owner can accept */}

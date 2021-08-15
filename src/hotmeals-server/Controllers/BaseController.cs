@@ -55,6 +55,7 @@ namespace hotmeals_server.Controllers
         protected async Task AddAuthenticationCookie(CurrentUserData user)
         {
             var claims = new Claim[] {
+                new Claim(ClaimTypes.NameIdentifier, user.Email),
                 new Claim(nameof(CurrentUserData.Id), user.Id.ToString()),
                 new Claim(nameof(CurrentUserData.Email), user.Email),
                 new Claim(nameof(CurrentUserData.IsRestaurantOwner), user.IsRestaurantOwner ? "1" : "0"),

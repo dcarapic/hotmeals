@@ -13,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using hotmeals_server.Model;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
 
 namespace hotmeals_server.Controllers
 {
@@ -25,12 +26,15 @@ namespace hotmeals_server.Controllers
     public class OrderController : BaseController
     {
 
-        ILogger<OrderController> _log;
-        private HMContext _db;
         const int OrdersResultPageSize = 20;
 
-        public OrderController(ILogger<OrderController> logger, HMContext db)
+        private readonly ILogger<OrderController> _log;
+        private readonly HMContext _db;
+        private readonly IHubContext<NotificationHub> _hub;
+
+        public OrderController(ILogger<OrderController> logger, HMContext db, IHubContext<NotificationHub> hub)
         {
+            _hub = hub;
             _log = logger;
             _db = db;
         }
@@ -89,7 +93,6 @@ namespace hotmeals_server.Controllers
             totalPages = total == 0 ? 0 : (total / OrdersResultPageSize) + 1;
             qry = qry.Skip(page - 1).Take(OrdersResultPageSize);
             var orders = await qry.ToArrayAsync();
-
             return Ok(new GetOrdersResponse(orders, TotalPages: totalPages, Page: 1));
         }
 
@@ -140,7 +143,7 @@ namespace hotmeals_server.Controllers
             if (!this.CurrentUser.IsCustomer)
                 return Unauthorized(new APIResponse(false, "Only customers may place orders!"));
 
-            var r = await _db.Restaurants.Include(x => x.MenuItems).FirstOrDefaultAsync(x => x.Id == req.RestaurantId);
+            var r = await _db.Restaurants.Include(x => x.MenuItems).Include(x=>x.Owner).FirstOrDefaultAsync(x => x.Id == req.RestaurantId);
             var u = await _db.Users.FindAsync(this.CurrentUser.Id);
             var o = new OrderRecord();
             o.RestaurantId = req.RestaurantId;
@@ -158,8 +161,9 @@ namespace hotmeals_server.Controllers
                     return BadRequest(new APIResponse(false, "Unfortunately one of the menu items price has change. Please create a new order."));
                 o.OrderItems.Add(new OrderItemRecord() { Position = i + 1, MenuItemName = menuItem.Name, MenuItemDescription = menuItem.Description, Quantity = reqItem.Quantity, PricePerItem = menuItem.Price });
             }
-
+            o.Total = o.OrderItems.Sum(x=>Math.Round(x.PricePerItem * x.Quantity, 2));
             o.OrderHistory.Add(new OrderHistoryRecord() { Status = OrderStatus.Placed, DateChanged = o.DateCreated });
+
             _db.Orders.Add(o);
             await _db.SaveChangesAsync();
 
@@ -177,6 +181,9 @@ namespace hotmeals_server.Controllers
                 Items: o.OrderItems.Select(x => new OrderItemDTO(x.MenuItemName, x.MenuItemDescription, x.PricePerItem, x.Position, x.Quantity)).ToArray(),
                 History: o.OrderHistory.Select(x => new OrderHistoryDTO(x.Status, x.DateChanged)).ToArray());
 
+            await _hub.Clients.User(dto.CustomerEmail).SendAsync(NotificationHub.OrderUpdateNotification, dto);
+            await _hub.Clients.User(r.Owner.Email).SendAsync(NotificationHub.OrderUpdateNotification, dto);
+
             return Ok(new PlaceOrderResponse(dto));
         }
 
@@ -186,7 +193,7 @@ namespace hotmeals_server.Controllers
         [HttpPut("{orderId}")]
         public async Task<IActionResult> UpdateOrder(Guid orderId, [FromBody] UpdateOrderRequest req)
         {
-            var o = await _db.Orders.Include(x => x.OrderItems).Include(x => x.OrderHistory).Include(x => x.Restaurant).Include(x => x.Customer).FirstOrDefaultAsync(x => x.Id == orderId);
+            var o = await _db.Orders.Include(x => x.OrderItems).Include(x => x.OrderHistory).Include(x => x.Customer).Include(x => x.Restaurant).ThenInclude(x => x.Owner).FirstOrDefaultAsync(x => x.Id == orderId);
             // Check if order exists and that the user can access it (is either customer or owner)
             if (o == null || (this.CurrentUser.IsCustomer && o.CustomerId != this.CurrentUser.Id) || (this.CurrentUser.IsRestaurantOwner && o.Restaurant.OwnerId != this.CurrentUser.Id))
                 return BadRequest(new APIResponse(false, "Order does not exist!"));
@@ -249,6 +256,11 @@ namespace hotmeals_server.Controllers
                 Total: o.Total,
                 Items: o.OrderItems.Select(x => new OrderItemDTO(x.MenuItemName, x.MenuItemDescription, x.PricePerItem, x.Position, x.Quantity)).ToArray(),
                 History: o.OrderHistory.Select(x => new OrderHistoryDTO(x.Status, TimeZoneInfo.ConvertTimeFromUtc(x.DateChanged, TimeZoneInfo.Local))).ToArray());
+
+
+            await _hub.Clients.User(dto.CustomerEmail).SendAsync(NotificationHub.OrderUpdateNotification, dto);
+            await _hub.Clients.User(o.Restaurant.Owner.Email).SendAsync(NotificationHub.OrderUpdateNotification, dto);
+
 
             return Ok(new PlaceOrderResponse(dto));
         }
