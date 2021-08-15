@@ -2,8 +2,16 @@ import React from "react";
 import { Color } from "react-bootstrap/esm/types";
 import styles from "./Loading.module.css";
 
+/** Loading animation. */
 const Loading = (
-    props: React.HTMLAttributes<HTMLDivElement> & { showLabel?: boolean; variant?: Color; label?: string }
+    props: React.HTMLAttributes<HTMLDivElement> & {
+        /** If true then a label is displayed */
+        showLabel?: boolean;
+        /** Bootstrap variant */
+        variant?: Color;
+        /** Specific label to display */
+        label?: string;
+    }
 ) => {
     // Merge 'className' into className and remove it from other props so that we do not override the default class name.
     var cn = `${styles.container} ${props.className}`;

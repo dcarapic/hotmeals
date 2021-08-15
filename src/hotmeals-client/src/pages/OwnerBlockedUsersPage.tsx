@@ -1,47 +1,10 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../state/model";
 import { Alert, Button, Col, Row } from "react-bootstrap";
 import Loading from "../shared/Loading";
 import BlockedUserUpdater, { BlockedUserUpdateType } from "../shared/BlockedUserUpdater";
-
-const BlockedUserList = (props: { blockedUsers: model.BlockedUserDTO[]; onDelete?: (email: string) => void }) => {
-    return (
-        <Fragment>
-            {props.blockedUsers.map((mi, i) => {
-                return (
-                    <Fragment key={mi.email}>
-                        {i > 0 && <hr />}
-                        <BlockedUserListItem blockedUser={mi} onDelete={props.onDelete} />
-                    </Fragment>
-                );
-            })}
-        </Fragment>
-    );
-};
-const BlockedUserListItem = (props: { blockedUser: model.BlockedUserDTO; onDelete?: (email: string) => void }) => {
-    return (
-        <Row className="d-grid">
-            <Col>{props.blockedUser.email}</Col>
-            <Col>
-                <i>
-                    {props.blockedUser.addressCityZip} {props.blockedUser.addressCity}<br/>
-                    {props.blockedUser.addressStreet}
-                </i>
-            </Col>
-            <Col>
-                <Button
-                    size="sm"
-                    className="me-1 mb-1"
-                    variant="warning"
-                    onClick={() => props.onDelete && props.onDelete(props.blockedUser.email)}>
-                    Unblock user
-                </Button>
-            </Col>
-        </Row>
-    );
-};
 
 const OwnerBlockedUsersPage = ui.withAlertMessageContainer(() => {
     const msgs = ui.useAlertMessageService();
@@ -51,7 +14,7 @@ const OwnerBlockedUsersPage = ui.withAlertMessageContainer(() => {
     const [blockedUsers, setBlockedUsers] = useState<model.BlockedUserDTO[]>([]);
     const [userToUnblock, setUserToUnblock] = useState<model.BlockedUserDTO | null>(null);
 
-    const loadBlockedUsers = async () => {
+    const loadBlockedUsers = useCallback(async () => {
         msgs.clearMessage();
         setLoading(true);
         let response = await api.blockedUsersFetchAll(abort);
@@ -65,11 +28,11 @@ const OwnerBlockedUsersPage = ui.withAlertMessageContainer(() => {
             setLoading(false);
             setBlockedUsers([]);
         }
-    };
+    }, [msgs, abort]);
 
     useEffect(() => {
         loadBlockedUsers();
-    }, []);
+    }, [loadBlockedUsers]);
 
     const deleteBlockedUser = (email: string) => {
         let r = blockedUsers.find((x) => x.email === email);
@@ -105,9 +68,52 @@ const OwnerBlockedUsersPage = ui.withAlertMessageContainer(() => {
                 </Fragment>
             )}
             {userToUnblock && (
-                <BlockedUserUpdater type={BlockedUserUpdateType.UnblockUser} userEmail={userToUnblock.email} onCancel={onUnblockCanceled} onBlockChanged={onUnblocked} />
+                <BlockedUserUpdater
+                    type={BlockedUserUpdateType.UnblockUser}
+                    userEmail={userToUnblock.email}
+                    onCancel={onUnblockCanceled}
+                    onBlockChanged={onUnblocked}
+                />
             )}
         </Fragment>
     );
 });
 export default OwnerBlockedUsersPage;
+
+const BlockedUserList = (props: { blockedUsers: model.BlockedUserDTO[]; onDelete?: (email: string) => void }) => {
+    return (
+        <Fragment>
+            {props.blockedUsers.map((mi, i) => {
+                return (
+                    <Fragment key={mi.email}>
+                        {i > 0 && <hr />}
+                        <BlockedUserListItem blockedUser={mi} onDelete={props.onDelete} />
+                    </Fragment>
+                );
+            })}
+        </Fragment>
+    );
+};
+const BlockedUserListItem = (props: { blockedUser: model.BlockedUserDTO; onDelete?: (email: string) => void }) => {
+    return (
+        <Row className="d-grid">
+            <Col>{props.blockedUser.email}</Col>
+            <Col>
+                <i>
+                    {props.blockedUser.addressCityZip} {props.blockedUser.addressCity}
+                    <br />
+                    {props.blockedUser.addressStreet}
+                </i>
+            </Col>
+            <Col>
+                <Button
+                    size="sm"
+                    className="me-1 mb-1"
+                    variant="warning"
+                    onClick={() => props.onDelete && props.onDelete(props.blockedUser.email)}>
+                    Unblock user
+                </Button>
+            </Col>
+        </Row>
+    );
+};

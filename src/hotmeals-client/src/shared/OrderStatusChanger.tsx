@@ -5,10 +5,15 @@ import * as model from "../state/model";
 import { Button, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
 
+/** Modal dialog which updates the order to a new status */
 const OrderStatusChanger = (props: {
+    /** Order to update */
     order: model.OrderDTO;
+    /** Target status */
     status: model.OrderStatus;
+    /** Invoked when user cancels the update */
     onCancel: () => void;
+    /** Invoked after the update has been performed. The provided order is the new object from server. */
     onStatusChanged: (order: model.OrderDTO) => void;
 }) => {
     const [submitting, setSubmitting] = useState(false);

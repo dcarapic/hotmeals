@@ -4,16 +4,23 @@ import * as ui from "../util/ui";
 import { Button, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
 
-
+/** Type of blocking operation */
 export enum BlockedUserUpdateType  {
+    /** Block the user */
     BlockUser = 1,
+    /** Unblock the user */
     UnblockUser = 2
 }
 
+/** Modal dialog for blocking / unblocking a user */
 const BlockedUserUpdater = (props: {
+    /** Block or unblock */
     type: BlockedUserUpdateType,
+    /** Email of the user to block */
     userEmail: string;
+    /** Invoked if user canceled the operation */
     onCancel: () => void;
+    /** Invoked after the block/unblock was performed */
     onBlockChanged: () => void;
 }) => {
     const [submitting, setSubmitting] = useState(false);

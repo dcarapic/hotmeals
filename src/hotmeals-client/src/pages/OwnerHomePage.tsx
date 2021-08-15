@@ -1,6 +1,5 @@
 import React, { Fragment } from "react";
 import * as ui from "../util/ui";
-import { Col } from "react-bootstrap";
 import routes from "../routes";
 import { RouterNavButton } from "../shared/RouterNav";
 

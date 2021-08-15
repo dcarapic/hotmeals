@@ -3,16 +3,24 @@ import * as api from "../util/api";
 import * as ui from "../util/ui";
 import { Alert, Col, Form, Row } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
-import { useCurrentUser } from "../state/user";
+import { setCurrentUser, useCurrentUser } from "../state/user";
 import { LoadingButton } from "./LoadingButton";
 
+/** Account editing type */
 enum AccountEditorType {
+    /** Registration for restaurant owner */
     OwnerRegistration = 1,
+    /** Registration for customer */
     CustomerRegistration = 2,
-    AccountSettings = 3
+    /** User account settings */
+    AccountSettings = 3,
 }
 
-const AccountEditor = (props: { type: AccountEditorType }) => {
+/** Form for editing user account information */
+const AccountEditor = (props: {
+    /** Editing type */
+    type: AccountEditorType;
+}) => {
     const currentUser = useCurrentUser();
     const msgs = ui.useAlertMessageService();
     const history = useHistory();
@@ -29,25 +37,25 @@ const AccountEditor = (props: { type: AccountEditorType }) => {
         msgs.clearMessage();
 
         setSaved(false);
-        
+
         // Clear custom validity
         form.formPasswordConfirm.setCustomValidity("");
 
-        let email : string = form.formEmail.value;
-        let firstName : string = form.formFirstName.value;
-        let lastName : string = form.formLastName.value;
-        let addressCityZip : string = form.formAddressCityZip.value;
-        let addressCity : string = form.formAddressCity.value;
-        let addressStreet : string = form.formAddressStreet.value;
-        let password : string = form.formPassword.value;
-        let passwordConfirm : string = form.formPasswordConfirm.value;
-        
+        let email: string = form.formEmail.value;
+        let firstName: string = form.formFirstName.value;
+        let lastName: string = form.formLastName.value;
+        let addressCityZip: string = form.formAddressCityZip.value;
+        let addressCity: string = form.formAddressCity.value;
+        let addressStreet: string = form.formAddressStreet.value;
+        let password: string = form.formPassword.value;
+        let passwordConfirm: string = form.formPasswordConfirm.value;
+
         if (form.checkValidity() === false) {
             setValidated(true);
             return;
         }
         // If password is set (mandatory for registration) then check that the password matches
-        if(password && password !== passwordConfirm ) {
+        if (password && password !== passwordConfirm) {
             form.formPasswordConfirm.setCustomValidity("Please enter matching password values!");
             setValidated(true);
             return;
@@ -55,43 +63,51 @@ const AccountEditor = (props: { type: AccountEditorType }) => {
 
         setValidated(false);
         setSubmitting(true);
-        if(props.type === AccountEditorType.CustomerRegistration || props.type === AccountEditorType.OwnerRegistration) {
-            let response = await api.userRegister({
-                email,
-                firstName,
-                lastName,
-                addressCityZip,
-                addressCity,
-                addressStreet,
-                password,
-                isRestaurantOwner: props.type === AccountEditorType.OwnerRegistration,
-            }, abort);
-            if(response.isAborted) return;
+        if (
+            props.type === AccountEditorType.CustomerRegistration ||
+            props.type === AccountEditorType.OwnerRegistration
+        ) {
+            let response = await api.userRegister(
+                {
+                    email,
+                    firstName,
+                    lastName,
+                    addressCityZip,
+                    addressCity,
+                    addressStreet,
+                    password,
+                    isRestaurantOwner: props.type === AccountEditorType.OwnerRegistration,
+                },
+                abort
+            );
+            if (response.isAborted) return;
             setSubmitting(false);
             msgs.setMessageFromResponse(response);
             if (response.ok && response.result) {
-                currentUser.setCurrentUser(response.result.user);
+                setCurrentUser(response.result.user);
                 // Go to home page
                 history.push("/");
             }
         } else {
-            let response = await api.userUpdate({
-                firstName,
-                lastName,
-                addressCityZip,
-                addressCity,
-                addressStreet,
-                newPassword : password
-            }, abort);
-            if(response.isAborted) return;
+            let response = await api.userUpdate(
+                {
+                    firstName,
+                    lastName,
+                    addressCityZip,
+                    addressCity,
+                    addressStreet,
+                    newPassword: password,
+                },
+                abort
+            );
+            if (response.isAborted) return;
             setSubmitting(false);
             msgs.setMessageFromResponse(response);
             if (response.ok && response.result) {
-                currentUser.setCurrentUser(response.result.user);
+                setCurrentUser(response.result.user);
                 setSaved(true);
             }
         }
-
     };
     return (
         <Fragment>
@@ -103,7 +119,7 @@ const AccountEditor = (props: { type: AccountEditorType }) => {
                         placeholder="Enter your email"
                         maxLength={100}
                         readOnly={submitting || props.type !== AccountEditorType.AccountSettings}
-                        defaultValue={currentUser.userData?.email}
+                        defaultValue={currentUser?.email}
                         required
                     />
                 </Form.Group>
@@ -113,7 +129,7 @@ const AccountEditor = (props: { type: AccountEditorType }) => {
                             <Form.Label>First name</Form.Label>
                             <Form.Control
                                 type="text"
-                                defaultValue={currentUser.userData?.firstName}
+                                defaultValue={currentUser?.firstName}
                                 maxLength={100}
                                 readOnly={submitting}
                                 required
@@ -125,7 +141,7 @@ const AccountEditor = (props: { type: AccountEditorType }) => {
                             <Form.Label>Last name</Form.Label>
                             <Form.Control
                                 type="text"
-                                defaultValue={currentUser.userData?.lastName}
+                                defaultValue={currentUser?.lastName}
                                 maxLength={100}
                                 readOnly={submitting}
                                 required
@@ -139,7 +155,7 @@ const AccountEditor = (props: { type: AccountEditorType }) => {
                             <Form.Label>City</Form.Label>
                             <Form.Control
                                 type="text"
-                                defaultValue={currentUser.userData?.addressCity}
+                                defaultValue={currentUser?.addressCity}
                                 maxLength={100}
                                 readOnly={submitting}
                                 required
@@ -151,7 +167,7 @@ const AccountEditor = (props: { type: AccountEditorType }) => {
                             <Form.Label>Zip code</Form.Label>
                             <Form.Control
                                 type="text"
-                                defaultValue={currentUser.userData?.addressCityZip}
+                                defaultValue={currentUser?.addressCityZip}
                                 maxLength={20}
                                 readOnly={submitting}
                                 required
@@ -163,7 +179,7 @@ const AccountEditor = (props: { type: AccountEditorType }) => {
                     <Form.Label>Street and number</Form.Label>
                     <Form.Control
                         type="text"
-                        defaultValue={currentUser.userData?.addressStreet}
+                        defaultValue={currentUser?.addressStreet}
                         maxLength={200}
                         readOnly={submitting}
                         required
@@ -172,14 +188,20 @@ const AccountEditor = (props: { type: AccountEditorType }) => {
 
                 <Form.Group className="mb-2" controlId="formPassword">
                     <Form.Label>
-                        {props.type !==  AccountEditorType.AccountSettings ? "Password" : "Enter new password value to change your password"}
+                        {props.type !== AccountEditorType.AccountSettings
+                            ? "Password"
+                            : "Enter new password value to change your password"}
                     </Form.Label>
                     <Form.Control
                         type="password"
-                        placeholder={props.type !==  AccountEditorType.AccountSettings ? "Enter your password" : "Change your password"}
+                        placeholder={
+                            props.type !== AccountEditorType.AccountSettings
+                                ? "Enter your password"
+                                : "Change your password"
+                        }
                         maxLength={500}
                         readOnly={submitting}
-                        required={props.type !==  AccountEditorType.AccountSettings}
+                        required={props.type !== AccountEditorType.AccountSettings}
                     />
                     <Form.Control.Feedback type="invalid">Please enter your password</Form.Control.Feedback>
                 </Form.Group>
@@ -191,12 +213,12 @@ const AccountEditor = (props: { type: AccountEditorType }) => {
                         placeholder="Confirm your password"
                         maxLength={500}
                         readOnly={submitting}
-                        required={props.type !==  AccountEditorType.AccountSettings}
+                        required={props.type !== AccountEditorType.AccountSettings}
                     />
                     <Form.Control.Feedback type="invalid">Please confirm your password</Form.Control.Feedback>
                 </Form.Group>
                 <LoadingButton variant="primary" type="submit" loading={submitting} className="mb-3">
-                    {props.type !==  AccountEditorType.AccountSettings ? "Register" : "Save changes"}
+                    {props.type !== AccountEditorType.AccountSettings ? "Register" : "Save changes"}
                 </LoadingButton>
             </Form>
             <Alert show={saved} variant="success">
@@ -205,4 +227,4 @@ const AccountEditor = (props: { type: AccountEditorType }) => {
         </Fragment>
     );
 };
-export {AccountEditor, AccountEditorType};
+export { AccountEditor, AccountEditorType };

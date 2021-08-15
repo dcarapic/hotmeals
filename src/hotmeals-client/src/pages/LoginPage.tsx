@@ -6,10 +6,9 @@ import { useHistory } from "react-router-dom";
 import routes from "../routes";
 import { LoadingButton } from "../shared/LoadingButton";
 import { RouterNavLink } from "../shared/RouterNav";
-import { useCurrentUser } from "../state/user";
+import { setCurrentUser } from "../state/user";
 
 const LoginPage = ui.withAlertMessageContainer(() => {
-    const currentUser = useCurrentUser();
     const msgs = ui.useAlertMessageService();
     const history = useHistory();
     const abort = ui.useAbortable();
@@ -37,7 +36,7 @@ const LoginPage = ui.withAlertMessageContainer(() => {
         msgs.setMessageFromResponse(response);
 
         if (response.ok && response.result) {
-            currentUser.setCurrentUser(response.result.user);
+            setCurrentUser(response.result.user);
             // Go to home page
             history.push("/");
         }

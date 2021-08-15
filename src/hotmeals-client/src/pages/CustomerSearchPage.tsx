@@ -1,14 +1,14 @@
-import React, { FormEvent, Fragment, useEffect, useState } from "react";
+import React, { FormEvent, Fragment, useCallback, useEffect, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../state/model";
 import { Alert, Button, Col, Form, InputGroup } from "react-bootstrap";
 import { LoadingButton } from "../shared/LoadingButton";
 import { RouterNavButton } from "../shared/RouterNav";
-import { useHistory, useLocation, useParams } from "react-router-dom";
+import { useHistory, useParams } from "react-router-dom";
 import routes from "../routes";
 import { ServerResponsePagination } from "../shared/ServerResponsePagination";
-import { useCurrentOrder } from "../state/current-order";
+import { createCurrentOrder, setCurrentOrderMenuItem } from "../state/current-order";
 
 const SearchResultItem = (props: {
     item: model.SearchResultItemDTO;
@@ -44,22 +44,13 @@ const CustomerSearchPage = ui.withAlertMessageContainer(() => {
     const msgs = ui.useAlertMessageService();
     const history = useHistory();
     const abort = ui.useAbortable();
-    const order = useCurrentOrder();
     const { searchQuery } = useParams<any>();
-
-    const params = new URLSearchParams(useLocation().search);
 
     const [searching, setSearching] = useState(false);
     const [searched, setSearched] = useState(false);
     const [validated, setValidated] = useState(false);
     const [pageInfo, setPageInfo] = useState<api.PagingInformation>();
     const [items, setItems] = useState<model.SearchResultItemDTO[]>([]);
-
-    useEffect(() => {
-        if (searchQuery) {
-            searchCore(1);
-        }
-    }, [searchQuery]);
 
     const search = async (e: FormEvent) => {
         let form: any = e.currentTarget;
@@ -74,7 +65,7 @@ const CustomerSearchPage = ui.withAlertMessageContainer(() => {
         else searchCore(1);
     };
 
-    const searchCore = async (page: number) => {
+    const searchCore = useCallback(async (page: number) => {
         setValidated(false);
         setSearching(true);
         let response = await api.searchFood(searchQuery, page, abort);
@@ -86,14 +77,22 @@ const CustomerSearchPage = ui.withAlertMessageContainer(() => {
             setPageInfo(response.result);
             setSearched(true);
         }
-    };
+    }, [searchQuery, msgs, abort]);
+
+    
+    useEffect(() => {
+        if (searchQuery) {
+            searchCore(1);
+        }
+    }, [searchQuery, searchCore]);
+
 
     const orderMenuItem = (id: string, restaurantId: string) => {
         const item = items.find(x=>x.restaurantId === restaurantId);
         if(!item)
             return;
-        order.createOrder(item.restaurantId, item.restaurantName);
-        order.setMenuItem(item, 1);
+        createCurrentOrder(item.restaurantId, item.restaurantName);
+        setCurrentOrderMenuItem(item, 1);
         history.push(routes.customerOrder);
     };
 

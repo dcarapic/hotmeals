@@ -1,4 +1,4 @@
-import React, { DependencyList, Fragment, FunctionComponent, useContext, useEffect, useRef, useState } from "react";
+import React, { Fragment, FunctionComponent, useContext, useEffect, useRef, useState } from "react";
 import { Alert, Toast, ToastContainer } from "react-bootstrap";
 import { Variant } from "react-bootstrap/esm/types";
 import * as api from "../util/api";
@@ -229,15 +229,5 @@ const useAbortable = (): AbortSignal => {
     return controller.signal;
 };
 
-/**
- * React effect hook which provides abort signal which is automatically raised if a component has been dismounted.
- */
-const useAbortableEffect = (effect: (signal: AbortSignal) => void, deps: DependencyList) => {
-    useEffect(() => {
-        let controller = new AbortController();
-        effect(controller.signal);
-        return () => controller.abort();
-    }, deps);
-};
 
-export { useAbortableEffect, useAbortable };
+export { useAbortable };

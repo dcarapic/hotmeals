@@ -5,9 +5,13 @@ import * as model from "../state/model";
 import { Button, Col, Form, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
 
+/** Modal dialog for editing a restaurant. */
 const RestaurantEditor = (props: {
+    /** Restaurant to edit. */
     restaurant: model.RestaurantDTO;
+    /** Invoked when user cancels the editing */
     onCancel: () => void;
+    /** Invoked after the chagnes have been saved. The restaurant provided is a new object from server. */
     onSaved: (savedRestaurant: model.RestaurantDTO) => void;
 }) => {
     const [submitting, setSubmitting] = useState(false);

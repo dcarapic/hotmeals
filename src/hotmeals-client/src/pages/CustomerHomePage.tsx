@@ -1,6 +1,6 @@
 import React, { FormEvent, Fragment, useState } from "react";
 import * as ui from "../util/ui";
-import { Button, Col, Form, InputGroup, Row } from "react-bootstrap";
+import { Button, Form, InputGroup } from "react-bootstrap";
 import { RouterNavButton } from "../shared/RouterNav";
 import { useHistory } from "react-router-dom";
 import routes from "../routes";

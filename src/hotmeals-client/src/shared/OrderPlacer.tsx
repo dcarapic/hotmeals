@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, {  useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../state/model";
@@ -6,14 +6,21 @@ import { Button, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
 import { OrderDetails } from "./OrderDetails";
 import Loading from "./Loading";
-import { useNotificationSubscription } from "../util/ws-notifications";
+import { useEvent } from "../util/ws-events";
 
+/** Modal dialog used to confirm and place a new order. */
 const OrderPlacer = (props: {
+    /** New order which should be placed */
     order: model.NewOrder;
+    /** Invoked when user cancels the placement */
     onCancelPlacing: () => void;
+    /** Invoked when user stops waiting for confirmation from the restaurant owner */
     onStoppedWaitingForConfirmation: (order: model.OrderDTO) => void;
+    /** Invoked when order is placed (but still waiting for confirmation) */
     onOrderPlaced: (order: model.OrderDTO) => void;
+    /** Invoked when order is placed but user canceled it */
     onOrderCanceled: (order: model.OrderDTO) => void;
+    /** Invoked when order is placed and the confirmation was received */
     onOrderConfirmed: (order: model.OrderDTO) => void;
 }) => {
     const [placing, setPlacing] = useState(false);
@@ -63,7 +70,7 @@ const OrderPlacer = (props: {
         props.onStoppedWaitingForConfirmation(placedOrder!);
     };
 
-    useNotificationSubscription(
+    useEvent(
         "OrderUpdated",
         (order: model.OrderDTO) => {
             console.log(

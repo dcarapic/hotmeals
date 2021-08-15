@@ -40,7 +40,7 @@ export default class GlobalErrorBoundary extends Component<ErrorBoundaryProps, E
     public render() {
         if (this.state.fatalError) {
             return (
-                <Alert variant="danger">
+                <Alert variant="danger" className="m-5"> 
                     <Alert.Heading>An error occurred!</Alert.Heading>
                     <p>It seems that an error occurred in the application. Please refresh your browser!</p>
                 </Alert>

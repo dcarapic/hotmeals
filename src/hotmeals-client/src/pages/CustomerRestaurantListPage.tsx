@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../state/model";
@@ -6,49 +6,20 @@ import { Alert, Button, Col, Row } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
 import Loading from "../shared/Loading";
 import { ServerResponsePagination } from "../shared/ServerResponsePagination";
-import { useCurrentOrder } from "../state/current-order";
+import { createCurrentOrder } from "../state/current-order";
 import routes from "../routes";
-
-const RestaurantListItem = (props: { restaurant: model.RestaurantDTO; onSelect?: (id: string) => void }) => {
-    return (
-        <div className="mb-3">
-            <div>
-                <strong>{props.restaurant.name}</strong>
-            </div>
-            <div>
-                <i>{props.restaurant.description}</i>
-            </div>
-            <div>
-                {props.restaurant.phoneNumber}
-            </div>
-            <div>
-                <Button
-                    size="sm"
-                    variant="primary"
-                    onClick={() => props.onSelect && props.onSelect(props.restaurant.id)}>
-                    Order
-                </Button>
-            </div>
-        </div>
-    );
-};
 
 const CustomerRestaurantListPage = ui.withAlertMessageContainer(() => {
     const msgs = ui.useAlertMessageService();
     const history = useHistory();
     const abort = ui.useAbortable();
-    const order = useCurrentOrder();
-    
+
     const [loading, setLoading] = useState(false);
     const [loaded, setLoaded] = useState(false);
     const [pageInfo, setPageInfo] = useState<api.PagingInformation>();
     const [items, setItems] = useState<model.RestaurantDTO[]>([]);
 
-    useEffect(() => {
-        loadPage(1);
-    }, []);
-
-    const loadPage = async (page: number) => {
+    const loadPage = useCallback(async (page: number) => {
         setLoading(true);
         let response = await api.restaurantFetchAll(page, abort);
         if (response.isAborted) return;
@@ -59,13 +30,18 @@ const CustomerRestaurantListPage = ui.withAlertMessageContainer(() => {
             setPageInfo(response.result);
             setLoaded(true);
         }
-    };
+    }, [msgs, abort]);
+
+    useEffect(() => {
+        loadPage(1);
+    }, [loadPage]);
+
 
     const onSelectRestaurant = (restaurantId: string) => {
-        let restaurant = items.find(x=>x.id === restaurantId);
-        if(!restaurant)return;
+        let restaurant = items.find((x) => x.id === restaurantId);
+        if (!restaurant) return;
 
-        order.createOrder(restaurant.id, restaurant.name);
+        createCurrentOrder(restaurant.id, restaurant.name);
         history.push(routes.customerOrder);
     };
 
@@ -101,3 +77,25 @@ const CustomerRestaurantListPage = ui.withAlertMessageContainer(() => {
     );
 });
 export default CustomerRestaurantListPage;
+
+const RestaurantListItem = (props: { restaurant: model.RestaurantDTO; onSelect?: (id: string) => void }) => {
+    return (
+        <div className="mb-3">
+            <div>
+                <strong>{props.restaurant.name}</strong>
+            </div>
+            <div>
+                <i>{props.restaurant.description}</i>
+            </div>
+            <div>{props.restaurant.phoneNumber}</div>
+            <div>
+                <Button
+                    size="sm"
+                    variant="primary"
+                    onClick={() => props.onSelect && props.onSelect(props.restaurant.id)}>
+                    Order
+                </Button>
+            </div>
+        </div>
+    );
+};

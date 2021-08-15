@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useState } from "react";
 import { Row, Col, Alert, Button } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import * as api from "../util/api";
@@ -9,54 +9,6 @@ import MenuItemDeleter from "../shared/MenuItemDeleter";
 import Loading from "../shared/Loading";
 import NotFoundPage from "./NotFoundPage";
 
-const MenuItemList = (props: {
-    menuItems: model.MenuItemDTO[];
-    onEdit?: (id: string) => void;
-    onDelete?: (id: string) => void;
-}) => {
-    return (
-        <Fragment>
-            {props.menuItems.map((mi, i) => {
-                return (
-                    <Fragment key={mi.menuItemId}>
-                        {i > 0 && <hr />}
-                        <MenuItemListItem menuItem={mi} onEdit={props.onEdit} onDelete={props.onDelete} />
-                    </Fragment>
-                );
-            })}
-        </Fragment>
-    );
-};
-const MenuItemListItem = (props: {
-    menuItem: model.MenuItemDTO;
-    onEdit?: (id: string) => void;
-    onDelete?: (id: string) => void;
-}) => {
-    return (
-        <Row className="d-grid">
-                <Col>{props.menuItem.name} <strong className='text-success'>{props.menuItem.price} €</strong></Col>
-            <Col>
-                <i>{props.menuItem.description}</i>
-            </Col>
-            <Col>
-                <Button
-                    size="sm"
-                    className="me-1 mb-1"
-                    variant="success"
-                    onClick={() => props.onEdit && props.onEdit(props.menuItem.menuItemId)}>
-                    Edit item
-                </Button>
-                <Button
-                    size="sm"
-                    className="me-1 mb-1"
-                    variant="danger"
-                    onClick={() => props.onDelete && props.onDelete(props.menuItem.menuItemId)}>
-                    Delete
-                </Button>
-            </Col>
-        </Row>
-    );
-};
 
 const OwnerRestaurantMenuPage = ui.withAlertMessageContainer(() => {
     const msgs = ui.useAlertMessageService();
@@ -70,7 +22,7 @@ const OwnerRestaurantMenuPage = ui.withAlertMessageContainer(() => {
     const [editedMenuItem, setEditedMenuItem] = useState<model.MenuItemDTO | null>(null);
     const [menuItemToDelete, setMenuItemToDelete] = useState<model.MenuItemDTO | null>(null);
 
-    const loadMenuItems = async () => {
+    const loadMenuItems = useCallback(async () => {
         msgs.clearMessage();
         setLoading(true);
         let response = await api.menuItemFetchAll(restaurantId, abort);
@@ -85,11 +37,11 @@ const OwnerRestaurantMenuPage = ui.withAlertMessageContainer(() => {
             setMenuItems([]);
             setTitle("")
         }
-    };
+    }, [msgs, abort, restaurantId]);
 
     useEffect(() => {
         loadMenuItems();
-    }, []);
+    }, [loadMenuItems]);
 
     const createNewMenuItem = () => {
         setEditedMenuItem({ menuItemId: "", restaurantId, name: "", description: "", price: 0 });
@@ -153,3 +105,54 @@ const OwnerRestaurantMenuPage = ui.withAlertMessageContainer(() => {
     );
 });
 export default OwnerRestaurantMenuPage;
+
+
+
+const MenuItemList = (props: {
+    menuItems: model.MenuItemDTO[];
+    onEdit?: (id: string) => void;
+    onDelete?: (id: string) => void;
+}) => {
+    return (
+        <Fragment>
+            {props.menuItems.map((mi, i) => {
+                return (
+                    <Fragment key={mi.menuItemId}>
+                        {i > 0 && <hr />}
+                        <MenuItemListItem menuItem={mi} onEdit={props.onEdit} onDelete={props.onDelete} />
+                    </Fragment>
+                );
+            })}
+        </Fragment>
+    );
+};
+const MenuItemListItem = (props: {
+    menuItem: model.MenuItemDTO;
+    onEdit?: (id: string) => void;
+    onDelete?: (id: string) => void;
+}) => {
+    return (
+        <Row className="d-grid">
+                <Col>{props.menuItem.name} <strong className='text-success'>{props.menuItem.price} €</strong></Col>
+            <Col>
+                <i>{props.menuItem.description}</i>
+            </Col>
+            <Col>
+                <Button
+                    size="sm"
+                    className="me-1 mb-1"
+                    variant="success"
+                    onClick={() => props.onEdit && props.onEdit(props.menuItem.menuItemId)}>
+                    Edit item
+                </Button>
+                <Button
+                    size="sm"
+                    className="me-1 mb-1"
+                    variant="danger"
+                    onClick={() => props.onDelete && props.onDelete(props.menuItem.menuItemId)}>
+                    Delete
+                </Button>
+            </Col>
+        </Row>
+    );
+};

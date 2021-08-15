@@ -1,41 +1,37 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../state/model";
-import { Col,  Row } from "react-bootstrap";
-import { useCurrentOrder } from "../state/current-order";
+import { Col, Row } from "react-bootstrap";
+import { getCurrentOrder, removeCurrentOrder, setCurrentOrderMenuItem } from "../state/current-order";
 import { Redirect, useHistory } from "react-router-dom";
 import routes from "../routes";
 import Loading from "../shared/Loading";
-import {  OrderDetails, OrderMenuItem } from "../shared/OrderDetails";
+import { OrderDetails, OrderMenuItem } from "../shared/OrderDetails";
 import OrderPlacer from "../shared/OrderPlacer";
 
 const CustomerOrdering = ui.withAlertMessageContainer(() => {
-    const currentOrder = useCurrentOrder();
-
-    // If there is no current order then redirect to home page
-    if (!currentOrder.order) return <Redirect to={routes.homePage} />;
-
     const msgs = ui.useAlertMessageService();
     const abort = ui.useAbortable();
     const history = useHistory();
-    
+
     const [loading, setLoading] = useState(true);
     const [placingOrder, setPlacingOrder] = useState(false);
     const [menuItems, setMenuItems] = useState<model.NewOrderItem[]>([]);
 
-    const loadMenuItems = async () => {
-        if (!currentOrder.order) return;
+    const loadMenuItems = useCallback(async () => {
+        var currentOrder =getCurrentOrder();
+        if (!currentOrder) return;
         msgs.clearMessage();
         setLoading(true);
-        let response = await api.menuItemFetchAll(currentOrder.order.restaurantId, abort);
+        let response = await api.menuItemFetchAll(currentOrder.restaurantId, abort);
         if (response.isAborted) return;
         setLoading(false);
         msgs.setMessageFromResponse(response);
         if (response.ok && response.result) {
             let items = response.result.menuItems.map((x) => ({ ...x, quantity: 0 }));
             // After loading the items update their quantity to match ordered quantity
-            for (let orderedMenuItem of currentOrder.order.items) {
+            for (let orderedMenuItem of currentOrder.items) {
                 let menuItem = items.find((x) => x.menuItemId === orderedMenuItem.menuItemId);
                 if (menuItem) menuItem.quantity = orderedMenuItem.quantity;
             }
@@ -44,17 +40,23 @@ const CustomerOrdering = ui.withAlertMessageContainer(() => {
             setLoading(false);
             setMenuItems([]);
         }
-    };
+    }, [msgs, abort]);
 
     useEffect(() => {
         loadMenuItems();
-    }, []);
+    }, [loadMenuItems]);
+
+    
+    // If there is no current order then redirect to home page
+    let currentOrder = getCurrentOrder();
+    if (!currentOrder) return <Redirect to={routes.homePage} />;
+
 
     const changeQuantity = (menuItemId: string, quantity: number) => {
-        if (!currentOrder.order) return;
+        if (!getCurrentOrder()) return;
         let item = menuItems.find((x) => x.menuItemId === menuItemId);
         if (item) {
-            currentOrder.setMenuItem(item, quantity);
+            setCurrentOrderMenuItem(item, quantity);
             // we also have to update the menu item array to update the counter on the menu item from the selection
             const newItems = [...menuItems];
             newItems[newItems.indexOf(item)] = { ...item, quantity };
@@ -64,40 +66,28 @@ const CustomerOrdering = ui.withAlertMessageContainer(() => {
 
     const changeStatus = (status: model.OrderStatus) => {
         // Status can no longer be changed by the order details
-        if(placingOrder)
-            return;
-        if(status === 'Placed')
-            setPlacingOrder(true);
-        else if(status === 'Canceled')
-            currentOrder.removeOrder(); 
-    }
-
-    const placeOrder = () => {
-        setPlacingOrder(true);
+        if (placingOrder) return;
+        if (status === "Placed") setPlacingOrder(true);
+        else if (status === "Canceled") removeCurrentOrder();
     };
 
-    const clearOrder =() => {
-        setPlacingOrder(false);
-        currentOrder.removeOrder(); 
-    }
-
     const onPlacingCanceled = () => setPlacingOrder(false);
-    const onStoppedWaitingForConfirmation  = (order: model.OrderDTO) => {
+    const onStoppedWaitingForConfirmation = (order: model.OrderDTO) => {
         setPlacingOrder(false);
-        currentOrder.removeOrder();
+        removeCurrentOrder();
         history.push(routes.ordersActive);
-    }
+    };
 
     const onOrderPlaced = (order: model.OrderDTO) => {
         // Do nothing, let the dialog wait for confirmation
     };
     const onOrderCanceled = (order: model.OrderDTO) => {
         setPlacingOrder(false);
-        currentOrder.removeOrder();
+        removeCurrentOrder();
     };
     const onOrderConfirmed = (order: model.OrderDTO) => {
         setPlacingOrder(false);
-        currentOrder.removeOrder();
+        removeCurrentOrder();
         history.push(routes.ordersActive);
     };
 
@@ -107,7 +97,7 @@ const CustomerOrdering = ui.withAlertMessageContainer(() => {
                 <h3 className="text-center p-2 hm-sticky-padder">Order your food</h3>
                 <div className="border rounded mb-4 bg-light shadow">
                     <OrderDetails
-                        order={currentOrder.order}
+                        order={currentOrder}
                         onQuantityChanged={changeQuantity}
                         onRequestStatusChange={changeStatus}
                     />
@@ -133,7 +123,7 @@ const CustomerOrdering = ui.withAlertMessageContainer(() => {
             )}
             {placingOrder && (
                 <OrderPlacer
-                    order={currentOrder.order}
+                    order={currentOrder}
                     onCancelPlacing={onPlacingCanceled}
                     onStoppedWaitingForConfirmation={onStoppedWaitingForConfirmation}
                     onOrderPlaced={onOrderPlaced}

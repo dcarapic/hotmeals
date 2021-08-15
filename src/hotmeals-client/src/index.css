@@ -1,3 +1,6 @@
+/*
+The navbar is fixed on top and we need some way to know exact height to be able to place stick controls at the correct position.
+*/
 :root {
   --nav-height: 60px;
   --nav-margin: 58px;

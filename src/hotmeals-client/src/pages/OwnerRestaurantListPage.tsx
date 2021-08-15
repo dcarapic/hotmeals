@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useState } from "react";
 import { Alert, Button, Col, Row } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
 import * as api from "../util/api";
@@ -8,59 +8,6 @@ import routes from "../routes";
 import Loading from "../shared/Loading";
 import RestaurantEditor from "../shared/RestaurantEditor";
 import RestaurantDeleter from "../shared/RestaurantDeleter";
-
-
-const RestaurantListItem = (props: {
-    restaurant: model.RestaurantDTO;
-    onEdit?: (id: string) => void;
-    onEditMenu?: (id: string) => void;
-    onViewOrders?: (id: string) => void;
-    onDelete?: (id: string) => void;
-}) => {
-    return (
-        <div className="mb-3">
-            <div>
-                <strong>{props.restaurant.name}</strong>
-            </div>
-            <div>
-                <i>{props.restaurant.description}</i>
-            </div>
-            <div>
-                {props.restaurant.phoneNumber}
-            </div>
-            <div className="d-flex flex-wrap">
-                <Button
-                    size="sm"
-                    className="me-1 mb-1"
-                    variant="success"
-                    onClick={() => props.onEdit && props.onEdit(props.restaurant.id)}>
-                    Edit restaurant information
-                </Button>
-                <Button
-                    size="sm"
-                    className="me-1 mb-1"
-                    variant="success"
-                    onClick={() => props.onEditMenu && props.onEditMenu(props.restaurant.id)}>
-                    Edit menu
-                </Button>
-                <Button
-                    size="sm"
-                    className="me-1 mb-1"
-                    variant="success"
-                    onClick={() => props.onViewOrders && props.onViewOrders(props.restaurant.id)}>
-                    View orders
-                </Button>
-                <Button
-                    size="sm"
-                    className="me-1 mb-1"
-                    variant="danger"
-                    onClick={() => props.onDelete && props.onDelete(props.restaurant.id)}>
-                    Delete restaurant
-                </Button>
-            </div>
-        </div>
-    );
-};
 
 const OwnerRestaurantListPage = ui.withAlertMessageContainer(() => {
     const msgs = ui.useAlertMessageService();
@@ -73,7 +20,7 @@ const OwnerRestaurantListPage = ui.withAlertMessageContainer(() => {
     const [editedRestaurant, setEditedRestaurant] = useState<model.RestaurantDTO | null>(null);
     const [restaurantToDelete, setRestaurantToDelete] = useState<model.RestaurantDTO | null>(null);
 
-    const loadRestaurants = async () => {
+    const loadRestaurants = useCallback(async () => {
         msgs.clearMessage();
         setLoading(true);
         let response = await api.restaurantFetchAll(1, abort);
@@ -87,11 +34,11 @@ const OwnerRestaurantListPage = ui.withAlertMessageContainer(() => {
             setLoading(false);
             setRestaurants([]);
         }
-    };
+    }, [abort, msgs]);
 
     useEffect(() => {
         loadRestaurants();
-    }, []);
+    }, [loadRestaurants]);
 
     const createNewRestaurant = () => {
         setEditedRestaurant({ id: "", name: "", description: "", phoneNumber: "" });
@@ -176,3 +123,53 @@ const OwnerRestaurantListPage = ui.withAlertMessageContainer(() => {
     );
 });
 export default OwnerRestaurantListPage;
+
+const RestaurantListItem = (props: {
+    restaurant: model.RestaurantDTO;
+    onEdit?: (id: string) => void;
+    onEditMenu?: (id: string) => void;
+    onViewOrders?: (id: string) => void;
+    onDelete?: (id: string) => void;
+}) => {
+    return (
+        <div className="mb-3">
+            <div>
+                <strong>{props.restaurant.name}</strong>
+            </div>
+            <div>
+                <i>{props.restaurant.description}</i>
+            </div>
+            <div>{props.restaurant.phoneNumber}</div>
+            <div className="d-flex flex-wrap">
+                <Button
+                    size="sm"
+                    className="me-1 mb-1"
+                    variant="success"
+                    onClick={() => props.onEdit && props.onEdit(props.restaurant.id)}>
+                    Edit restaurant information
+                </Button>
+                <Button
+                    size="sm"
+                    className="me-1 mb-1"
+                    variant="success"
+                    onClick={() => props.onEditMenu && props.onEditMenu(props.restaurant.id)}>
+                    Edit menu
+                </Button>
+                <Button
+                    size="sm"
+                    className="me-1 mb-1"
+                    variant="success"
+                    onClick={() => props.onViewOrders && props.onViewOrders(props.restaurant.id)}>
+                    View orders
+                </Button>
+                <Button
+                    size="sm"
+                    className="me-1 mb-1"
+                    variant="danger"
+                    onClick={() => props.onDelete && props.onDelete(props.restaurant.id)}>
+                    Delete restaurant
+                </Button>
+            </div>
+        </div>
+    );
+};

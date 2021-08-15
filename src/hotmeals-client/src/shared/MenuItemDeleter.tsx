@@ -5,7 +5,15 @@ import * as model from "../state/model";
 import { Button, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
 
-const MenuItemDeleter = (props: { menuItem: model.MenuItemDTO; onCancel: () => void; onDeleted: () => void }) => {
+/** Modal dialog for deleting restaurant menu item. */
+const MenuItemDeleter = (props: {
+    /** Menu item to delete */
+    menuItem: model.MenuItemDTO;
+    /** Invoked if user canceled deletion */
+    onCancel: () => void;
+    /** Invoked after the user has deleted the item */
+    onDeleted: () => void;
+}) => {
     const [submitting, setSubmitting] = useState(false);
     const [serverResponse, setServerResponse] = useState<api.ServerResponse<any> | null>(null);
     const abort = ui.useAbortable();

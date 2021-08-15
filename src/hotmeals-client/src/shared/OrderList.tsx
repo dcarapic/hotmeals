@@ -1,20 +1,29 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../state/model";
-import { Alert, Button, Col, Row } from "react-bootstrap";
+import { Alert, Col, Row } from "react-bootstrap";
 import Loading from "./Loading";
 import { ServerResponsePagination } from "./ServerResponsePagination";
 import { OrderDetails } from "./OrderDetails";
 import OrderStatusChanger from "./OrderStatusChanger";
 import BlockedUserUpdater, { BlockedUserUpdateType } from "./BlockedUserUpdater";
 
+/** Order list type */
 enum OrderListType {
+    /** Display active orders */
     ActiveOrders = 1,
+    /** Display completed orders */
     CompleteOrders = 2,
 }
 
-const OrderList = (props: { restaurantId?: string; type: OrderListType }) => {
+/** Displays a list of either active or completed orders */
+const OrderList = (props: {
+    /** Optional restaurant Id */
+    restaurantId?: string;
+    /** Type of listing */
+    type: OrderListType;
+}) => {
     const msgs = ui.useAlertMessageService();
     const abort = ui.useAbortable();
 
@@ -27,25 +36,28 @@ const OrderList = (props: { restaurantId?: string; type: OrderListType }) => {
     );
     const [emailToBlock, setEmailToBlock] = useState<string | null>(null);
 
+    const loadPage = useCallback(
+        async (page: number) => {
+            setLoading(true);
+            let response;
+            if (props.type === OrderListType.ActiveOrders) response = await api.ordersFetchActive(page, abort);
+            else response = await api.ordersFetchCompleted(page, abort);
+            if (response.isAborted) return;
+            msgs.setMessageFromResponse(response);
+            if (response.ok && response.result) {
+                setItems(response.result.orders);
+                setPageInfo(response.result);
+                setLoaded(true);
+            }
+
+            setLoading(false);
+        },
+        [msgs, abort, props.type]
+    );
+
     useEffect(() => {
         loadPage(1);
-    }, []);
-
-    const loadPage = async (page: number) => {
-        setLoading(true);
-        let response;
-        if (props.type === OrderListType.ActiveOrders) response = await api.ordersFetchActive(page, abort);
-        else response = await api.ordersFetchCompleted(page, abort);
-        if (response.isAborted) return;
-        msgs.setMessageFromResponse(response);
-        if (response.ok && response.result) {
-            setItems(response.result.orders);
-            setPageInfo(response.result);
-            setLoaded(true);
-        }
-
-        setLoading(false);
-    };
+    }, [loadPage]);
 
     const statusUpdate = (orderId: string, status: model.OrderStatus) => {
         let item = items.find((x) => x.orderId === orderId);
