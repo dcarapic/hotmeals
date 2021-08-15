@@ -53,7 +53,7 @@ const CurrentAccountIcon = () => {
                 }}></i>
             <Modal show={showMenu} onHide={() => setShowMenu(false)} keyboard={false}>
                 <Modal.Header closeButton>
-                    <Modal.Title>User name</Modal.Title>
+                    <Modal.Title>{currentUser.firstName} {currentUser.lastName} ({currentUser.email})</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <div className="d-grid">

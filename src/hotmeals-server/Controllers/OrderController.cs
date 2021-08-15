@@ -183,8 +183,9 @@ namespace hotmeals_server.Controllers
                 History: order.OrderHistory.Select(x => new OrderHistoryDTO(x.Status, x.DateChanged)).ToArray());
 
             // Notify customer and owner over websockets
-            await _hub.Clients.User(dto.CustomerEmail).SendAsync(NotificationHub.OrderUpdateNotification, dto);
-            await _hub.Clients.User(restaurant.Owner.Email).SendAsync(NotificationHub.OrderUpdateNotification, dto);
+            // Note - we are not awaiting results, we do not care if recipients never receive the information
+            _ = _hub.Clients.User(dto.CustomerEmail).SendAsync(NotificationHub.OrderUpdateNotification, dto);
+            _ = _hub.Clients.User(restaurant.Owner.Email).SendAsync(NotificationHub.OrderUpdateNotification, dto);
 
             _log.LogInformation($"Customer {ApplicationUser.Email} placed a new order {order.Id} / {order.Total:n2} € for restaurant '{restaurant.Name}' ({restaurant.Owner.Email})");
             return Ok(new PlaceOrderResponse(dto));
@@ -261,8 +262,9 @@ namespace hotmeals_server.Controllers
                 History: order.OrderHistory.Select(x => new OrderHistoryDTO(x.Status, TimeZoneInfo.ConvertTimeFromUtc(x.DateChanged, TimeZoneInfo.Local))).ToArray());
 
             // Notify customer and owner over websockets
-            await _hub.Clients.User(dto.CustomerEmail).SendAsync(NotificationHub.OrderUpdateNotification, dto);
-            await _hub.Clients.User(order.Restaurant.Owner.Email).SendAsync(NotificationHub.OrderUpdateNotification, dto);
+            // Note - we are not awaiting results, we do not care if recipients never receive the information
+            _ = _hub.Clients.User(dto.CustomerEmail).SendAsync(NotificationHub.OrderUpdateNotification, dto);
+            _ = _hub.Clients.User(order.Restaurant.Owner.Email).SendAsync(NotificationHub.OrderUpdateNotification, dto);
             _log.LogInformation($"Customer {ApplicationUser.Email} updated the order {dto.OrderId} / {dto.Total:n2} € to status {req.Status} (restaurant '{order.Restaurant.Name}' / {order.Restaurant.Owner.Email})");
 
 

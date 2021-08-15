@@ -8,6 +8,7 @@ import { ServerResponsePagination } from "./ServerResponsePagination";
 import { OrderDetails } from "./OrderDetails";
 import OrderStatusChanger from "./OrderStatusChanger";
 import BlockedUserUpdater, { BlockedUserUpdateType } from "./BlockedUserUpdater";
+import { useEvent } from "../util/ws-events";
 
 /** Order list type */
 enum OrderListType {
@@ -58,6 +59,18 @@ const OrderList = (props: {
     useEffect(() => {
         loadPage(1);
     }, [loadPage]);
+
+    // Update the list when we determine that an order has been updated
+    useEvent("OrderUpdated", (order: model.OrderDTO) => {
+        console.log(`OrderList: Order updated ${order.orderId}`);
+        setItems((current) => {
+            let item = current.find(x=>x.orderId === order.orderId);
+            if(!item) return current;
+            let copy = [...current]
+            copy[copy.indexOf(item)] = order;
+            return copy;
+        });
+    }, []); 
 
     const statusUpdate = (orderId: string, status: model.OrderStatus) => {
         let item = items.find((x) => x.orderId === orderId);
