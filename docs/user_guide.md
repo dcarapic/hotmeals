@@ -64,7 +64,6 @@ This page is displayed as a home page for a user once the user is logged in and 
 The user has an option to immediately search for food or to navigate to a list of restaurants for a direct selection of a restaurant from which to order.
 Once the user is logged in an additional 'user' image which can be clicked to gain additional menu where the user can:
 - Manage his account
-- View current and previous orders
 - Logout
 
 The screenshot also depicts notifications which the user may receive at any time but this is separately described later in this document.
@@ -91,7 +90,7 @@ Note: If a user is blocked by a restaurant owner then the menu items from all re
 ## Customer - ordering food
 <img src="screenshots/Customer_Ordering_food.png" width="70%"/>   
 
-This page is reached when customer selects a restaurant from the list of restaurants or when the customer selects a single item from the search result (see previous page).
+This page is reached when customer selects a restaurant from the list of restaurants or when the customer selects a single item from the search result (see previous page). Once the user starts creating an order an additional basket icon appears in the top right corner. Clicking on this icon will bring the user to this page.
 
 Current order is displayed on the top of the page. If the browser is near the top of the page the full order is displayed with details about all selected items, their prices and totals.
 In case the user scrolls down the full order section is replaced with a smaller order section which simply details the most relevant information (menu items ordered and total price). This section also remains always on top (sticky).
@@ -115,15 +114,21 @@ Once the restaurant owner has accepted the order the modal dialog goes away.
 The customer is then redirected to the his order list where he can view the current status of the order (see next page).  
 The user also sees the notification icon in the top left corner which indicates that there is an active order.
 
-## Customer - order list
+## Customer - order list (active)
 <img src="screenshots/Customer_Orders.png" width="70%"/>   
 
-The user can access this page by either the menu available under the user icon in the top right corner or by clicking on the alert icon in the top right corner which is automatically displayed in case there are active orders.
-The list is split into two sections. First section is the list of currently active orders and the second section is the list of past orders.
+The user can access this page from the main page or by clicking on the truck icon on the top right corner.
 The user can view all relevant information about orders as well as history of status changes.
 For the active orders the following buttons are available:
 - Cancel - cancels the active order; only possible until the restaurant owner ships the order; once the order has been shipped it can no longer be canceled
 - Received - confirms that the customer has received the order; only possible after the restaurant owner marks the order as delivered
+
+## Customer - order list (active)
+<img src="screenshots/Customer_Orders_Completed.png" width="70%"/>   
+
+The user can access this page from the main page.
+The user can view all relevant information about orders as well as history of status changes.
+There are no actions available.
 
 ### Customer - account settings
 <img src="screenshots/Customer_Registration_and_Account_settings.png" width="70%"/>  
@@ -136,7 +141,7 @@ This page is similar to customer registration page. Same validation settings app
 This page is displayed as a home page for a user once the user is logged in and the user is a restaurant owner.
 The user has several options:
 - Manage his restaurants
-- Manage orders
+- Manage active orders and view past orders
 - Manage blocked customers
 
 Once the user is logged in an additional 'user' image which can be clicked to gain additional menu where the user can:
@@ -165,7 +170,6 @@ The page lists all restaurants owned by the restaurant owner.
 For each restaurant the owner can do the following:
 - Edit restaurant information (described in restaurant editing page)
 - Edit restaurant menu (described in restaurant menu editing page)
-- View current and past orders (described in order list page)
 - Delete the restaurant
 
 Deletion of a restaurant will perform a hard delete (delete records from a database) in case there aren't any orders for that restaurant. In case there were orders for that restaurant then restaurant can not be deleted.
@@ -200,13 +204,10 @@ The entered information is validated:
 - Price must be a positive number with 2 decimals
 - Meal name must be unique for the selected restaurant
 
-## Restaurant owner - order list
+## Restaurant owner - order list (active)
 <img src="screenshots/Restaurant_owner_Orders.png" width="70%"/>   
 
-The user can access this page from the main page, by clicking on the 'View orders' in the restaurant list or by clicking on the alert icon in the top right corner which is automatically displayed in case there are active orders.
-
-The list is split into two sections. First section is the list of currently active orders and the second section is the list of past orders.
-In case the user has selected to view orders only from a specific restaurant then only the orders from that restaurant are displayed.
+The user can access this page from the main page or by clicking on the truck icon on the top right corner.
 The user can view all relevant information about orders as well as history of status changes.
 For the active orders the the following buttons are displayed depending on the status of the order:
 - Accept order - confirm that the restaurant owner has accepted the order; only possible when the order is first placed by the customer
@@ -214,6 +215,13 @@ For the active orders the the following buttons are displayed depending on the s
 - Delivered - confirms that the order was delivered to the customer; only possible after the order has been shipped
 
 In addition to managing the order the restaurant owner has the option to block the customer that made the order. This will not block the currently active orders but it will prevent the customer from being able to view menus or place orders for any of the restaurants of the restaurant owner.
+
+## Restaurant owner - order list (completed)
+<img src="screenshots/Restaurant_owner_Orders_Completed.png" width="70%"/>   
+
+The user can access this page from the main page.
+The user can view all relevant information about orders as well as history of status changes.
+The restaurant owner has the option to block the customer that made the order. This will not block the currently active orders but it will prevent the customer from being able to view menus or place orders for any of the restaurants of the restaurant owner.
 
 ## Restaurant owner - blocked user management
 <img src="screenshots/Restaurant_owner_Blocked_usres.png" width="70%"/>   
@@ -227,12 +235,6 @@ This page is similar to restaurant owner registration page. Same validation sett
 
 ## Common user experience
 While user is logged in as a customer or restaurant owner the user may get notified about events occurring in the application. These events are raised whenever an order changes status.
-For example if a user posts a new order a restaurant owner will get a notification that a new order has been received in real-time. In addition to this, in case there are active orders (for customer or restaurant owner) an additional notification icon appears next to the user image on the top right corner. This notification icon has a badge which displays count of active orders relevant for the user.
+For example if a user posts a new order a restaurant owner will get a notification that a new order has been received in real-time. 
+In addition to this, in case there are active orders (for customer or restaurant owner) an additional truck icon appears in the top right corner. This notification icon has a badge which displays count of active orders relevant for the user. Clicking on the icon will bring up the active orders page for the user.
 
-# Technical information
-
-The application is an SPA application.
-The client side is made with React framework together with Bootstrap UI (React-bootstrap library).
-The server side is made with .NET Core v5.0. 
-Server presents a REST api which is consumed by the client.
-The server stores the information an SQL lite database. 
