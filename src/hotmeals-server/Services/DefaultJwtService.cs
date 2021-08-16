@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace hotmeals_server.Services
 {
     /// <summary>
-    /// Provides cryptologial methods.
+    /// Default implementation of IJwtService.
     /// </summary>
     public class DefaultJwtService : IJwtService
     {
