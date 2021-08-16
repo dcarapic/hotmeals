@@ -64,6 +64,16 @@ namespace hotmeals_server
                 opt.SwaggerDoc("v1", new OpenApiInfo { Title = "HotMeals", Version = "v1" });
             });
 
+            var jwt = new Services.DefaultJwtService(
+                jwtKey: Configuration["Jwt:Key"],
+                jwtIssuer: Configuration["Jwt:Audience"],
+                jwtAudience: Configuration["Jwt:Issuer"],
+                tokenExpirationSeconds: Services.JwtServiceDefaults.JwtTokenExpirationSeconds,
+                roleOwner: Services.JwtServiceDefaults.RoleOwner,
+                roleCustomer: Services.JwtServiceDefaults.RoleCustomer);
+            services.AddSingleton<Services.IJwtService>(jwt);
+
+
             services.AddAuthentication(opt =>
             {
                 opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -71,23 +81,14 @@ namespace hotmeals_server
             }).AddJwtBearer(opt =>
             {
                 opt.SaveToken = true;
-                opt.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
-                {
-                    ValidateIssuer = true,
-                    ValidIssuer = Configuration["Jwt:Issuer"],
-                    ValidateAudience = true,
-                    ValidAudience = Configuration["Jwt:Audience"],
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
-                };
+                opt.TokenValidationParameters = jwt.GetTokenValidationParameters();
             });
 
             services.AddDbContext<Model.HMContext>(opt =>
             {
                 opt.UseSqlite(Configuration.GetConnectionString("DefaultConnection"));
-                // Enable logging of parameter values to log when in dev mode
-                if (env.IsDevelopment())
-                    opt.EnableSensitiveDataLogging();
+                //if (env.EnvironmentName == "Testing")
+                //    opt.UseInMemoryDatabase("HotMeals");
             });
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
@@ -103,6 +104,7 @@ namespace hotmeals_server
                 opt.PayloadSerializerOptions.Converters.Add(enumConverter);
             });
 
+            services.AddSingleton<Services.ICryptoService, Services.DefaultCryptoService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

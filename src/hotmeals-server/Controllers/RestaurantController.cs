@@ -25,9 +25,10 @@ namespace hotmeals_server.Controllers
     public class RestaurantController : BaseController
     {
 
-        ILogger<RestaurantController> _log;
-        private HMContext _db;
         const int RestaurantsResultPageSize = 20;
+
+        private readonly ILogger<RestaurantController> _log;
+        private readonly HMContext _db;
 
         public RestaurantController(ILogger<RestaurantController> logger, HMContext db)
         {
@@ -74,7 +75,7 @@ namespace hotmeals_server.Controllers
         /// Adds a new restaurant for the currently logged on user.
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = RoleOwner)]
+        [Authorize(Roles = Services.JwtServiceDefaults.RoleOwner)]
         public async Task<IActionResult> AddRestaurant([FromBody] NewRestaurantRequest req)
         {
             var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == ApplicationUser.Id && x.Name.ToLower() == req.Name.ToLower());
@@ -102,7 +103,7 @@ namespace hotmeals_server.Controllers
         /// Updates the restaurant of the currently logged on user.
         /// </summary>
         [HttpPut("{restaurantId}")]
-        [Authorize(Roles = RoleOwner)]
+        [Authorize(Roles = Services.JwtServiceDefaults.RoleOwner)]
         public async Task<IActionResult> UpdateRestaurant(Guid restaurantId, [FromBody] UpdateRestaurantRequest req)
         {
             var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == ApplicationUser.Id && x.Id == restaurantId);
@@ -136,7 +137,7 @@ namespace hotmeals_server.Controllers
         /// <param name="restaurantId"></param>
         /// <returns></returns>
         [HttpDelete("{restaurantId}")]
-        [Authorize(Roles = RoleOwner)]
+        [Authorize(Roles = Services.JwtServiceDefaults.RoleOwner)]
         public async Task<IActionResult> DeleteRestaurant(Guid restaurantId)
         {
             var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == ApplicationUser.Id && x.Id == restaurantId);
@@ -194,7 +195,7 @@ namespace hotmeals_server.Controllers
         /// Adds a new restaurant for the currently logged on user.
         /// </summary>
         [HttpPost("{restaurantId}/menu")]
-        [Authorize(Roles = RoleOwner)]
+        [Authorize(Roles = Services.JwtServiceDefaults.RoleOwner)]
         public async Task<IActionResult> AddMenuItem(Guid restaurantId, [FromBody] NewMenuItemRequest req)
         {
             var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == ApplicationUser.Id && x.Id == restaurantId);
@@ -226,7 +227,7 @@ namespace hotmeals_server.Controllers
         /// Updates the restaurant of the currently logged on user.
         /// </summary>
         [HttpPut("{restaurantId}/menu/{menuItemId}")]
-        [Authorize(Roles = RoleOwner)]
+        [Authorize(Roles = Services.JwtServiceDefaults.RoleOwner)]
         public async Task<IActionResult> UpdateMenuItem(Guid menuItemId, Guid restaurantId, [FromBody] UpdateMenuItemRequest req)
         {
             var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == ApplicationUser.Id && x.Id == restaurantId);
@@ -263,7 +264,7 @@ namespace hotmeals_server.Controllers
         /// <param name="restaurantId"></param>
         /// <returns></returns>
         [HttpDelete("{restaurantId}/menu/{menuItemId}")]
-        [Authorize(Roles = RoleOwner)]        
+        [Authorize(Roles = Services.JwtServiceDefaults.RoleOwner)]        
         public async Task<IActionResult> DeleteMenuItem(Guid menuItemId, Guid restaurantId)
         {
             var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == ApplicationUser.Id && x.Id == restaurantId);

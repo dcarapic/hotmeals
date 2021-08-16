@@ -101,8 +101,6 @@ namespace hotmeals_server.Model
 
 
     public record GetBlockedUsersResponse(BlockedUserDTO[] BlockedUsers) : APIResponse(true, null);
-    public record BlockUserRequest([Required][MaxLength(100)] string Email);
-    public record UnBlockUserRequest([Required][MaxLength(100)] string Email);
 
     public record SearchFoodResponse(SearchResultItemDTO[] Items, int TotalPages, int Page);
 

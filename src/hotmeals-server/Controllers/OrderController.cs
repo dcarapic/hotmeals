@@ -139,7 +139,7 @@ namespace hotmeals_server.Controllers
         /// Adds a new order for the currently logged on customer.
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = RoleCustomer)]
+        [Authorize(Roles = Services.JwtServiceDefaults.RoleCustomer)]
         public async Task<IActionResult> PlaceOrder([FromBody] PlaceOrderRequest req)
         {
             var restaurant = await _db.Restaurants.Include(x => x.MenuItems).Include(x => x.Owner).FirstOrDefaultAsync(x => x.Id == req.RestaurantId);

@@ -21,7 +21,7 @@ namespace hotmeals_server.Controllers
     /// </summary>
     [Route("api/blocked-users")]
     [ApiController]
-    [Authorize(Roles = RoleOwner)]
+    [Authorize(Roles = Services.JwtServiceDefaults.RoleOwner)]
     public class BlockedUsersController : BaseController
     {
 
@@ -52,10 +52,10 @@ namespace hotmeals_server.Controllers
         /// <summary>
         /// Blocks a user.
         /// </summary>
-        [HttpPost]
-        public async Task<IActionResult> BlockUser([FromBody] BlockUserRequest req)
+        [HttpPost("{email}")]
+        public async Task<IActionResult> BlockUser(string email)
         {
-            var user = await _db.Users.FirstOrDefaultAsync(x => x.Email.ToLower() == req.Email.ToLower());
+            var user = await _db.Users.FirstOrDefaultAsync(x => x.Email.ToLower() == email.ToLower());
             // If user does not exist then simply say that its ok
             if (user == null)
                 return Ok(new APIResponse(true));
@@ -72,17 +72,17 @@ namespace hotmeals_server.Controllers
             _db.BlockedUsers.Add(block);
 
             await _db.SaveChangesAsync();
-            _log.LogInformation($"Owner {ApplicationUser.Email} blocked customer {req.Email}");
+            _log.LogInformation($"Owner {ApplicationUser.Email} blocked customer {email}");
             return Ok(new APIResponse(true));
         }
 
         /// <summary>
         /// Blocks a user.
         /// </summary>
-        [HttpDelete]
-        public async Task<IActionResult> UnBlockUser([FromBody] UnBlockUserRequest req)
+        [HttpDelete("{email}")]
+        public async Task<IActionResult> UnBlockUser(string email)
         {
-            var user = await _db.Users.FirstOrDefaultAsync(x => x.Email.ToLower() == req.Email.ToLower());
+            var user = await _db.Users.FirstOrDefaultAsync(x => x.Email.ToLower() == email.ToLower());
             // If user does not exist then simply say that its ok
             if (user == null)
                 return Ok(new APIResponse(true));
@@ -94,7 +94,7 @@ namespace hotmeals_server.Controllers
 
             _db.BlockedUsers.Remove(block);
             await _db.SaveChangesAsync();
-            _log.LogInformation($"Owner {ApplicationUser.Email} unblocked customer {req.Email}");
+            _log.LogInformation($"Owner {ApplicationUser.Email} unblocked customer {email}");
             return Ok(new APIResponse(true));
         }
 

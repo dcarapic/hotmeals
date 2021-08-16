@@ -34,9 +34,9 @@ const BlockedUserUpdater = (props: {
 
         let response : api.ServerResponse;
         if(props.type === BlockedUserUpdateType.BlockUser)
-            response = await api.blockedUsersAdd({ email: props.userEmail }, abort);
+            response = await api.blockedUsersAdd(props.userEmail, abort);
         else
-            response = await api.blockedUsersRemove({ email: props.userEmail }, abort);
+            response = await api.blockedUsersRemove(props.userEmail, abort);
         if (response.isAborted) return;
         setSubmitting(false);
         setServerResponse(response);

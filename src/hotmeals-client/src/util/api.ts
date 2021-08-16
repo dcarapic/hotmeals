@@ -5,7 +5,7 @@ let serverUrl: string;
 if (process.env.NODE_ENV === "production") serverUrl = "/";
 else serverUrl = "https://localhost:5001/";
 
-export {serverUrl };
+export { serverUrl };
 
 // API methods
 
@@ -178,22 +178,17 @@ export async function blockedUsersFetchAll(abort?: AbortSignal): Promise<ServerR
     );
 }
 
-export async function blockedUsersAdd(
-    req: BlockUserRequest,
-    abort?: AbortSignal
-): Promise<ServerResponse<APIResponse>> {
-    return await request<BlockUserRequest, APIResponse>("Block user", `api/blocked-users`, "POST", req, abort);
+export async function blockedUsersAdd(email: string, abort?: AbortSignal): Promise<ServerResponse<APIResponse>> {
+    email = encodeURIComponent(email);
+    return await request<void, APIResponse>("Block user", `api/blocked-users/${email}`, "POST", undefined, abort);
 }
 
-export async function blockedUsersRemove(
-    req: UnblockUserRequest,
-    abort?: AbortSignal
-): Promise<ServerResponse<APIResponse>> {
-    return await request<UnblockUserRequest, APIResponse>(
+export async function blockedUsersRemove(email: string, abort?: AbortSignal): Promise<ServerResponse<APIResponse>> {
+    return await request<void, APIResponse>(
         "Delete menu item",
-        `api/blocked-users`,
+        `api/blocked-users/${email}`,
         "DELETE",
-        req,
+        undefined,
         abort
     );
 }
@@ -397,14 +392,6 @@ export type UpdateMenuItemResponse = APIResponse & {
 
 export type GetBlockedUsersResponse = APIResponse & {
     blockedUsers: model.BlockedUserDTO[];
-};
-
-export type BlockUserRequest = {
-    email: string;
-};
-
-export type UnblockUserRequest = {
-    email: string;
 };
 
 export type SearchFoodResponse = APIResponse &

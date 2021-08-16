@@ -21,13 +21,13 @@ namespace hotmeals_server.Controllers
     /// </summary>
     [Route("api/search")]
     [ApiController]
-    [Authorize(Roles = RoleCustomer)]
+    [Authorize(Roles = Services.JwtServiceDefaults.RoleCustomer)]
     public class SearchController : BaseController
     {
-
-        ILogger<SearchController> _log;
-        private HMContext _db;
         const int SearchResultPageSize = 20;
+
+        private readonly ILogger<SearchController> _log;
+        private readonly HMContext _db;
 
         public SearchController(ILogger<SearchController> logger, HMContext db)
         {
@@ -42,9 +42,6 @@ namespace hotmeals_server.Controllers
         [HttpGet("{searchExpression}")]
         public async Task<IActionResult> Search(string searchExpression, [FromQuery] int page = 1)
         {
-            if (this.ApplicationUser.IsRestaurantOwner)
-                return Unauthorized("You are not a customer!");
-
             var qry = (from mi in _db.MenuItems
                        join r in _db.Restaurants on mi.RestaurantId equals r.Id
                        join o in _db.Users on r.OwnerId equals o.Id

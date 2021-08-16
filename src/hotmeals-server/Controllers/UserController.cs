@@ -13,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using hotmeals_server.Model;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using hotmeals_server.Services;
 
 namespace hotmeals_server.Controllers
 {
@@ -25,15 +26,18 @@ namespace hotmeals_server.Controllers
     public class UserController : BaseController
     {
 
-        ILogger<UserController> _log;
-        private IConfiguration _config;
-        private HMContext _db;
+        private readonly ILogger<UserController> _log;
+        private readonly IConfiguration _config;
+        private readonly HMContext _db;
+        private readonly ICryptoService _crypto;
+        private readonly IJwtService _jwt;
 
-        public UserController(ILogger<UserController> logger, IConfiguration config, HMContext db)
+        public UserController(ILogger<UserController> logger, HMContext db, ICryptoService crypto, IJwtService jwt)
         {
             _log = logger;
-            _config = config;
             _db = db;
+            _crypto = crypto;
+            _jwt = jwt;
         }
 
 
@@ -47,15 +51,14 @@ namespace hotmeals_server.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequest req)
         {
             var user = await _db.Users.FirstOrDefaultAsync(x => x.Email == req.Email);
-            if (user == null || !this.VerifyPassword(
-                enteredPassword: req.Password,
-                storedHash: user.PasswordHash,
-                storedSalt: user.PasswordSalt))
+            if (user == null || !_crypto.VerifyPassword(
+                password: req.Password,
+                hash: user.PasswordHash,
+                salt: user.PasswordSalt))
                 return this.BadRequest(new APIResponse(false, $"There is no user with such email or password!"));
 
-            var current = new ApplicationUserData(user.Id, user.Email, user.IsRestaurantOwner);
             _log.LogDebug("User {Email} logged in", user.Email);
-            var token = this.GenerateToken(current, _config);
+            var token = _jwt.GenerateToken(user);
             var tokenText = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().WriteToken(token.Token);
             return Ok(new LoginResponse(new UserDTO(
                 Email: user.Email,
@@ -117,7 +120,7 @@ namespace hotmeals_server.Controllers
             user.AddressStreet = req.AddressStreet;
             user.IsRestaurantOwner = req.IsRestaurantOwner;
 
-            var hs = GenerateSaltedHash(req.Password);
+            var hs = _crypto.GenerateSaltedHash(req.Password);
             user.PasswordHash = hs.Hash;
             user.PasswordSalt = hs.Salt;
 
@@ -125,8 +128,7 @@ namespace hotmeals_server.Controllers
             await _db.SaveChangesAsync();
 
             _log.LogDebug("User {Email} registered in", user.Email);
-            var current = new ApplicationUserData(user.Id, user.Email, user.IsRestaurantOwner);
-            var token = this.GenerateToken(current, _config);
+            var token = _jwt.GenerateToken(user);
             var tokenText = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().WriteToken(token.Token);
 
             return Ok(new RegisterUserResponse(new UserDTO(
@@ -154,7 +156,7 @@ namespace hotmeals_server.Controllers
 
             if (!string.IsNullOrEmpty(req.NewPassword))
             {
-                var hs = GenerateSaltedHash(req.NewPassword);
+                var hs = _crypto.GenerateSaltedHash(req.NewPassword);
                 user.PasswordHash = hs.Hash;
                 user.PasswordSalt = hs.Salt;
             }

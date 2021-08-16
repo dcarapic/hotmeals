@@ -7,6 +7,9 @@ namespace hotmeals_server.Model
 {
     public partial class UserRecord
     {
+
+
+
         public UserRecord()
         {
             BlockingUsers = new HashSet<BlockedUserRecord>();
