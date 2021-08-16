@@ -8,7 +8,8 @@ import { ServerResponsePagination } from "./ServerResponsePagination";
 import { OrderDetails } from "./OrderDetails";
 import OrderStatusChanger from "./OrderStatusChanger";
 import BlockedUserUpdater, { BlockedUserUpdateType } from "./BlockedUserUpdater";
-import { useEvent } from "../util/ws-events";
+import { useEventEffect } from "../util/ws-events";
+import { useAbortable } from "../util/abortable";
 
 /** Order list type */
 enum OrderListType {
@@ -26,7 +27,7 @@ const OrderList = (props: {
     type: OrderListType;
 }) => {
     const msgs = ui.useAlertMessageService();
-    const abort = ui.useAbortable();
+    const abort = useAbortable();
 
     const [loading, setLoading] = useState(false);
     const [loaded, setLoaded] = useState(false);
@@ -61,19 +62,19 @@ const OrderList = (props: {
     }, [loadPage]);
 
     // Update the list when we determine that an order has been updated
-    useEvent(
-        "OrderUpdated",
+    useEventEffect(
         (order: model.OrderDTO) => {
             console.log(`OrderList: Order updated ${order.orderId}`);
             setItems((current) => {
                 let item = current.find((x) => x.orderId === order.orderId);
                 if (!item) {
-                    const shouldAdd = (props.type === OrderListType.ActiveOrders && model.isOrderActive(order)) || (props.type === OrderListType.CompleteOrders && !model.isOrderActive(order))
+                    const shouldAdd =
+                        (props.type === OrderListType.ActiveOrders && model.isOrderActive(order)) ||
+                        (props.type === OrderListType.CompleteOrders && !model.isOrderActive(order));
                     if (shouldAdd) {
                         let copy = [...current];
                         copy.push(order);
                         return copy;
-                        
                     } else {
                         return current;
                     }
@@ -83,7 +84,8 @@ const OrderList = (props: {
                 return copy;
             });
         },
-        []
+        [props.type],
+        "OrderUpdated"
     );
 
     const statusUpdate = (orderId: string, status: model.OrderStatus) => {

@@ -4,6 +4,7 @@ import * as ui from "../util/ui";
 import * as model from "../state/model";
 import { Button, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
+import { useAbortable } from "../util/abortable";
 
 /** Modal dialog for deleting a restaurant */
 const RestaurantDeleter = (props: {
@@ -16,7 +17,7 @@ const RestaurantDeleter = (props: {
 }) => {
     const [submitting, setSubmitting] = useState(false);
     const [serverResponse, setServerResponse] = useState<api.ServerResponse<any> | null>(null);
-    const abort = ui.useAbortable();
+    const abort = useAbortable();
 
     const deleteRestaurant = async () => {
         setSubmitting(true);

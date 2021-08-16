@@ -1,4 +1,4 @@
-import React, {  useState } from "react";
+import React, { useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../state/model";
@@ -6,7 +6,8 @@ import { Button, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
 import { OrderDetails } from "./OrderDetails";
 import Loading from "./Loading";
-import { useEvent } from "../util/ws-events";
+import { useEventEffect } from "../util/ws-events";
+import { useAbortable } from "../util/abortable";
 
 /** Modal dialog used to confirm and place a new order. */
 const OrderPlacer = (props: {
@@ -29,7 +30,7 @@ const OrderPlacer = (props: {
     const [waitingConfirmation, setWaitingConfirmation] = useState(false);
     const [serverResponse, setServerResponse] = useState<api.ServerResponse<any> | null>(null);
 
-    const abort = ui.useAbortable();
+    const abort = useAbortable();
 
     const placeOrder = async () => {
         setPlacing(true);
@@ -70,8 +71,7 @@ const OrderPlacer = (props: {
         props.onStoppedWaitingForConfirmation(placedOrder!);
     };
 
-    useEvent(
-        "OrderUpdated",
+    useEventEffect(
         (order: model.OrderDTO) => {
             console.log(
                 `OrderPlacer: Order updated ${order.orderId} (waiting: ${waitingConfirmation} for order ${placedOrder?.orderId} ) `
@@ -79,7 +79,8 @@ const OrderPlacer = (props: {
             if (waitingConfirmation && placedOrder && placedOrder.orderId === order.orderId)
                 props.onStoppedWaitingForConfirmation(placedOrder!);
         },
-        [props, waitingConfirmation, placedOrder]
+        [waitingConfirmation, placedOrder, props],
+        "OrderUpdated"
     );
 
     return (
@@ -93,7 +94,7 @@ const OrderPlacer = (props: {
                 ) : (
                     <div className="row justify-content-center">
                         <div className="col-8">
-                            <Loading showLabel label="Please wait until the restaurant confirms your order ..." />
+                            <Loading showLabel label="Please wait until the restaurant confirms your order. You can also close this dialog if you do not want to wait." />
                         </div>
                     </div>
                 )}

@@ -4,6 +4,7 @@ import * as ui from "../util/ui";
 import * as model from "../state/model";
 import { Button, Col, Form, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
+import { useAbortable } from "../util/abortable";
 
 /** Modal dialog for editing restaurant menu items. */
 const MenuItemEditor = (props: {
@@ -17,7 +18,7 @@ const MenuItemEditor = (props: {
     const [submitting, setSubmitting] = useState(false);
     const [serverResponse, setServerResponse] = useState<api.ServerResponse<any> | null>(null);
     const [validated, setValidated] = useState(false);
-    const abort = ui.useAbortable();
+    const abort = useAbortable();
 
     const formRef = useRef<any>();
 

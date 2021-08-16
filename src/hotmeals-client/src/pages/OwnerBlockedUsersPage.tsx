@@ -1,23 +1,23 @@
-import React, { Fragment, useCallback, useEffect, useState } from "react";
+import React, { Fragment, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../state/model";
 import { Alert, Button, Col, Row } from "react-bootstrap";
 import Loading from "../shared/Loading";
 import BlockedUserUpdater, { BlockedUserUpdateType } from "../shared/BlockedUserUpdater";
+import { useAbortableLoad } from "../util/abortable";
 
 const OwnerBlockedUsersPage = ui.withAlertMessageContainer(() => {
     const msgs = ui.useAlertMessageService();
-    const abort = ui.useAbortable();
 
     const [loading, setLoading] = useState(true);
     const [blockedUsers, setBlockedUsers] = useState<model.BlockedUserDTO[]>([]);
     const [userToUnblock, setUserToUnblock] = useState<model.BlockedUserDTO | null>(null);
 
-    const loadBlockedUsers = useCallback(async () => {
+    useAbortableLoad(async (signal) => {
         msgs.clearMessage();
         setLoading(true);
-        let response = await api.blockedUsersFetchAll(abort);
+        let response = await api.blockedUsersFetchAll(signal);
         if (response.isAborted) return;
         setLoading(false);
         msgs.setMessageFromResponse(response);
@@ -28,11 +28,8 @@ const OwnerBlockedUsersPage = ui.withAlertMessageContainer(() => {
             setLoading(false);
             setBlockedUsers([]);
         }
-    }, [msgs, abort]);
+    }, [msgs]);
 
-    useEffect(() => {
-        loadBlockedUsers();
-    }, [loadBlockedUsers]);
 
     const deleteBlockedUser = (email: string) => {
         let r = blockedUsers.find((x) => x.email === email);

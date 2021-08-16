@@ -3,6 +3,7 @@ import * as api from "../util/api";
 import * as ui from "../util/ui";
 import { Button, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
+import { useAbortable } from "../util/abortable";
 
 /** Type of blocking operation */
 export enum BlockedUserUpdateType  {
@@ -25,7 +26,7 @@ const BlockedUserUpdater = (props: {
 }) => {
     const [submitting, setSubmitting] = useState(false);
     const [serverResponse, setServerResponse] = useState<api.ServerResponse<any> | null>(null);
-    const abort = ui.useAbortable();
+    const abort = useAbortable();
 
     const updateBlockStatus = async () => {
         setSubmitting(true);

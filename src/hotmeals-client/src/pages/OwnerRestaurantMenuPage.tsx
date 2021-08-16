@@ -1,4 +1,4 @@
-import React, { Fragment, useCallback, useEffect, useState } from "react";
+import React, { Fragment, useState } from "react";
 import { Row, Col, Alert, Button } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import * as api from "../util/api";
@@ -8,11 +8,10 @@ import MenuItemEditor from "../shared/MenuItemEditor";
 import MenuItemDeleter from "../shared/MenuItemDeleter";
 import Loading from "../shared/Loading";
 import NotFoundPage from "./NotFoundPage";
-
+import { useAbortableLoad } from "../util/abortable";
 
 const OwnerRestaurantMenuPage = ui.withAlertMessageContainer(() => {
     const msgs = ui.useAlertMessageService();
-    const abort = ui.useAbortable();
     const { restaurantId } = useParams<any>();
     if (!restaurantId) return <NotFoundPage />;
 
@@ -22,26 +21,25 @@ const OwnerRestaurantMenuPage = ui.withAlertMessageContainer(() => {
     const [editedMenuItem, setEditedMenuItem] = useState<model.MenuItemDTO | null>(null);
     const [menuItemToDelete, setMenuItemToDelete] = useState<model.MenuItemDTO | null>(null);
 
-    const loadMenuItems = useCallback(async () => {
-        msgs.clearMessage();
-        setLoading(true);
-        let response = await api.menuItemFetchAll(restaurantId, abort);
-        if (response.isAborted) return;
-        setLoading(false);
-        msgs.setMessageFromResponse(response);
-        if (response.ok && response.result) {
-            setMenuItems(response.result.menuItems);
-            setTitle(`Menu for '${response.result.restaurantName}'`)
-        } else {
+    useAbortableLoad(
+        async (signal) => {
+            msgs.clearMessage();
+            setLoading(true);
+            let response = await api.menuItemFetchAll(restaurantId, signal);
+            if (response.isAborted) return;
             setLoading(false);
-            setMenuItems([]);
-            setTitle("")
-        }
-    }, [msgs, abort, restaurantId]);
-
-    useEffect(() => {
-        loadMenuItems();
-    }, [loadMenuItems]);
+            msgs.setMessageFromResponse(response);
+            if (response.ok && response.result) {
+                setMenuItems(response.result.menuItems);
+                setTitle(`Menu for '${response.result.restaurantName}'`);
+            } else {
+                setLoading(false);
+                setMenuItems([]);
+                setTitle("");
+            }
+        },
+        [msgs, restaurantId]
+    );
 
     const createNewMenuItem = () => {
         setEditedMenuItem({ menuItemId: "", restaurantId, name: "", description: "", price: 0 });
@@ -59,10 +57,8 @@ const OwnerRestaurantMenuPage = ui.withAlertMessageContainer(() => {
     const onEditSaved = (savedMenuItem: model.MenuItemDTO) => {
         // Replace the edited menu item with the updated copy
         let copy = [...menuItems];
-        if(editedMenuItem!.menuItemId)
-            copy[copy.indexOf(editedMenuItem!)] = savedMenuItem;
-        else
-            copy.push(savedMenuItem);
+        if (editedMenuItem!.menuItemId) copy[copy.indexOf(editedMenuItem!)] = savedMenuItem;
+        else copy.push(savedMenuItem);
         // Clear edited menu item, this will hide the dialog
         setEditedMenuItem(null);
         setMenuItems(copy);
@@ -99,14 +95,16 @@ const OwnerRestaurantMenuPage = ui.withAlertMessageContainer(() => {
             <Button onClick={createNewMenuItem} className="mt-3" disabled={loading}>
                 Create new menu item
             </Button>
-            {editedMenuItem && <MenuItemEditor menuItem={editedMenuItem} onCancel={onEditCanceled} onSaved={onEditSaved} />}
-            {menuItemToDelete && <MenuItemDeleter menuItem={menuItemToDelete} onCancel={onDeleteCanceled} onDeleted={onDeleted} />}
+            {editedMenuItem && (
+                <MenuItemEditor menuItem={editedMenuItem} onCancel={onEditCanceled} onSaved={onEditSaved} />
+            )}
+            {menuItemToDelete && (
+                <MenuItemDeleter menuItem={menuItemToDelete} onCancel={onDeleteCanceled} onDeleted={onDeleted} />
+            )}
         </Fragment>
     );
 });
 export default OwnerRestaurantMenuPage;
-
-
 
 const MenuItemList = (props: {
     menuItems: model.MenuItemDTO[];
@@ -133,7 +131,9 @@ const MenuItemListItem = (props: {
 }) => {
     return (
         <Row className="d-grid">
-                <Col>{props.menuItem.name} <strong className='text-success'>{props.menuItem.price} €</strong></Col>
+            <Col>
+                {props.menuItem.name} <strong className="text-success">{props.menuItem.price} €</strong>
+            </Col>
             <Col>
                 <i>{props.menuItem.description}</i>
             </Col>

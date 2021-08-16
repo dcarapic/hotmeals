@@ -4,11 +4,11 @@ import * as api from "./api";
 import * as jwt from "../state/jwt-token";
 import { onUserChanged } from "../state/user";
 
-let connectionOpts : signalR.IHttpConnectionOptions = {
+let connectionOpts: signalR.IHttpConnectionOptions = {
     accessTokenFactory: () => {
         return jwt.getJWTToken().token || "";
-    }
-}
+    },
+};
 
 // SignalR connection object
 let connection = new signalR.HubConnectionBuilder()
@@ -17,7 +17,7 @@ let connection = new signalR.HubConnectionBuilder()
     .withAutomaticReconnect([0, 2, 5, 5, 10, 30, 60, 60, 60, 60, 60])
     .build();
 
-/** Connects the client to the server web-socket hub. */    
+/** Connects the client to the server web-socket hub. */
 const connect = async () => {
     console.log(`ws: connect()`);
     // If already connecting then ignore connect attempt
@@ -66,7 +66,7 @@ const onEvent = (type: EventType, handler: (message: any) => void): Subscription
 
 /** Unsubscribes from the given event type. */
 const offEvent = (subscriptionId: SubscriptionId) => {
-    console.log(`ws: trying to unsubscribe ${subscriptionId}`);
+    //console.log(`ws: trying to unsubscribe ${subscriptionId}`);
     let reg = subscriptions.find((x) => x.subscriptionId === subscriptionId);
     if (!reg) return;
     console.log(`ws: unsubscribed from ${reg.type}`);
@@ -75,25 +75,23 @@ const offEvent = (subscriptionId: SubscriptionId) => {
 };
 
 /** React hook which performs automatic subscription and un-subscription from an event of the given type.*/
-const useEvent = <T>(
-    type: EventType,
-    handler: EventHandler<T>,
-    deps: DependencyList
-) => {
+const useEventEffect = <T>(handler: EventHandler<T>, deps: DependencyList, type: EventType) => {
     useEffect(() => {
         const subId = onEvent(type, handler);
         return () => offEvent(subId);
+        // eslint-disable-next-line
     }, deps);
 };
+
 
 // Here we immediately subscribe to current application user change so when user is set then we automatically connect the socket.
 // When the user is cleared we will automatically disconnect
 onUserChanged((user) => {
-    if(user) {
+    if (user) {
         connect();
     } else {
         disconnect();
     }
-})
+});
 
-export { onEvent, offEvent, useEvent };
+export { onEvent, offEvent, useEventEffect };

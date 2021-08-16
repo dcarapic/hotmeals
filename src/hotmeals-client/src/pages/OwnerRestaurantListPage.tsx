@@ -1,4 +1,4 @@
-import React, { Fragment, useCallback, useEffect, useState } from "react";
+import React, { Fragment, useState } from "react";
 import { Alert, Button, Col, Row } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
 import * as api from "../util/api";
@@ -8,11 +8,11 @@ import routes from "../routes";
 import Loading from "../shared/Loading";
 import RestaurantEditor from "../shared/RestaurantEditor";
 import RestaurantDeleter from "../shared/RestaurantDeleter";
+import { useAbortableLoad } from "../util/abortable";
 
 const OwnerRestaurantListPage = ui.withAlertMessageContainer(() => {
     const msgs = ui.useAlertMessageService();
     const history = useHistory();
-    const abort = ui.useAbortable();
 
     const [loading, setLoading] = useState(true);
     const [loaded, setLoaded] = useState(false);
@@ -20,10 +20,10 @@ const OwnerRestaurantListPage = ui.withAlertMessageContainer(() => {
     const [editedRestaurant, setEditedRestaurant] = useState<model.RestaurantDTO | null>(null);
     const [restaurantToDelete, setRestaurantToDelete] = useState<model.RestaurantDTO | null>(null);
 
-    const loadRestaurants = useCallback(async () => {
+    useAbortableLoad(async (signal) => {
         msgs.clearMessage();
         setLoading(true);
-        let response = await api.restaurantFetchAll(1, abort);
+        let response = await api.restaurantFetchAll(1, signal);
         if (response.isAborted) return;
         setLoading(false);
         msgs.setMessageFromResponse(response);
@@ -34,11 +34,8 @@ const OwnerRestaurantListPage = ui.withAlertMessageContainer(() => {
             setLoading(false);
             setRestaurants([]);
         }
-    }, [abort, msgs]);
+    }, [msgs]);
 
-    useEffect(() => {
-        loadRestaurants();
-    }, [loadRestaurants]);
 
     const createNewRestaurant = () => {
         setEditedRestaurant({ id: "", name: "", description: "", phoneNumber: "" });

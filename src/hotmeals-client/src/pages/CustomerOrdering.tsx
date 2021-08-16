@@ -1,4 +1,4 @@
-import React, { Fragment, useCallback, useEffect, useState } from "react";
+import React, { Fragment, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../state/model";
@@ -9,22 +9,22 @@ import routes from "../routes";
 import Loading from "../shared/Loading";
 import { OrderDetails, OrderMenuItem } from "../shared/OrderDetails";
 import OrderPlacer from "../shared/OrderPlacer";
+import { useAbortableLoad } from "../util/abortable";
 
 const CustomerOrdering = ui.withAlertMessageContainer(() => {
     const msgs = ui.useAlertMessageService();
-    const abort = ui.useAbortable();
     const history = useHistory();
 
     const [loading, setLoading] = useState(true);
     const [placingOrder, setPlacingOrder] = useState(false);
     const [menuItems, setMenuItems] = useState<model.NewOrderItem[]>([]);
 
-    const loadMenuItems = useCallback(async () => {
+    useAbortableLoad(async (signal) => {
         var currentOrder = getCurrentOrder();
         if (!currentOrder) return;
         msgs.clearMessage();
         setLoading(true);
-        let response = await api.menuItemFetchAll(currentOrder.restaurantId, abort);
+        let response = await api.menuItemFetchAll(currentOrder.restaurantId, signal);
         if (response.isAborted) return;
         setLoading(false);
         msgs.setMessageFromResponse(response);
@@ -40,11 +40,7 @@ const CustomerOrdering = ui.withAlertMessageContainer(() => {
             setLoading(false);
             setMenuItems([]);
         }
-    }, [msgs, abort]);
-
-    useEffect(() => {
-        loadMenuItems();
-    }, [loadMenuItems]);
+    }, [msgs]);
 
     // If there is no current order then redirect to home page
     let currentOrder = getCurrentOrder();

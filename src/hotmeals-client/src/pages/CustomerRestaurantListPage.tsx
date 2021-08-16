@@ -8,11 +8,12 @@ import Loading from "../shared/Loading";
 import { ServerResponsePagination } from "../shared/ServerResponsePagination";
 import { createCurrentOrder } from "../state/current-order";
 import routes from "../routes";
+import { useAbortable } from "../util/abortable";
 
 const CustomerRestaurantListPage = ui.withAlertMessageContainer(() => {
     const msgs = ui.useAlertMessageService();
     const history = useHistory();
-    const abort = ui.useAbortable();
+    const abort = useAbortable();
 
     const [loading, setLoading] = useState(false);
     const [loaded, setLoaded] = useState(false);

@@ -36,6 +36,7 @@ const removeCurrentOrder = () => {
 
 /** Sets the menu item of the current order */
 const setCurrentOrderMenuItem = (item: model.MenuItemBase, quantity: number) => {
+    //console.log(`current-order: set item ${item.name} - ${quantity}`);
     // If current order was cleared or new order for another restaurant has started then do not do anything
     if (!orderContainer.currentOrder || orderContainer.currentOrder.restaurantId !== item.restaurantId)
         return;
@@ -45,28 +46,19 @@ const setCurrentOrderMenuItem = (item: model.MenuItemBase, quantity: number) => 
 
     // Create a new order or make a copy of existing order where the new menu item is either
     // updated / added or removed
-    let orderItems: model.NewOrderItem[] = [];
-    if (orderContainer.currentOrder) orderItems = [...orderContainer.currentOrder.items];
-
-    let orderItem = orderItems.find((x) => x.menuItemId === item.menuItemId && x.restaurantId === item.restaurantId);
+    let copiedItems =  [...orderContainer.currentOrder.items];
+    let orderItem = copiedItems.find((x) => x.menuItemId === item.menuItemId);
     if (orderItem) {
-        if (quantity === 0) orderItems.splice(orderItems.indexOf(orderItem));
-        else orderItems[orderItems.indexOf(orderItem)] = { ...orderItem, quantity: quantity };
+        if (quantity === 0) copiedItems.splice(copiedItems.indexOf(orderItem), 1);
+        else copiedItems[copiedItems.indexOf(orderItem)] = { ...orderItem, quantity: quantity };
     } else {
         if (quantity !== 0)
-            orderItems.push({
-                menuItemId: item.menuItemId,
-                restaurantId: item.restaurantId,
-                name: item.name,
-                description: item.description,
-                price: item.price,
-                quantity: quantity,
-            });
+            copiedItems.push({...item,quantity});
     }
     let total = 0;
-    if (orderItems.length > 0) total = orderItems.map((x) => x.price * x.quantity).reduce((prev, next) => prev + next);
+    if (copiedItems.length > 0) total = copiedItems.map((x) => x.price * x.quantity).reduce((prev, next) => prev + next);
     total = Math.round((total + Number.EPSILON) * 100) / 100;
-    orderContainer.currentOrder = { ...orderContainer.currentOrder, items: orderItems, total };
+    orderContainer.currentOrder = { ...orderContainer.currentOrder, items: copiedItems, total };
     fireOrderChanged();
 };
 

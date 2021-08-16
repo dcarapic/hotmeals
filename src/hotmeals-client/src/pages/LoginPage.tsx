@@ -7,11 +7,12 @@ import routes from "../routes";
 import { LoadingButton } from "../shared/LoadingButton";
 import { RouterNavLink } from "../shared/RouterNav";
 import { setCurrentUser } from "../state/user";
+import { useAbortable } from "../util/abortable";
 
 const LoginPage = ui.withAlertMessageContainer(() => {
     const msgs = ui.useAlertMessageService();
     const history = useHistory();
-    const abort = ui.useAbortable();
+    const abort = useAbortable();
 
     const [submitting, setSubmitting] = useState(false);
     const [validated, setValidated] = useState(false);

@@ -1,20 +1,20 @@
-import React, { Fragment, useCallback, useEffect, useState } from "react";
+import React, { Fragment, useState } from "react";
 import * as api from "../util/api";
-import * as ui from "../util/ui";
 import * as model from "../state/model";
-import { Badge, Breadcrumb, Button, Container, Image, Modal, Nav, Navbar, NavLink } from "react-bootstrap";
+import { Badge, Button, Container, Image, Modal, Nav, Navbar, NavLink } from "react-bootstrap";
 import srcLogo from "../assets/Logo.svg";
 import srcHotMeals from "../assets/HotMeals.svg";
 import { RouterNavLink } from "./RouterNav";
 import { clearCurrentUser, useCurrentUser } from "../state/user";
 import routes from "../routes";
 import { useCurrentOrder } from "../state/current-order";
-import { useHistory, useLocation } from "react-router-dom";
-import { useEvent } from "../util/ws-events";
+import { useHistory } from "react-router-dom";
+import { useEventEffect } from "../util/ws-events";
+import { useAbortableLoad } from "../util/abortable";
 
 /** Navbar component */
 const TopNav = () => {
-    const loc = useLocation();
+    //const loc = useLocation();
     return (
         <div className="hm-navbar">
             <Navbar bg="primary">
@@ -34,7 +34,9 @@ const TopNav = () => {
             </Navbar>
             <div className="bg-info text-light">
                 <Container>
-                    <RouterNavLink to={routes.homePage} className="link-dark my-0 py-0 mb-1">Home</RouterNavLink>
+                    <RouterNavLink to={routes.homePage} className="link-dark my-0 py-0 mb-1">
+                        Home
+                    </RouterNavLink>
                 </Container>
             </div>
         </div>
@@ -120,27 +122,24 @@ const CurrentOrderIcon = () => {
 const ActiveOrdersIcon = () => {
     const currentUser = useCurrentUser();
     const history = useHistory();
-    const abort = ui.useAbortable();
     const [activeOrders, setActiveOrders] = useState<model.OrderDTO[]>([]);
     const [hasMorePages, setHasMorePages] = useState<boolean>();
 
-    const loadActiveOrders = useCallback(async () => {
-        if (!currentUser) return;
-        let response = await api.ordersFetchActive(1, abort);
-        if (response.isAborted) return;
-        if (response.ok && response.result) {
-            setActiveOrders(response.result.orders);
-            setHasMorePages(response.result.totalPages > 1);
-        }
-    }, [abort, currentUser]);
-
-    useEffect(() => {
-        loadActiveOrders();
-    }, [loadActiveOrders]);
+    useAbortableLoad(
+        async (signal) => {
+            if (!currentUser) return;
+            let response = await api.ordersFetchActive(1, signal);
+            if (response.isAborted) return;
+            if (response.ok && response.result) {
+                setActiveOrders(response.result.orders);
+                setHasMorePages(response.result.totalPages > 1);
+            }
+        },
+        [currentUser]
+    );
 
     // Update the list when we determine that an order has been updated
-    useEvent(
-        "OrderUpdated",
+    useEventEffect(
         (order: model.OrderDTO) => {
             setActiveOrders((current) => {
                 if (!model.isOrderActive(order)) {
@@ -161,7 +160,8 @@ const ActiveOrdersIcon = () => {
                 }
             });
         },
-        []
+        [],
+        "OrderUpdated"
     );
 
     if (!currentUser) return null;

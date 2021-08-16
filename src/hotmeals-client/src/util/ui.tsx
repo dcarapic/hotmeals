@@ -217,17 +217,3 @@ const withToastMessageContainer = (WrappedComponent: React.ComponentType) => {
 const useToastMessageService = () => useContext(ToastServiceContext);
 
 export { ToastServiceContext, ToastMessageServiceContainer, useToastMessageService, withToastMessageContainer };
-
-/**
- * React hook which returns an abort signal which is automatically raised if a component has been dismounted.
- */
-const useAbortable = (): AbortSignal => {
-    let [controller] = useState(new AbortController());
-    useEffect(() => {
-        return () => controller.abort();
-    }, [controller]);
-    return controller.signal;
-};
-
-
-export { useAbortable };

@@ -9,41 +9,12 @@ import { useHistory, useParams } from "react-router-dom";
 import routes from "../routes";
 import { ServerResponsePagination } from "../shared/ServerResponsePagination";
 import { createCurrentOrder, setCurrentOrderMenuItem } from "../state/current-order";
-
-const SearchResultItem = (props: {
-    item: model.SearchResultItemDTO;
-    onOrder?: (id: string, restaurantId: string) => void;
-}) => {
-    return (
-        <div className="mb-3">
-            <div className="bg-secondary text-white mb-1 px-2">
-                <small>{props.item.restaurantName}</small>
-            </div>
-            <div className="row ">
-                <div className="col-7">{props.item.name}</div>
-                <div className="col-3">
-                    <strong>{props.item.price} €</strong>
-                </div>
-                <div className="col-2 d-flex justify-content-end">
-                    <Button
-                        size="sm"
-                        variant="success"
-                        onClick={() => props.onOrder && props.onOrder(props.item.menuItemId, props.item.restaurantId)}>
-                        +
-                    </Button>
-                </div>
-            </div>
-            <div>
-                <i>{props.item.description}</i>
-            </div>
-        </div>
-    );
-};
+import { useAbortable } from "../util/abortable";
 
 const CustomerSearchPage = ui.withAlertMessageContainer(() => {
     const msgs = ui.useAlertMessageService();
     const history = useHistory();
-    const abort = ui.useAbortable();
+    const abort = useAbortable();
     const { searchQuery } = useParams<any>();
 
     const [searching, setSearching] = useState(false);
@@ -145,3 +116,34 @@ const CustomerSearchPage = ui.withAlertMessageContainer(() => {
     );
 });
 export default CustomerSearchPage;
+
+
+const SearchResultItem = (props: {
+    item: model.SearchResultItemDTO;
+    onOrder?: (id: string, restaurantId: string) => void;
+}) => {
+    return (
+        <div className="mb-3">
+            <div className="bg-secondary text-white mb-1 px-2">
+                <small>{props.item.restaurantName}</small>
+            </div>
+            <div className="row ">
+                <div className="col-7">{props.item.name}</div>
+                <div className="col-3">
+                    <strong>{props.item.price} €</strong>
+                </div>
+                <div className="col-2 d-flex justify-content-end">
+                    <Button
+                        size="sm"
+                        variant="success"
+                        onClick={() => props.onOrder && props.onOrder(props.item.menuItemId, props.item.restaurantId)}>
+                        +
+                    </Button>
+                </div>
+            </div>
+            <div>
+                <i>{props.item.description}</i>
+            </div>
+        </div>
+    );
+};

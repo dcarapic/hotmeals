@@ -5,6 +5,7 @@ import { Alert, Col, Form, Row } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
 import { setCurrentUser, useCurrentUser } from "../state/user";
 import { LoadingButton } from "./LoadingButton";
+import { useAbortable } from "../util/abortable";
 
 /** Account editing type */
 enum AccountEditorType {
@@ -24,7 +25,7 @@ const AccountEditor = (props: {
     const currentUser = useCurrentUser();
     const msgs = ui.useAlertMessageService();
     const history = useHistory();
-    const abort = ui.useAbortable();
+    const abort = useAbortable();
 
     const [submitting, setSubmitting] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -118,7 +119,7 @@ const AccountEditor = (props: {
                         type="email"
                         placeholder="Enter your email"
                         maxLength={100}
-                        readOnly={submitting || props.type !== AccountEditorType.AccountSettings}
+                        readOnly={submitting || props.type === AccountEditorType.AccountSettings}
                         defaultValue={currentUser?.email}
                         required
                     />

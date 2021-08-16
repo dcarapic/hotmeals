@@ -25,6 +25,7 @@ import { useCurrentUser, setCurrentUser } from "./state/user";
 import GlobalErrorBoundary from "./util/global-error-handling";
 import CustomerSearchPage from "./pages/CustomerSearchPage";
 import OrderNotificationManager from "./shared/OrderNotificationManager";
+import { useAbortable } from "./util/abortable";
 
 /**
  * Main application component.
@@ -32,7 +33,7 @@ import OrderNotificationManager from "./shared/OrderNotificationManager";
  */
 const App = () => {
     const user = useCurrentUser();
-    const abort = ui.useAbortable();
+    const abort = useAbortable();
     const [authenticating, setAuthenticating] = useState(true);
 
     const authenticateUser = useCallback(async () => {
