@@ -7,13 +7,10 @@ using System.Threading.Tasks;
 namespace hotmeals_server.Services
 {
     /// <summary>
-    /// Provides cryptologial methods.
+    /// Default implementation of ICryptoService
     /// </summary>
     public class DefaultCryptoService : ICryptoService
     {
-        /// <summary>
-        /// Generate hash and salt from the given password string.
-        /// </summary>
         public (string Hash, string Salt) GenerateSaltedHash(string password)
         {
             // 128 bit salt
@@ -28,12 +25,6 @@ namespace hotmeals_server.Services
             return (hashPassword, salt);
         }
 
-        /// <summary>
-        /// Verifies that the provided password matches given hash and salt values
-        /// </summary>
-        /// <param name="password">Password to check.</param>
-        /// <param name="hash">Base64 encoded hash value.</param>
-        /// <param name="salt">Base64 encoded salt value.</param>
         public bool VerifyPassword(string password, string hash, string salt) {
             var saltBytes = Convert.FromBase64String(salt);
             var rfc2898DeriveBytes = new Rfc2898DeriveBytes(password, saltBytes, 10000);

@@ -108,7 +108,7 @@ namespace hotmeals_server.Controllers
         {
             var restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == ApplicationUser.Id && x.Id == restaurantId);
             if (restaurant == null)
-                return BadRequest(new APIResponse(false, "The restaurant does not exist. Have you perhaps deleted it?"));
+                return BadRequest(new APIResponse(false, "The restaurant does not exist."));
 
             if (string.Compare(restaurant.Name, req.Name.Trim(), ignoreCase: true) != 0)
             {
@@ -172,7 +172,7 @@ namespace hotmeals_server.Controllers
                                     where r.Id == restaurantId
                                     select r).FirstOrDefaultAsync();
                 if (restaurant == null)
-                    return BadRequest(new APIResponse(false, "The restaurant does not exist. Have you perhaps deleted it?"));
+                    return BadRequest(new APIResponse(false, "The restaurant does not exist."));
                 qry = from mi in _db.MenuItems
                       where mi.RestaurantId == restaurant.Id
                       orderby mi.DateCreated
@@ -182,7 +182,7 @@ namespace hotmeals_server.Controllers
             {
                 restaurant = await _db.Restaurants.FirstOrDefaultAsync(x => x.OwnerId == ApplicationUser.Id && x.Id == restaurantId);
                 if (restaurant == null)
-                    return BadRequest(new APIResponse(false, "The restaurant does not exist. Have you perhaps deleted it?"));
+                    return BadRequest(new APIResponse(false, "The restaurant does not exist."));
                 qry = from mi in _db.MenuItems
                       where mi.RestaurantId == restaurant.Id
                       orderby mi.DateCreated

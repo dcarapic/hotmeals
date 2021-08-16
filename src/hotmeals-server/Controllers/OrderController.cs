@@ -99,43 +99,6 @@ namespace hotmeals_server.Controllers
 
 
         /// <summary>
-        /// Fetches an order. 
-        /// Customer may only fetch orders where he is the customer.
-        /// Owner may only fetch orders for his restaurants.
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet("{orderId}")]
-        public async Task<IActionResult> GetOrder(Guid orderId)
-        {
-            IQueryable<OrderDTO> qry;
-            if (this.ApplicationUser.IsRestaurantOwner)
-            {
-                qry = from o in _db.Orders.Include(x => x.OrderItems).Include(x => x.OrderHistory)
-                      join r in _db.Restaurants on o.RestaurantId equals r.Id
-                      join c in _db.Users on o.CustomerId equals c.Id
-                      where r.OwnerId == ApplicationUser.Id
-                      where o.Id == orderId
-                      orderby r.DateCreated
-                      select new OrderDTO(o.Id, o.RestaurantId, r.Name, o.CustomerId, c.Email, c.FirstName, c.LastName, o.Status, o.DateCreated, o.Total, o.OrderItems.Select(x => new OrderItemDTO(x.MenuItemName, x.MenuItemDescription, x.PricePerItem, x.Position, x.Quantity)).ToArray(), o.OrderHistory.Select(x => new OrderHistoryDTO(x.Status, x.DateChanged)).ToArray());
-
-            }
-            else
-            {
-                qry = from o in _db.Orders.Include(x => x.OrderItems).Include(x => x.OrderHistory)
-                      join r in _db.Restaurants on o.RestaurantId equals r.Id
-                      join c in _db.Users on o.CustomerId equals c.Id
-                      where o.CustomerId == ApplicationUser.Id
-                      where o.Id == orderId
-                      orderby r.DateCreated
-                      select new OrderDTO(o.Id, o.RestaurantId, r.Name, o.CustomerId, c.Email, c.FirstName, c.LastName, o.Status, o.DateCreated, o.Total, o.OrderItems.Select(x => new OrderItemDTO(x.MenuItemName, x.MenuItemDescription, x.PricePerItem, x.Position, x.Quantity)).ToArray(), o.OrderHistory.Select(x => new OrderHistoryDTO(x.Status, x.DateChanged)).ToArray());
-            }
-            var order = await qry.FirstOrDefaultAsync();
-            if (order == null)
-                return BadRequest(new APIResponse(false, "Order does not exist!"));
-            return Ok(new GetOrderResponse(order));
-        }
-
-        /// <summary>
         /// Adds a new order for the currently logged on customer.
         /// </summary>
         [HttpPost]
@@ -143,13 +106,22 @@ namespace hotmeals_server.Controllers
         public async Task<IActionResult> PlaceOrder([FromBody] PlaceOrderRequest req)
         {
             var restaurant = await _db.Restaurants.Include(x => x.MenuItems).Include(x => x.Owner).FirstOrDefaultAsync(x => x.Id == req.RestaurantId);
+            if (restaurant == null)
+                return BadRequest(new APIResponse(false, "The restaurant does not exist."));
+
             var currentUser = await _db.Users.FindAsync(this.ApplicationUser.Id);
-            
+            if (currentUser == null)
+                return this.Unauthorized(new APIResponse(false, $"You are not authorized"));
+
             var order = new OrderRecord();
             order.RestaurantId = req.RestaurantId;
             order.Status = OrderStatus.Placed;
             order.CustomerId = this.ApplicationUser.Id;
             order.DateCreated = DateTime.UtcNow;
+
+            if (req.Items.Length == 0)
+                return BadRequest(new APIResponse(false, "Please provide at least one menu item."));
+
 
             // Create order items
             for (var i = 0; i < req.Items.Length; i++)
@@ -206,6 +178,7 @@ namespace hotmeals_server.Controllers
             switch (req.Status)
             {
                 case OrderStatus.Placed: // Placed is only when order is being placed
+                    return BadRequest(new APIResponse(false, $"You may not mark the order as placed!"));
 
                 case OrderStatus.Accepted:
                     if (order.Status != OrderStatus.Placed)
@@ -229,7 +202,7 @@ namespace hotmeals_server.Controllers
                     break;
 
                 case OrderStatus.Received:
-                    if (order.Status != OrderStatus.Shipped && order.Status != OrderStatus.Delivered)
+                    if (order.Status != OrderStatus.Delivered)
                         return BadRequest(new APIResponse(false, $"Order is {order.Status.ToString()}. You may not mark it as received!"));
                     if (!this.ApplicationUser.IsCustomer)
                         return BadRequest(new APIResponse(false, $"You do not have permission to change the order status to {req.Status.ToString()}!"));

@@ -62,7 +62,7 @@ namespace hotmeals_server.tests
 
 
         [Fact]
-        public async Task Search_UnauthorizedExceptCustomer()
+        public async Task Search_InvalidExceptCustomer()
         {
             await SeedDb();
             UserRecord owner = null;

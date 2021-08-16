@@ -71,6 +71,21 @@ namespace hotmeals_server.tests
         }
 
         [Fact]
+        public async Task BlockUser_UnknownEmail()
+        {
+            await SeedDb();
+            UserRecord owner = null;
+            await WithDb(async db =>
+            {
+                owner = await db.Users.FirstAsync(x => x.IsRestaurantOwner);
+            });
+
+            var hrm = this.CreateAuthenticatedRequest(HttpMethod.Post, $"/api/blocked-users/{Uri.EscapeDataString("any@mail.com")}", owner);
+            var res = await Client.SendAsync(hrm);
+            Assert.Equal(System.Net.HttpStatusCode.OK, res.StatusCode);
+        }
+
+        [Fact]
         public async Task UnBlockUser()
         {
             await SeedDb();
@@ -102,9 +117,26 @@ namespace hotmeals_server.tests
         }
 
 
+        [Fact]
+        public async Task UnBlockUser_UnknownEmail()
+        {
+            await SeedDb();
+            UserRecord owner = null;
+            await WithDb(async db =>
+            {
+                owner = await db.Users.FirstAsync(x => x.IsRestaurantOwner);
+            });
+
+            var hrm = this.CreateAuthenticatedRequest(HttpMethod.Delete, $"/api/blocked-users/{Uri.EscapeDataString("any@mail.com")}", owner);
+            var res = await Client.SendAsync(hrm);
+            Assert.Equal(System.Net.HttpStatusCode.OK, res.StatusCode);
+        }
+
+
+
 
         [Fact]
-        public async Task BlockedUsers_UnathorizedExceptOwner()
+        public async Task BlockedUsers_InvalidExceptOwner()
         {
             await SeedDb();
             UserRecord customer = null;

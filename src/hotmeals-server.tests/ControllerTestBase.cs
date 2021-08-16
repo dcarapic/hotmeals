@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -27,6 +28,16 @@ namespace hotmeals_server.tests
         }
 
 
+        public System.Text.Json.JsonSerializerOptions JsonSerializerOptions
+        {
+            get
+            {
+                var opts = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
+                var enumConverter = new System.Text.Json.Serialization.JsonStringEnumConverter();
+                opts.Converters.Add(enumConverter);
+                return opts;
+            }
+        }
 
         public async Task WithService<T>(Func<T, Task> method)
         {
@@ -84,7 +95,7 @@ namespace hotmeals_server.tests
 
         public string DefaultUserPassword => "pwd";
 
-        public async Task SeedDb(bool addUsers = true, bool addRestaurants = true)
+        public async Task SeedDb(bool addUsers = true, bool addRestaurants = true, bool addOrders = false, int customerCount = 10, int ownerCount = 10, int restaurantCount = 10, int menuItemCount = 100, int activeOrderCount = 2, int completedOrderCount = 2)
         {
             await ClearDb();
             (string Hash, string Salt) hashSalt = ("", "");
@@ -99,9 +110,9 @@ namespace hotmeals_server.tests
                 var restaurants = new List<RestaurantRecord>();
                 if (addUsers)
                 {
-                    for (var i = 1; i < 10; i++)
+                    for (var i = 1; i < customerCount + 1; i++)
                         customers.Add(new UserRecord() { Email = $"customer{i}@hm.com", FirstName = $"FirstName{i}", LastName = $"LastName{i}", AddressCityZip = $"1000{i}", AddressCity = $"City {i}", AddressStreet = $"Street {i}", IsRestaurantOwner = false, PasswordHash = hashSalt.Hash, PasswordSalt = hashSalt.Salt });
-                    for (var i = 1; i < 10; i++)
+                    for (var i = 1; i < ownerCount + 1; i++)
                         owners.Add(new UserRecord() { Email = $"owner{i}@hm.com", FirstName = $"FirstName{i}", LastName = $"LastName{i}", AddressCityZip = $"1000{i}", AddressCity = $"City {i}", AddressStreet = $"Street {i}", IsRestaurantOwner = true, PasswordHash = hashSalt.Hash, PasswordSalt = hashSalt.Salt });
 
                     db.Users.AddRange(customers);
@@ -111,16 +122,52 @@ namespace hotmeals_server.tests
                 {
                     foreach (var owner in owners)
                     {
-                        for (var i = 1; i < 10; i++)
+                        for (var i = 1; i < restaurantCount + 1; i++)
                         {
                             var r = new RestaurantRecord() { Name = $"Restaurant {owner.Email} - {i}", Description = $"Restaurant {i} description", DateCreated = DateTime.UtcNow, PhoneNumber = $"000{i}", Version = 1 };
-                            for (var j = 1; j < 100; j++)
+                            for (var j = 1; j < menuItemCount + 1; j++)
                                 r.MenuItems.Add(new MenuItemRecord() { Name = $"Food {r.Name} {j}", Description = $"Description {r.Name} {j}", DateCreated = r.DateCreated, Price = j });
                             owner.Restaurants.Add(r);
                         }
                     }
                 }
                 await db.SaveChangesAsync();
+
+                if (addUsers && addRestaurants && addOrders)
+                {
+                    foreach (var customer in customers)
+                    {
+                        foreach (var owner in owners)
+                        {
+                            foreach (var r in owner.Restaurants)
+                            {
+                                for (var i = 0; i < activeOrderCount + completedOrderCount; i++)
+                                {
+                                    var o = new OrderRecord() { CustomerId = customer.Id, RestaurantId = r.Id, DateCreated = DateTime.UtcNow };
+                                    for (var j = 0; j < Math.Min(5, r.MenuItems.Count); j++)
+                                    {
+                                        var mi = r.MenuItems.Skip(j).First();
+                                        o.OrderItems.Add(new OrderItemRecord() { MenuItemName = mi.Name, MenuItemDescription = mi.Description, Position = j + 1, PricePerItem = mi.Price, Quantity = j });
+                                        o.Status = OrderStatus.Placed;
+                                    }
+                                    o.OrderHistory.Add(new OrderHistoryRecord() { Status = OrderStatus.Placed, DateChanged = DateTime.UtcNow });
+                                    if (i >= activeOrderCount)
+                                    {
+                                        o.OrderHistory.Add(new OrderHistoryRecord() { Status = OrderStatus.Accepted, DateChanged = DateTime.UtcNow });
+                                        o.OrderHistory.Add(new OrderHistoryRecord() { Status = OrderStatus.Shipped, DateChanged = DateTime.UtcNow });
+                                        o.OrderHistory.Add(new OrderHistoryRecord() { Status = OrderStatus.Delivered, DateChanged = DateTime.UtcNow });
+                                        o.OrderHistory.Add(new OrderHistoryRecord() { Status = OrderStatus.Received, DateChanged = DateTime.UtcNow });
+                                        o.Status = OrderStatus.Received;
+                                    }
+                                    db.Orders.Add(o);
+                                }
+
+                            }
+                        }
+                    }
+                    await db.SaveChangesAsync();
+                }
+
             });
         }
 

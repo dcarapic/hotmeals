@@ -5,11 +5,11 @@ using System.Collections.Generic;
 
 namespace hotmeals_server.Model
 {
+    /// <summary>
+    /// User database record.
+    /// </summary>
     public partial class UserRecord
     {
-
-
-
         public UserRecord()
         {
             BlockingUsers = new HashSet<BlockedUserRecord>();
