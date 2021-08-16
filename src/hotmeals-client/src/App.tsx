@@ -137,6 +137,9 @@ const AppRoutes = () => {
             <Route exact path={routes.homePage}>
                 {RequiresAuth(currentUser, <CustomerHomePage />, <OwnerHomePage />)}
             </Route>
+            <Route exact path={routes.homePage + "index.html"}>
+                {RequiresAuth(currentUser, <CustomerHomePage />, <OwnerHomePage />)}
+            </Route>
 
             <Route exact path={routes.ordersActive}>
                 {RequiresAuth(currentUser, <OrdersActivePage />)}

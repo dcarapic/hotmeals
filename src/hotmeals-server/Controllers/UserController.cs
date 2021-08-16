@@ -27,7 +27,6 @@ namespace hotmeals_server.Controllers
     {
 
         private readonly ILogger<UserController> _log;
-        private readonly IConfiguration _config;
         private readonly HMContext _db;
         private readonly ICryptoService _crypto;
         private readonly IJwtService _jwt;
