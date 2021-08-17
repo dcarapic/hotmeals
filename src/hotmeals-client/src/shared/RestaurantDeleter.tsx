@@ -35,7 +35,7 @@ const RestaurantDeleter = (props: {
     return (
         <Modal show={true} backdrop="static">
             <Modal.Header closeButton={false}>
-                <Modal.Title>Delete restaurant </Modal.Title>
+                <Modal.Title>Delete your restaurant</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 Are you sure you wish to delete your restaurant "{props.restaurant?.name}"?

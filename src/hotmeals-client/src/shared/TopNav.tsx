@@ -18,7 +18,7 @@ import { useAbortableLoad } from "../util/abortable";
 const TopNav = () => {
     //const loc = useLocation();
     return (
-        <div className="hm-navbar">
+        <div className="sticky-top">
             <Navbar bg="primary">
                 <Container>
                     <Navbar.Brand>

@@ -58,7 +58,7 @@ const MenuItemEditor = (props: {
     return (
         <Modal show={true} backdrop="static">
             <Modal.Header closeButton={false}>
-                <Modal.Title>Edit menuItem </Modal.Title>
+                <Modal.Title>Edit menu item</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <Col className="d-grid">

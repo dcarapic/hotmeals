@@ -1,5 +1,3 @@
-import _ from "lodash";
-import React from "react";
 import { Badge, Button, Form } from "react-bootstrap";
 import * as model from "../state/model";
 import { useCurrentUser } from "../state/user";

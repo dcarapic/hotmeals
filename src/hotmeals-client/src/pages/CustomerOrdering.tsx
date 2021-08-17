@@ -6,7 +6,7 @@ import { getCurrentOrder, removeCurrentOrder, setCurrentOrderMenuItem } from "..
 import { Redirect, useHistory } from "react-router-dom";
 import routes from "../routes";
 import Loading from "../shared/Loading";
-import { OrderDetails, OrderDetailsSmall, OrderMenuItem } from "../shared/OrderDetails";
+import { OrderDetails,  OrderMenuItem } from "../shared/OrderDetails";
 import OrderPlacer from "../shared/OrderPlacer";
 import { useAbortableLoad } from "../util/abortable";
 
@@ -18,7 +18,6 @@ const CustomerOrdering = ui.withAlertMessageContainer(() => {
     const [loading, setLoading] = useState(true);
     const [placingOrder, setPlacingOrder] = useState(false);
     const [menuItems, setMenuItems] = useState<model.NewOrderItem[]>([]);
-    const [smallOrderDetails, setSmallOrderDetails] = useState(false);
 
     useAbortableLoad(
         async (signal) => {
@@ -93,27 +92,20 @@ const CustomerOrdering = ui.withAlertMessageContainer(() => {
         history.push(routes.ordersActive);
     };
 
-    ui.useScrollPosition((pos) => {
-        setSmallOrderDetails(pos.scrollY > 80);
-    }, []);
+    // ui.useScrollPosition((pos) => {
+    //     setSmallOrderDetails(pos.scrollY > 120);
+    // }, [], detailsContainerRef.current);
 
     return (
         <Fragment>
-            <div className="sticky-top">
-                <h3 className="text-center p-2 hm-sticky-padder">Order your food</h3>
+            <div>
+                <h3 className="text-center p-2">Order your food</h3>
                 <div className="border rounded mb-4 bg-light shadow">
-                    {smallOrderDetails ? (
-                        <OrderDetailsSmall
-                            order={currentOrder}
-                            onRequestStatusChange={changeStatus}
-                        />
-                    ) : (
-                        <OrderDetails
-                            order={currentOrder}
-                            onQuantityChanged={changeQuantity}
-                            onRequestStatusChange={changeStatus}
-                        />
-                    )}
+                    <OrderDetails
+                        order={currentOrder}
+                        onQuantityChanged={changeQuantity}
+                        onRequestStatusChange={changeStatus}
+                    />
                 </div>
             </div>
             {loading && (

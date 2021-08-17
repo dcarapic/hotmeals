@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import * as api from "./util/api";
 import * as ui from "./util/ui";
 import * as model from "./state/model";
-import { Container } from "react-bootstrap";
+import { Col, Container, Row } from "react-bootstrap";
 import { BrowserRouter, Switch, Route, Redirect } from "react-router-dom";
 import CustomerHomePage from "./pages/CustomerHomePage";
 import CustomerOrdering from "./pages/CustomerOrdering";
@@ -60,18 +60,20 @@ const App = () => {
             <BrowserRouter>
                 <ui.ToastMessageServiceContainer>
                     <TopNav />
-                    <Container className="py-4 hm-sticky-margin">
-                        <div className="row justify-content-center">
-                            <div className="col-md-8">
-                                {authenticating ? (
-                                    <div className="w-50 mx-auto">
-                                        <Loading showLabel />
-                                    </div>
-                                ) : (
-                                    <AppRoutes />
-                                )}
-                            </div>
-                        </div>
+                    <Container className="py-4">
+                        <Row className="justify-content-center">
+                            <Col style={{ maxWidth: "768px" }}>
+                                <div>
+                                    {authenticating ? (
+                                        <div className="w-50 mx-auto">
+                                            <Loading showLabel />
+                                        </div>
+                                    ) : (
+                                        <AppRoutes />
+                                    )}
+                                </div>
+                            </Col>
+                        </Row>
                         <OrderNotificationManager />
                     </Container>
                 </ui.ToastMessageServiceContainer>

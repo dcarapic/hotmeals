@@ -57,7 +57,7 @@ const RestaurantEditor = (props: {
     return (
         <Modal show={true} backdrop="static">
             <Modal.Header closeButton={false}>
-                <Modal.Title>Edit restaurant </Modal.Title>
+                <Modal.Title>Edit restaurant</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <Col className="d-grid">

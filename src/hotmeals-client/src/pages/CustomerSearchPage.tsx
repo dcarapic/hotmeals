@@ -91,7 +91,7 @@ const CustomerSearchPage = ui.withAlertMessageContainer(() => {
                 <div className="row mb-2">
                     {items.map((r, i) => {
                         return (
-                            <div className="col-md-6" key={r.menuItemId}>
+                            <div className="col-lg-6" key={r.menuItemId}>
                                 <SearchResultItem item={r} onOrder={orderMenuItem} />
                             </div>
                         );
@@ -127,12 +127,12 @@ const SearchResultItem = (props: {
             <div className="bg-secondary text-white mb-1 px-2">
                 <small>{props.item.restaurantName}</small>
             </div>
-            <div className="row ">
-                <div className="col-7">{props.item.name}</div>
-                <div className="col-3">
+            <div className="d-flex justify-content-between">
+                <div className="flex-grow-1">{props.item.name}</div>
+                <div className="mx-2">
                     <strong>{props.item.price} €</strong>
                 </div>
-                <div className="col-2 d-flex justify-content-end">
+                <div className="">
                     <Button
                         size="sm"
                         variant="success"

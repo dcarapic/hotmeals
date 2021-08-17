@@ -235,9 +235,9 @@ function isWindow(container: any): container is Window {
 export type ScrollPosition = { scrollX: number; scrollY: number };
 
 /**
- * Hook which fires an effect when user scrolls the window. The method call is throttled to avoid firing the event too much.
+ * Hook which fires an effect when user scrolls the window. The method call is debounced to avoid firing the event too much.
  */
-const useScrollPosition = (effect: (pos: ScrollPosition) => void, deps: [], container?: Window | HTMLElement) => {
+const useScrollPosition = (effect: (pos: ScrollPosition) => void, deps: [], container?: Window | HTMLElement | null) => {
     let getPosX: () => number;
     let getPosY: () => number;
     if (container && isWindow(container)) {
@@ -245,7 +245,7 @@ const useScrollPosition = (effect: (pos: ScrollPosition) => void, deps: [], cont
         getPosY = () => container.scrollY;
     } else if (container && !isWindow(container)) {
         getPosX = () => container.getBoundingClientRect().left;
-        getPosY = () => container.getBoundingClientRect().left;
+        getPosY = () => container.getBoundingClientRect().top;
     } else {
         getPosX = () => global.window.scrollX;
         getPosY = () => global.window.scrollY;
@@ -256,14 +256,14 @@ const useScrollPosition = (effect: (pos: ScrollPosition) => void, deps: [], cont
     }, deps);
 
     // eslint-disable-next-line
-    const throttledOnScroll = useCallback(_.throttle(onScroll, 100), [onScroll]);
+    const debouncedOnScroll = useCallback(_.debounce(onScroll, 100), [onScroll]);
 
     let finalDeps: any[] = [];
     if (deps) finalDeps = [...deps];
-    finalDeps.push(throttledOnScroll);
+    finalDeps.push(debouncedOnScroll);
 
     useLayoutEffect(() => {
-        window.addEventListener("scroll", throttledOnScroll);
+        window.addEventListener("scroll", debouncedOnScroll);
         return () => window.removeEventListener("scroll", onScroll);
         // eslint-disable-next-line
     }, finalDeps);

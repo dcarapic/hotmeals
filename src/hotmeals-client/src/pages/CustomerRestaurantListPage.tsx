@@ -60,7 +60,7 @@ const CustomerRestaurantListPage = ui.withAlertMessageContainer(() => {
                 <div className="row mb-2">
                     {items.map((r, i) => {
                         return (
-                            <div className="col-md-6" key={r.id}>
+                            <div className="col-lg-6" key={r.id}>
                                 <RestaurantListItem restaurant={r} onSelect={onSelectRestaurant} />
                             </div>
                         );

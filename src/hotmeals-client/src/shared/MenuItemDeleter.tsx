@@ -35,7 +35,7 @@ const MenuItemDeleter = (props: {
     return (
         <Modal show={true} backdrop="static">
             <Modal.Header closeButton={false}>
-                <Modal.Title>Delete menuItem </Modal.Title>
+                <Modal.Title>Delete menu item</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 Are you sure you wish to delete menu item "{props.menuItem?.name}"?
