@@ -2,12 +2,9 @@ import React, { useRef, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../state/model";
-import { Button, Col, Form, Modal } from "react-bootstrap";
+import { Button, Col, Form, InputGroup, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
 import { useAbortable } from "../util/abortable";
-
-// TODO: Add validation messages to form
-// TODO: Add price unit to price input
 
 /** Modal dialog for editing restaurant menu items. */
 const MenuItemEditor = (props: {
@@ -75,6 +72,9 @@ const MenuItemEditor = (props: {
                                 defaultValue={props.menuItem?.name}
                                 required
                             />
+                            <Form.Control.Feedback type="invalid">
+                                Please enter menu item name (up to 100 characters).
+                            </Form.Control.Feedback>
                         </Form.Group>
                         <Form.Group className="mb-2" controlId="formDescription">
                             <Form.Label>Description</Form.Label>
@@ -86,18 +86,27 @@ const MenuItemEditor = (props: {
                                 rows={3}
                                 required
                             />
+                            <Form.Control.Feedback type="invalid">
+                                Please enter menu item description
+                            </Form.Control.Feedback>
                         </Form.Group>
                         <Form.Group className="mb-2" controlId="formPrice">
                             <Form.Label>Price</Form.Label>
-                            <Form.Control
-                                type="number"
-                                min={0}
-                                max={99999}
-                                readOnly={submitting}
-                                step=".01"
-                                defaultValue={props.menuItem?.price}
-                                required
-                            />
+                            <InputGroup>
+                                <Form.Control
+                                    type="number"
+                                    min={0}
+                                    max={99999}
+                                    readOnly={submitting}
+                                    step=".01"
+                                    defaultValue={props.menuItem?.price}
+                                    required
+                                />
+                                <InputGroup.Text>€</InputGroup.Text>
+                                <Form.Control.Feedback type="invalid">
+                                    Please enter a valid price (between 0 and 9999)
+                                </Form.Control.Feedback>
+                            </InputGroup>
                         </Form.Group>
                     </Form>
                     <ui.AlertMessageServiceContainer serverResponse={serverResponse} />

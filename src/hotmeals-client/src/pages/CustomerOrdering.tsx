@@ -10,8 +10,7 @@ import { OrderDetails, OrderDetailsSmall, OrderMenuItem } from "../shared/OrderD
 import OrderPlacer from "../shared/OrderPlacer";
 import { useAbortableLoad } from "../util/abortable";
 
-// TODO: Display smaller current order details when the user scrolls down (order details can hide a lot of information)
-
+/** Page for customer ordering. */
 const CustomerOrdering = ui.withAlertMessageContainer(() => {
     const msgs = ui.useAlertMessageService();
     const history = useHistory();

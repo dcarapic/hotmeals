@@ -134,7 +134,6 @@ namespace hotmeals_server
             app.UseAuthentication();
             app.UseAuthorization();
 
-            //app.UseDelay(1); // TODO: Remove later
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

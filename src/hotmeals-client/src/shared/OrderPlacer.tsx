@@ -9,7 +9,6 @@ import Loading from "./Loading";
 import { useEventEffect } from "../util/ws-events";
 import { useAbortable } from "../util/abortable";
 
-// TODO: Reduce size of loading animation, on mobile screen it is too wide.
 
 /** Modal dialog used to confirm and place a new order. */
 const OrderPlacer = (props: {

@@ -92,7 +92,6 @@ namespace hotmeals_server.Controllers
 
         /// <summary>
         /// Does nothing at the moment. 
-        /// TODO: Remove refresh cookie.
         /// </summary>
         /// <returns></returns>
         [HttpPost("logout")]

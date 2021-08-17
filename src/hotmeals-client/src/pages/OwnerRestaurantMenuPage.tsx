@@ -130,7 +130,7 @@ const MenuItemListItem = (props: {
     return (
         <Row className="d-grid">
             <Col>
-                {props.menuItem.name} <strong className="text-success">{props.menuItem.price} €</strong>
+                {props.menuItem.name} - <strong className="text-success">{props.menuItem.price.toLocaleString(undefined,  { minimumFractionDigits: 2 })} €</strong>
             </Col>
             <Col>
                 <i>{props.menuItem.description}</i>

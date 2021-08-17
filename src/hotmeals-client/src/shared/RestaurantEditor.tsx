@@ -6,9 +6,6 @@ import { Button, Col, Form, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
 import { useAbortable } from "../util/abortable";
 
-// TODO: Add validation messages to form
-
-
 /** Modal dialog for editing a restaurant. */
 const RestaurantEditor = (props: {
     /** Restaurant to edit. */
@@ -25,8 +22,7 @@ const RestaurantEditor = (props: {
 
     const formRef = useRef<any>();
     const saveChanges = async () => {
-        if(!formRef.current)
-            return;
+        if (!formRef.current) return;
         if (formRef.current.checkValidity() === false) {
             setValidated(true);
             return;
@@ -75,6 +71,7 @@ const RestaurantEditor = (props: {
                                 defaultValue={props.restaurant?.name}
                                 required
                             />
+                            <Form.Control.Feedback type="invalid">Please enter restaurant name</Form.Control.Feedback>
                         </Form.Group>
                         <Form.Group className="mb-2" controlId="formDescription">
                             <Form.Label>Description</Form.Label>
@@ -86,16 +83,22 @@ const RestaurantEditor = (props: {
                                 rows={3}
                                 required
                             />
+                            <Form.Control.Feedback type="invalid">
+                                Please enter restaurant description.
+                            </Form.Control.Feedback>
                         </Form.Group>
                         <Form.Group className="mb-2" controlId="formPhone">
                             <Form.Label>Phone number</Form.Label>
                             <Form.Control
-                                type="phone"
+                                type="tel"
                                 maxLength={50}
                                 readOnly={submitting}
                                 defaultValue={props.restaurant?.phoneNumber}
                                 required
                             />
+                            <Form.Control.Feedback type="invalid">
+                                Please enter restaurant phone number.
+                            </Form.Control.Feedback>
                         </Form.Group>
                     </Form>
                     <ui.AlertMessageServiceContainer serverResponse={serverResponse} />

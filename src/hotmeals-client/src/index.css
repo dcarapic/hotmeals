@@ -14,7 +14,7 @@ The navbar is fixed on top and we need some way to know exact height to be able 
     position: fixed;
     left: 0;
     top: 0;
-    right: 0; 
+    right: 0;
     z-index: 1021;
 }
 
@@ -36,4 +36,14 @@ The navbar is fixed on top and we need some way to know exact height to be able 
 
 .hm-navbar-badge {
     transform: translate(-20px, 20px);
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
 }

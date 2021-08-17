@@ -1,3 +1,4 @@
+import _ from "lodash";
 import React from "react";
 import { Badge, Button, Form } from "react-bootstrap";
 import * as model from "../state/model";
@@ -43,7 +44,7 @@ const OrderDetails = (props: {
             </div>
             <div className="d-flex justify-content-end border-top px-2 mb-1">
                 <span className="me-auto">Total:</span>
-                <strong>{props.order.total} €</strong>
+                <strong>{props.order.total.toLocaleString(undefined,  { minimumFractionDigits: 2 })} €</strong>
             </div>
             {!props.disabled && (
                 <OrderDetailsToolbar
@@ -93,12 +94,12 @@ const OrderDetailsSmall = (props: {
                 <div className="d-flex flex-wrap">
                     {props.order.items.map((x, i) => (
                         <div key={x.name} className="me-2">
-                            <strong>{x.quantity}</strong> x <strong>{x.name} </strong> ({x.price} €)
+                            <strong>{x.quantity}</strong> x <strong>{x.name} </strong> ({x.price.toLocaleString(undefined,  { minimumFractionDigits: 2 })} €)
                         </div>
                     ))}
                 </div>
                 <div>
-                    <strong className="px-2 text-nowrap">{props.order.total} €</strong>
+                    <strong className="px-2 text-nowrap">{props.order.total.toLocaleString(undefined,  { minimumFractionDigits: 2 })} €</strong>
                 </div>
             </div>
             {!props.disabled && (
@@ -228,9 +229,6 @@ const OrderDetailsToolbar = (props: {
     );
 };
 
-// TODO: Enlarge the quantity input element (10 does not fit)
-// TODO: Enable direct entry of the quantity
-
 /** Displays infomration about new or placed order menu item. For placed orders it also enables the user to add/remove quantity. */
 const OrderMenuItem = (props: {
     /** Displayed menu item. */
@@ -240,6 +238,10 @@ const OrderMenuItem = (props: {
     /** Invoked if the user changed the quantity of an order menu item. */
     onQuantityChanged?: (menuItemId: string, quantity: number) => void;
 }) => {
+    const changeQuantity = (quantity: number) => {
+        if (props.onQuantityChanged && !isPlacedOrderItem(props.item) && quantity >= 0 && quantity < 100)
+            props.onQuantityChanged(props.item.menuItemId, quantity);
+    };
     return (
         <div className="mb-1 px-2">
             <div className="col d-flex justify-content-end align-items-center">
@@ -249,12 +251,7 @@ const OrderMenuItem = (props: {
                         size="sm"
                         variant="success"
                         className="me-1"
-                        onClick={() =>
-                            props.onQuantityChanged &&
-                            props.item.quantity > 0 &&
-                            !isPlacedOrderItem(props.item) &&
-                            props.onQuantityChanged(props.item.menuItemId, props.item.quantity - 1)
-                        }>
+                        onClick={() => changeQuantity(props.item.quantity - 1)}>
                         -
                     </Button>
                 )}
@@ -265,6 +262,7 @@ const OrderMenuItem = (props: {
                     size="sm"
                     style={{ maxWidth: "2.5em" }}
                     value={props.item.quantity}
+                    type="number"
                     readOnly
                 />
                 {!props.disabled && !isPlacedOrderItem(props.item) && (
@@ -272,17 +270,12 @@ const OrderMenuItem = (props: {
                         size="sm"
                         variant="success"
                         className="me-1"
-                        onClick={() =>
-                            props.onQuantityChanged &&
-                            props.item.quantity < 99 &&
-                            !isPlacedOrderItem(props.item) &&
-                            props.onQuantityChanged(props.item.menuItemId, props.item.quantity + 1)
-                        }>
+                        onClick={() => changeQuantity(props.item.quantity + 1)}>
                         +
                     </Button>
                 )}
                 <strong style={{ minWidth: "4em" }} className="text-end">
-                    {props.item.price} €
+                    {props.item.price.toLocaleString(undefined,  { minimumFractionDigits: 2 })} €
                 </strong>
             </div>
             <div>
