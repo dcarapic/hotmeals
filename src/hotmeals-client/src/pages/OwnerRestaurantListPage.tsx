@@ -155,13 +155,6 @@ const RestaurantListItem = (props: {
                 <Button
                     size="sm"
                     className="me-1 mb-1"
-                    variant="success"
-                    onClick={() => props.onViewOrders && props.onViewOrders(props.restaurant.id)}>
-                    View orders
-                </Button>
-                <Button
-                    size="sm"
-                    className="me-1 mb-1"
                     variant="danger"
                     onClick={() => props.onDelete && props.onDelete(props.restaurant.id)}>
                     Delete restaurant

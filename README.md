@@ -89,6 +89,7 @@ The available configuration settings are as follows:
 - **Jwt:Issuer** - JWT issuer. Not important for the application at the moment.
 - **Jwt:Audience** - JWT issuer. Not important for the application at the moment.
 - **ConnectionString:DefaultConnection** - Connection string for the SQLite database.
+- **LogFolder** - Application has a simplified log which logs to the provided log folder.
 
 
 ## Testing

@@ -1,4 +1,5 @@
 $ErrorActionPreference = "Stop"
+$runtime = $args[0]
 
 if(Test-Path ..\deploy) {
     Remove-item ..\deploy\ -force -recurse
@@ -11,7 +12,12 @@ Set-Location ..
 
 
 Set-Location hotmeals-server
-dotnet publish -o ../../deploy
+if($runtime) {
+    dotnet publish -o ../../deploy -r $runtime
+} else {
+    dotnet publish -o ../../deploy
+}
+
 if ($LASTEXITCODE -ne 0) { exit }
 Set-Location ..
 

@@ -13,7 +13,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Microsoft.IdentityModel.Tokens;
-
+using Microsoft.AspNetCore.Http;
 
 namespace hotmeals_server
 {
@@ -31,13 +31,24 @@ namespace hotmeals_server
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // Log only to console and debug
+            var httpContextAccessor = new HttpContextAccessor();
+            services.AddSingleton<IHttpContextAccessor>(httpContextAccessor);
+            var logFolder = Configuration["LogFolder"] ?? "./logs";
+            var loggerProvider = new Services.AsyncLoggerProvider(logFolder, "HotMeals_", true, httpContextAccessor: httpContextAccessor);
+            loggerProvider.AutoArchiveLog = true;
+            loggerProvider.NewLogFileCreated += LoggerProvider_NewLogFileCreated;
+            var log = loggerProvider.CreateLogger("Startup");
+            var assemblyName = this.GetType().Assembly.GetName();
+            log.Log(LogLevel.Information, "{application} v{version}", assemblyName.Name, assemblyName.Version);
+            log.Log(LogLevel.Information, "Configuring services ...");
+
+            // Use this logger
             services.AddLogging(opt =>
             {
                 opt.ClearProviders();
-                opt.AddConsole();
-                opt.AddDebug();
+                opt.AddProvider(loggerProvider);
             });
+
 
             // Prevent access to the web server from anywhere else except our SPA application.
             services.AddCors(opt =>
@@ -108,12 +119,17 @@ namespace hotmeals_server
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> log, Microsoft.AspNetCore.Mvc.Infrastructure.IActionDescriptorCollectionProvider actionProvider)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> log)
         {
+
+            log.Log(LogLevel.Information, "Configuring application ...");
+            log.Log(LogLevel.Information, "Enabling HTTPS redirection");
             app.UseHttpsRedirection();
             if (env.IsDevelopment())
             {
+                log.Log(LogLevel.Information, "Using developer exception page");
                 app.UseDeveloperExceptionPage();
+                log.Log(LogLevel.Information, "Using Swagger & Swagger UI");
                 app.UseSwagger();
                 app.UseSwaggerUI(c =>
                 {
@@ -122,21 +138,31 @@ namespace hotmeals_server
                 });
             }
             //app.UseStaticFiles();
+            log.Log(LogLevel.Information, "Using SPA static files");
             app.UseSpaStaticFiles();
 
             app.UseRouting();
 
             if (env.IsDevelopment())
+            {
+                log.Log(LogLevel.Information, "Using Development CORS policy");
                 app.UseCors("DevPolicy");
+            }
             else
+            {
+                log.Log(LogLevel.Information, "Using Production CORS policy");
                 app.UseCors("ProdPolicy");
+            }
 
+            log.Log(LogLevel.Information, "Enabling authentication and authorization");
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
+                log.Log(LogLevel.Information, "Using controllers");
                 endpoints.MapControllers();
+                log.Log(LogLevel.Information, "Using Signal-R hub at '/api/ws'");
                 endpoints.MapHub<NotificationHub>("/api/ws");
             });
             app.UseSpa(spa =>
@@ -146,11 +172,23 @@ namespace hotmeals_server
             using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
             {
                 var context = serviceScope.ServiceProvider.GetRequiredService<Model.HMContext>();
-                if(context.Database.EnsureCreated()) 
-                {
-                    log.LogWarning("New database generated!");
-                }
+                if (context.Database.EnsureCreated())
+                    log.LogWarning("There was no existing database, new database was created.");
+                else
+                    log.Log(LogLevel.Information, "Using existing database ... testing connection");
+                // This will fail and cause an exception to be thrown 
+                _ = context.Users.FirstOrDefault();
+
             }
         }
+
+        private void LoggerProvider_NewLogFileCreated(object sender, EventArgs e)
+        {
+            var loggerProvider = (Services.AsyncLoggerProvider)sender;
+            var log = loggerProvider.CreateLogger("Startup");
+            var assemblyName = this.GetType().Assembly.GetName();
+            log.Log(LogLevel.Information, "{application} v{version}", assemblyName.Name, assemblyName.Version);
+        }
+
     }
 }
