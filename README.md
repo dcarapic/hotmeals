@@ -72,9 +72,10 @@ Running the script will perform the following:
 - Build the React client application by running `npm build` in the `./src/hotmeals-server` folder.
 - Build the .NET server application by running `dotnet build` in the `/src/hotmeals-server` folder.
 - Copy the build output from both applications and place it in `./deploy` folder.
-- Copy the sample database (`./db/hotmeals.sqlite`) to `./deploy/db` folder
 
 After this the `./deploy` folder will contain the .NET server application which will also host the React files.
+You can copy the folder to your server.
+Note: By default the application is for the architecture of the machine where the build takes place. Should you wish to make a build for another architecture (linux) you must edit the `build.ps1` and add `-r linux-x64` parameter to `dotnet publish` command.
 
 ## Configuration
 

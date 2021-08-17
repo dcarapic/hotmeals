@@ -12,6 +12,8 @@ import { useHistory } from "react-router-dom";
 import { useEventEffect } from "../util/ws-events";
 import { useAbortableLoad } from "../util/abortable";
 
+// TODO: Finish breadcrumbs
+
 /** Navbar component */
 const TopNav = () => {
     //const loc = useLocation();

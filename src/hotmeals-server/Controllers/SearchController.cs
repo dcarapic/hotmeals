@@ -13,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using hotmeals_server.Model;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace hotmeals_server.Controllers
 {
@@ -36,11 +37,11 @@ namespace hotmeals_server.Controllers
         }
 
         /// <summary>
-        /// Returns the list of all blocked users. 
+        /// Searches for food.
         /// </summary>
         /// <returns></returns>
         [HttpGet("{searchExpression}")]
-        public async Task<IActionResult> Search(string searchExpression, [FromQuery] int page = 1)
+        public async Task<IActionResult> Search([MaxLength(100)]string searchExpression, [FromQuery][Range(1, 999999)] int page = 1)
         {
             var qry = (from mi in _db.MenuItems
                        join r in _db.Restaurants on mi.RestaurantId equals r.Id
@@ -52,8 +53,8 @@ namespace hotmeals_server.Controllers
             //select new OrderSelectionMenuItemDTO(mi.Id, mi.RestaurantId, r.Name, mi.Name, mi.Description, mi.Price));
             var total = (int)(await qry.CountAsync());
             var totalPages = total == 0 ? 0 : (total / SearchResultPageSize) + 1;
-            var resultPage = qry.Skip(page - 1).Take(SearchResultPageSize);
-            return Ok(new SearchFoodResponse(await resultPage.ToArrayAsync(), totalPages, page));
+            var resultPage = qry.Skip((page - 1) * SearchResultPageSize).Take(SearchResultPageSize);
+            return Ok(new SearchFoodResponse(await resultPage.ToArrayAsync(), totalPages, Math.Min(page, totalPages)));
         }
 
     }

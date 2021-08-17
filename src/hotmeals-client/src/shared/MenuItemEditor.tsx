@@ -6,6 +6,9 @@ import { Button, Col, Form, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
 import { useAbortable } from "../util/abortable";
 
+// TODO: Add validation messages to form
+// TODO: Add price unit to price input
+
 /** Modal dialog for editing restaurant menu items. */
 const MenuItemEditor = (props: {
     /** Restaurant menu item */

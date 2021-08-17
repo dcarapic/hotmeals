@@ -14,22 +14,24 @@ const OwnerBlockedUsersPage = ui.withAlertMessageContainer(() => {
     const [blockedUsers, setBlockedUsers] = useState<model.BlockedUserDTO[]>([]);
     const [userToUnblock, setUserToUnblock] = useState<model.BlockedUserDTO | null>(null);
 
-    useAbortableLoad(async (signal) => {
-        msgs.clearMessage();
-        setLoading(true);
-        let response = await api.blockedUsersFetchAll(signal);
-        if (response.isAborted) return;
-        setLoading(false);
-        msgs.setMessageFromResponse(response);
-        if (response.ok && response.result) {
-            console.log(JSON.stringify(response.result.blockedUsers));
-            setBlockedUsers(response.result.blockedUsers);
-        } else {
+    useAbortableLoad(
+        async (signal) => {
+            msgs.clearMessage();
+            setLoading(true);
+            let response = await api.blockedUsersFetchAll(signal);
+            if (response.isAborted) return;
             setLoading(false);
-            setBlockedUsers([]);
-        }
-    }, [msgs]);
-
+            msgs.setMessageFromResponse(response);
+            if (response.ok && response.result) {
+                console.log(JSON.stringify(response.result.blockedUsers));
+                setBlockedUsers(response.result.blockedUsers);
+            } else {
+                setLoading(false);
+                setBlockedUsers([]);
+            }
+        },
+        [msgs]
+    );
 
     const deleteBlockedUser = (email: string) => {
         let r = blockedUsers.find((x) => x.email === email);
@@ -50,11 +52,9 @@ const OwnerBlockedUsersPage = ui.withAlertMessageContainer(() => {
         <Fragment>
             <h3 className="text-center p-2">Your blocked users</h3>
             {loading && (
-                <Row className="justify-content-center">
-                    <Col xs="3">
-                        <Loading showLabel />
-                    </Col>
-                </Row>
+                <div className="w-50 mx-auto">
+                    <Loading showLabel />
+                </div>
             )}
             {!loading && (
                 <Fragment>

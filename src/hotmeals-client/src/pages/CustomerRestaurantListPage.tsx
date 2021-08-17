@@ -2,7 +2,7 @@ import React, { Fragment, useCallback, useEffect, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../state/model";
-import { Alert, Button, Col, Row } from "react-bootstrap";
+import { Alert, Button } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
 import Loading from "../shared/Loading";
 import { ServerResponsePagination } from "../shared/ServerResponsePagination";
@@ -20,23 +20,25 @@ const CustomerRestaurantListPage = ui.withAlertMessageContainer(() => {
     const [pageInfo, setPageInfo] = useState<api.PagingInformation>();
     const [items, setItems] = useState<model.RestaurantDTO[]>([]);
 
-    const loadPage = useCallback(async (page: number) => {
-        setLoading(true);
-        let response = await api.restaurantFetchAll(page, abort);
-        if (response.isAborted) return;
-        setLoading(false);
-        msgs.setMessageFromResponse(response);
-        if (response.ok && response.result) {
-            setItems(response.result.restaurants);
-            setPageInfo(response.result);
-            setLoaded(true);
-        }
-    }, [msgs, abort]);
+    const loadPage = useCallback(
+        async (page: number) => {
+            setLoading(true);
+            let response = await api.restaurantFetchAll(page, abort);
+            if (response.isAborted) return;
+            setLoading(false);
+            msgs.setMessageFromResponse(response);
+            if (response.ok && response.result) {
+                setItems(response.result.restaurants);
+                setPageInfo(response.result);
+                setLoaded(true);
+            }
+        },
+        [msgs, abort]
+    );
 
     useEffect(() => {
         loadPage(1);
     }, [loadPage]);
-
 
     const onSelectRestaurant = (restaurantId: string) => {
         let restaurant = items.find((x) => x.id === restaurantId);
@@ -50,11 +52,9 @@ const CustomerRestaurantListPage = ui.withAlertMessageContainer(() => {
         <Fragment>
             <h3 className="text-center p-2">Select restaurant to order from</h3>
             {loading && (
-                <Row className="justify-content-center">
-                    <Col xs="3">
-                        <Loading showLabel />
-                    </Col>
-                </Row>
+                <div className="w-50 mx-auto">
+                    <Loading showLabel />
+                </div>
             )}
             {loaded && (
                 <div className="row mb-2">

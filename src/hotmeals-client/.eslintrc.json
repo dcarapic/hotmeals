@@ -4,7 +4,7 @@
         "react-hooks/exhaustive-deps": [
             "warn",
             {
-                "additionalHooks": "(useEventEffect|useAbortableLoad)"
+                "additionalHooks": "(useEventEffect|useAbortableLoad|useScrollPosition)"
             }
         ]
     }

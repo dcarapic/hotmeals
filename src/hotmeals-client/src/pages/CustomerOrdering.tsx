@@ -2,14 +2,15 @@ import React, { Fragment, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../state/model";
-import { Col, Row } from "react-bootstrap";
 import { getCurrentOrder, removeCurrentOrder, setCurrentOrderMenuItem } from "../state/current-order";
 import { Redirect, useHistory } from "react-router-dom";
 import routes from "../routes";
 import Loading from "../shared/Loading";
-import { OrderDetails, OrderMenuItem } from "../shared/OrderDetails";
+import { OrderDetails, OrderDetailsSmall, OrderMenuItem } from "../shared/OrderDetails";
 import OrderPlacer from "../shared/OrderPlacer";
 import { useAbortableLoad } from "../util/abortable";
+
+// TODO: Display smaller current order details when the user scrolls down (order details can hide a lot of information)
 
 const CustomerOrdering = ui.withAlertMessageContainer(() => {
     const msgs = ui.useAlertMessageService();
@@ -18,29 +19,33 @@ const CustomerOrdering = ui.withAlertMessageContainer(() => {
     const [loading, setLoading] = useState(true);
     const [placingOrder, setPlacingOrder] = useState(false);
     const [menuItems, setMenuItems] = useState<model.NewOrderItem[]>([]);
+    const [smallOrderDetails, setSmallOrderDetails] = useState(false);
 
-    useAbortableLoad(async (signal) => {
-        var currentOrder = getCurrentOrder();
-        if (!currentOrder) return;
-        msgs.clearMessage();
-        setLoading(true);
-        let response = await api.menuItemFetchAll(currentOrder.restaurantId, signal);
-        if (response.isAborted) return;
-        setLoading(false);
-        msgs.setMessageFromResponse(response);
-        if (response.ok && response.result) {
-            let items = response.result.menuItems.map((x) => ({ ...x, quantity: 0 }));
-            // After loading the items update their quantity to match ordered quantity
-            for (let orderedMenuItem of currentOrder.items) {
-                let menuItem = items.find((x) => x.menuItemId === orderedMenuItem.menuItemId);
-                if (menuItem) menuItem.quantity = orderedMenuItem.quantity;
-            }
-            setMenuItems(items);
-        } else {
+    useAbortableLoad(
+        async (signal) => {
+            var currentOrder = getCurrentOrder();
+            if (!currentOrder) return;
+            msgs.clearMessage();
+            setLoading(true);
+            let response = await api.menuItemFetchAll(currentOrder.restaurantId, signal);
+            if (response.isAborted) return;
             setLoading(false);
-            setMenuItems([]);
-        }
-    }, [msgs]);
+            msgs.setMessageFromResponse(response);
+            if (response.ok && response.result) {
+                let items = response.result.menuItems.map((x) => ({ ...x, quantity: 0 }));
+                // After loading the items update their quantity to match ordered quantity
+                for (let orderedMenuItem of currentOrder.items) {
+                    let menuItem = items.find((x) => x.menuItemId === orderedMenuItem.menuItemId);
+                    if (menuItem) menuItem.quantity = orderedMenuItem.quantity;
+                }
+                setMenuItems(items);
+            } else {
+                setLoading(false);
+                setMenuItems([]);
+            }
+        },
+        [msgs]
+    );
 
     // If there is no current order then redirect to home page
     let currentOrder = getCurrentOrder();
@@ -89,24 +94,33 @@ const CustomerOrdering = ui.withAlertMessageContainer(() => {
         history.push(routes.ordersActive);
     };
 
+    ui.useScrollPosition((pos) => {
+        setSmallOrderDetails(pos.scrollY > 80);
+    }, []);
+
     return (
         <Fragment>
             <div className="sticky-top">
                 <h3 className="text-center p-2 hm-sticky-padder">Order your food</h3>
                 <div className="border rounded mb-4 bg-light shadow">
-                    <OrderDetails
-                        order={currentOrder}
-                        onQuantityChanged={changeQuantity}
-                        onRequestStatusChange={changeStatus}
-                    />
+                    {smallOrderDetails ? (
+                        <OrderDetailsSmall
+                            order={currentOrder}
+                            onRequestStatusChange={changeStatus}
+                        />
+                    ) : (
+                        <OrderDetails
+                            order={currentOrder}
+                            onQuantityChanged={changeQuantity}
+                            onRequestStatusChange={changeStatus}
+                        />
+                    )}
                 </div>
             </div>
             {loading && (
-                <Row className="justify-content-center">
-                    <Col xs="3">
-                        <Loading showLabel />
-                    </Col>
-                </Row>
+                <div className="w-50 mx-auto">
+                    <Loading showLabel />
+                </div>
             )}
             {!loading && (
                 <div className="row mb-2">

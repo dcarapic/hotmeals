@@ -1,5 +1,5 @@
 import React, { Fragment, useState } from "react";
-import { Alert, Button, Col, Row } from "react-bootstrap";
+import { Alert, Button } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
@@ -20,22 +20,24 @@ const OwnerRestaurantListPage = ui.withAlertMessageContainer(() => {
     const [editedRestaurant, setEditedRestaurant] = useState<model.RestaurantDTO | null>(null);
     const [restaurantToDelete, setRestaurantToDelete] = useState<model.RestaurantDTO | null>(null);
 
-    useAbortableLoad(async (signal) => {
-        msgs.clearMessage();
-        setLoading(true);
-        let response = await api.restaurantFetchAll(1, signal);
-        if (response.isAborted) return;
-        setLoading(false);
-        msgs.setMessageFromResponse(response);
-        setLoaded(true);
-        if (response.ok && response.result) {
-            setRestaurants(response.result.restaurants);
-        } else {
+    useAbortableLoad(
+        async (signal) => {
+            msgs.clearMessage();
+            setLoading(true);
+            let response = await api.restaurantFetchAll(1, signal);
+            if (response.isAborted) return;
             setLoading(false);
-            setRestaurants([]);
-        }
-    }, [msgs]);
-
+            msgs.setMessageFromResponse(response);
+            setLoaded(true);
+            if (response.ok && response.result) {
+                setRestaurants(response.result.restaurants);
+            } else {
+                setLoading(false);
+                setRestaurants([]);
+            }
+        },
+        [msgs]
+    );
 
     const createNewRestaurant = () => {
         setEditedRestaurant({ id: "", name: "", description: "", phoneNumber: "" });
@@ -81,11 +83,9 @@ const OwnerRestaurantListPage = ui.withAlertMessageContainer(() => {
         <Fragment>
             <h3 className="text-center p-2">Your restaurants</h3>
             {loading && (
-                <Row className="justify-content-center">
-                    <Col xs="3">
-                        <Loading showLabel />
-                    </Col>
-                </Row>
+                <div className="w-50 mx-auto">
+                    <Loading showLabel />
+                </div>
             )}
             {loaded && (
                 <div className="row mb-2">

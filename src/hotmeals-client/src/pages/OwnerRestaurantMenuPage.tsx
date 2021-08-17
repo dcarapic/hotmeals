@@ -78,11 +78,9 @@ const OwnerRestaurantMenuPage = ui.withAlertMessageContainer(() => {
         <Fragment>
             <h3 className="text-center p-2">{title}</h3>
             {loading && (
-                <Row className="justify-content-center">
-                    <Col xs="3">
-                        <Loading showLabel />
-                    </Col>
-                </Row>
+                <div className="w-50 mx-auto">
+                    <Loading showLabel />
+                </div>
             )}
             {!loading && (
                 <Fragment>

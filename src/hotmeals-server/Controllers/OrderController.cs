@@ -14,6 +14,7 @@ using hotmeals_server.Model;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.SignalR;
+using System.ComponentModel.DataAnnotations;
 
 namespace hotmeals_server.Controllers
 {
@@ -26,7 +27,7 @@ namespace hotmeals_server.Controllers
     public class OrderController : BaseController
     {
 
-        const int OrdersResultPageSize = 20;
+        const int OrdersResultPageSize = 10;
 
         private readonly ILogger<OrderController> _log;
         private readonly HMContext _db;
@@ -47,7 +48,7 @@ namespace hotmeals_server.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("active")]
-        public async Task<IActionResult> GetActiveOrders([FromQuery] int page = 1)
+        public async Task<IActionResult> GetActiveOrders([FromQuery][Range(1, 999999)] int page = 1)
         {
             return await GetOrders(new OrderStatus[] { OrderStatus.Placed, OrderStatus.Accepted, OrderStatus.Shipped, OrderStatus.Delivered }, page);
         }
@@ -60,12 +61,12 @@ namespace hotmeals_server.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("completed")]
-        public async Task<IActionResult> GetCompletedOrders([FromQuery] int page = 1)
+        public async Task<IActionResult> GetCompletedOrders([FromQuery][Range(1, 999999)] int page = 1)
         {
             return await GetOrders(new OrderStatus[] { OrderStatus.Received, OrderStatus.Canceled }, page);
         }
 
-        private async Task<IActionResult> GetOrders(OrderStatus[] statuses, int page)
+        private async Task<IActionResult> GetOrders(OrderStatus[] statuses,  int page)
         {
             IQueryable<OrderDTO> qry;
             var totalPages = 1;
@@ -92,9 +93,9 @@ namespace hotmeals_server.Controllers
             }
             var total = (int)(await qry.CountAsync());
             totalPages = total == 0 ? 0 : (total / OrdersResultPageSize) + 1;
-            qry = qry.Skip(page - 1).Take(OrdersResultPageSize);
+            qry = qry.Skip((page - 1) * OrdersResultPageSize).Take(OrdersResultPageSize);
             var orders = await qry.ToArrayAsync();
-            return Ok(new GetOrdersResponse(orders, TotalPages: totalPages, Page: 1));
+            return Ok(new GetOrdersResponse(orders, TotalPages: totalPages, Page: Math.Min(page, totalPages)));
         }
 
 

@@ -13,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using hotmeals_server.Model;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace hotmeals_server.Controllers
 {
@@ -43,7 +44,7 @@ namespace hotmeals_server.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        public async Task<IActionResult> GetAllRestaurants([FromQuery] int page = 1)
+        public async Task<IActionResult> GetAllRestaurants([FromQuery][Range(1, 999999)] int page = 1)
         {
             IQueryable<RestaurantDTO> qry;
             var totalPages = 1;
@@ -65,10 +66,10 @@ namespace hotmeals_server.Controllers
 
                 var total = (int)(await qry.CountAsync());
                 totalPages = total == 0 ? 0 : (total / RestaurantsResultPageSize) + 1;
-                qry = qry.Skip(page - 1).Take(RestaurantsResultPageSize);
+                qry = qry.Skip((page - 1) * RestaurantsResultPageSize).Take(RestaurantsResultPageSize);
             }
 
-            return Ok(new GetRestaurantsResponse(await qry.ToArrayAsync(), TotalPages: totalPages, Page: 1));
+            return Ok(new GetRestaurantsResponse(await qry.ToArrayAsync(), TotalPages: totalPages, Page: Math.Min(page, totalPages)));
         }
 
         /// <summary>
@@ -121,7 +122,7 @@ namespace hotmeals_server.Controllers
             restaurant.Name = req.Name.Trim();
             restaurant.Description = req.Description.Trim();
             restaurant.PhoneNumber = req.PhoneNumber.Trim();
-            // TODO: Get version from request and not from the db object
+            // TODO: Get version from request and not from the db object, add optimistic concurrency
             restaurant.Version += 1;
             await _db.SaveChangesAsync();
             return Ok(new UpdateRestaurantResponse(new RestaurantDTO(

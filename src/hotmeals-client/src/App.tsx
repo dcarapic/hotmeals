@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import * as api from "./util/api";
 import * as ui from "./util/ui";
 import * as model from "./state/model";
-import { Container, Col, Row } from "react-bootstrap";
+import { Container } from "react-bootstrap";
 import { BrowserRouter, Switch, Route, Redirect } from "react-router-dom";
 import CustomerHomePage from "./pages/CustomerHomePage";
 import CustomerOrdering from "./pages/CustomerOrdering";
@@ -50,7 +50,7 @@ const App = () => {
     // Whenever the user is not set (on first load or when logged out) we try to automatically authenticate the user.
     // This will only succeed if we have a valid token.
     // If not we will not be able to set the current user and the login dialog will be displayed.
-    
+
     useEffect(() => {
         authenticateUser();
     }, [authenticateUser]);
@@ -61,11 +61,17 @@ const App = () => {
                 <ui.ToastMessageServiceContainer>
                     <TopNav />
                     <Container className="py-4 hm-sticky-margin">
-                        <Row className="justify-content-center">
-                            <Col style={{ maxWidth: "768px" }}>
-                                {authenticating ? <Loading className="w-50" showLabel /> : <AppRoutes />}
-                            </Col>
-                        </Row>
+                        <div className="row justify-content-center">
+                            <div className="col-md-8">
+                                {authenticating ? (
+                                    <div className="w-50 mx-auto">
+                                        <Loading showLabel />
+                                    </div>
+                                ) : (
+                                    <AppRoutes />
+                                )}
+                            </div>
+                        </div>
                         <OrderNotificationManager />
                     </Container>
                 </ui.ToastMessageServiceContainer>

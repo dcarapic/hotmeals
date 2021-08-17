@@ -6,6 +6,9 @@ import { Button, Col, Form, Modal } from "react-bootstrap";
 import { LoadingButton } from "./LoadingButton";
 import { useAbortable } from "../util/abortable";
 
+// TODO: Add validation messages to form
+
+
 /** Modal dialog for editing a restaurant. */
 const RestaurantEditor = (props: {
     /** Restaurant to edit. */

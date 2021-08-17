@@ -143,6 +143,15 @@ namespace hotmeals_server
             app.UseSpa(spa =>
             {
             });
+
+            using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+            {
+                var context = serviceScope.ServiceProvider.GetRequiredService<Model.HMContext>();
+                if(context.Database.EnsureCreated()) 
+                {
+                    log.LogWarning("New database generated!");
+                }
+            }
         }
     }
 }

@@ -1,4 +1,14 @@
-import React, { Fragment, FunctionComponent, useContext, useEffect, useRef, useState } from "react";
+import _ from "lodash";
+import React, {
+    Fragment,
+    FunctionComponent,
+    useCallback,
+    useContext,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from "react";
 import { Alert, Toast, ToastContainer } from "react-bootstrap";
 import { Variant } from "react-bootstrap/esm/types";
 import * as api from "../util/api";
@@ -217,3 +227,46 @@ const withToastMessageContainer = (WrappedComponent: React.ComponentType) => {
 const useToastMessageService = () => useContext(ToastServiceContext);
 
 export { ToastServiceContext, ToastMessageServiceContainer, useToastMessageService, withToastMessageContainer };
+
+function isWindow(container: any): container is Window {
+    return container.scrollX;
+}
+
+export type ScrollPosition = { scrollX: number; scrollY: number };
+
+/**
+ * Hook which fires an effect when user scrolls the window. The method call is throttled to avoid firing the event too much.
+ */
+const useScrollPosition = (effect: (pos: ScrollPosition) => void, deps: [], container?: Window | HTMLElement) => {
+    let getPosX: () => number;
+    let getPosY: () => number;
+    if (container && isWindow(container)) {
+        getPosX = () => container.scrollX;
+        getPosY = () => container.scrollY;
+    } else if (container && !isWindow(container)) {
+        getPosX = () => container.getBoundingClientRect().left;
+        getPosY = () => container.getBoundingClientRect().left;
+    } else {
+        getPosX = () => global.window.scrollX;
+        getPosY = () => global.window.scrollY;
+    }
+    const onScroll = useCallback(() => {
+        effect({ scrollX: getPosX(), scrollY: getPosY() });
+        // eslint-disable-next-line
+    }, deps);
+
+    // eslint-disable-next-line
+    const throttledOnScroll = useCallback(_.throttle(onScroll, 100), [onScroll]);
+
+    let finalDeps: any[] = [];
+    if (deps) finalDeps = [...deps];
+    finalDeps.push(throttledOnScroll);
+
+    useLayoutEffect(() => {
+        window.addEventListener("scroll", throttledOnScroll);
+        return () => window.removeEventListener("scroll", onScroll);
+        // eslint-disable-next-line
+    }, finalDeps);
+};
+
+export { useScrollPosition };

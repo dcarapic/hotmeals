@@ -2,7 +2,7 @@ import React, { Fragment, useCallback, useEffect, useState } from "react";
 import * as api from "../util/api";
 import * as ui from "../util/ui";
 import * as model from "../state/model";
-import { Alert, Col, Row } from "react-bootstrap";
+import { Alert } from "react-bootstrap";
 import Loading from "./Loading";
 import { ServerResponsePagination } from "./ServerResponsePagination";
 import { OrderDetails } from "./OrderDetails";
@@ -116,11 +116,9 @@ const OrderList = (props: {
     return (
         <Fragment>
             {loading && (
-                <Row className="justify-content-center">
-                    <Col xs="3">
-                        <Loading showLabel />
-                    </Col>
-                </Row>
+                <div className="w-50 mx-auto">
+                    <Loading showLabel />
+                </div>
             )}
             {loaded &&
                 items.map((r, i) => {

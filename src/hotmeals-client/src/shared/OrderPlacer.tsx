@@ -9,6 +9,8 @@ import Loading from "./Loading";
 import { useEventEffect } from "../util/ws-events";
 import { useAbortable } from "../util/abortable";
 
+// TODO: Reduce size of loading animation, on mobile screen it is too wide.
+
 /** Modal dialog used to confirm and place a new order. */
 const OrderPlacer = (props: {
     /** New order which should be placed */
@@ -92,10 +94,11 @@ const OrderPlacer = (props: {
                 {!waitingConfirmation ? (
                     <OrderDetails order={props.order} disabled={true} />
                 ) : (
-                    <div className="row justify-content-center">
-                        <div className="col-8">
-                            <Loading showLabel label="Please wait until the restaurant confirms your order. You can also close this dialog if you do not want to wait." />
-                        </div>
+                    <div className="w-50 mx-auto">
+                        <Loading
+                            showLabel
+                            label="Please wait until the restaurant confirms your order. You can also close this dialog if you do not want to wait."
+                        />
                     </div>
                 )}
                 <ui.AlertMessageServiceContainer serverResponse={serverResponse} />
