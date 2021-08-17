@@ -42,7 +42,7 @@ The exact and detailed functionality of the application can be best described vi
 Note: The first several screenshots display the full page, later on only the central content of the page is depicted.
 
 ## Home page (landing page)
-<img src="./screenshots/Home_Page.png" width="70%"/>  
+<img src="./screenshots/Home_page.png" width="70%"/>  
 
 This is the initial page displayed to anyone who is not logged in into the application. The user can enter the login information and login or he can register himself as either a regular customer or a restaurant owner.
 
